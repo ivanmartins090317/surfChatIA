@@ -95,6 +95,7 @@ Mensagens de erro devem indicar **causa** e **correção**. Nunca engolir exceç
 | Documento | Quando consultar |
 |-----------|------------------|
 | `docs/PRD.md` | Escopo, user stories, prioridades, entidades |
+| `docs/PLANO_EXECUCAO.md` | **Roadmap do MVP** — fases, entregáveis, schemas, critérios de saída |
 | `docs/DESIGN_SYSTEM.md` | **Antes de criar qualquer tela** — tokens, componentes, padrões por módulo, a11y |
 | `docs/SECURITY.md` | **Antes do merge** — RLS, SSRF (links de vídeo), LLM, uploads, checklist DoD |
 | `.cursor/rules/project-general.mdc` | Regras detalhadas sempre ativas no Agent |
