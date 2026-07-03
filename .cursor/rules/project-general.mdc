@@ -1,0 +1,54 @@
+---
+description: Regras gerais e arquitetura do Surf Performance & Board AI (sempre ativa)
+alwaysApply: true
+---
+
+# Regras Gerais — Surf Performance & Board AI
+
+Idioma: **sempre responda em português (pt-BR)**.
+
+## Stack
+
+- **Frontend:** Next.js (App Router) · React · TypeScript · Tailwind CSS · shadcn/ui · Radix · Lucide.
+- **Backend:** Supabase (Auth, Postgres, Storage, RLS) via Server Actions / Route Handlers.
+- **IA:** integração com modelo de linguagem/visão isolada em camada própria (`lib/ai/`).
+
+## Arquitetura (nunca pule camadas)
+
+`UI (RSC/Client) → Server Action / Route Handler → Service → Supabase`
+
+1. **Server-first**: dados e mutações no servidor. UI é apresentação; lógica de negócio vive em `services/`.
+2. **Banco só via camada de dados**: acesse o Supabase por um client server-side dentro de services/actions. Nunca query direta em componente.
+3. **IA isolada**: toda chamada a modelo de IA passa por `lib/ai/` (prompts, parsing, tipos). Telas/actions só orquestram.
+4. **RLS obrigatório** em todas as tabelas — cada usuário só vê seus dados.
+
+## Clean Code & Clean Architecture
+
+- **Dependência aponta pra dentro**: UI depende de services; services dependem de abstrações de dados/IA — nunca o contrário. Domínio não conhece framework.
+- **Responsabilidade única (SRP)**: cada arquivo/função/componente faz uma coisa. Se precisa da conjunção "e" pra descrever, divida.
+- **Funções pequenas**: idealmente ≤ 20–30 linhas, um nível de abstração por função; extraia auxiliares nomeados em vez de aninhar `if`/loops.
+- **Nomes reveladores de intenção**: sem abreviações obscuras; booleanos com `is/has/should`; funções são verbos, dados são substantivos.
+- **DRY com cuidado**: reutilize lógica real; não force abstração prematura sobre coincidências.
+- **Sem números/strings mágicos**: extraia para constantes nomeadas ou tokens do Design System.
+- **Guard clauses / early return**: trate exceções primeiro; evite `else` profundo e aninhamento.
+- **Sem dead code**: nada de código comentado, imports não usados ou flags mortas — remova.
+- **Efeitos colaterais explícitos**: funções puras por padrão; I/O (Supabase, IA) concentrado nas bordas (services/actions).
+- **Ordem de imports**: externos → internos (aliases) → mesmo domínio/relativos.
+
+## Regras invioláveis
+
+1. **`use client` mínimo**: prefira React Server Components. Só use client para interação/estado local em componentes pequenos; envolva em `Suspense` com fallback.
+2. **Tipos**: prefira `interface` sobre `type`. **Não use `enum`** — use mapas/const objects.
+3. **Sem classes**: componentes funcionais e funções puras (palavra-chave `function`). Padrões funcionais e declarativos.
+4. **Exports nomeados** para componentes. Diretórios em `kebab-case` (ex.: `components/board-spec`).
+5. **Erros**: trate com estados explícitos (`enviando → processando → pronto → erro`); mensagem com causa **e** correção. Nunca engula erro em `catch` vazio.
+6. **Ambiente**: segredos e chaves só em `.env` (via variáveis validadas). Nunca hardcode credenciais. **Nunca sobrescreva `.env` sem confirmar.**
+7. **Design System**: consulte `docs/DESIGN_SYSTEM.md` antes de criar telas. Use **tokens semânticos** (sem hex cru), dark-first, mobile-first, alvos ≥ 44px.
+8. **Segurança (OWASP)**: siga `docs/SECURITY.md` — RLS + autorização server-side, validação Zod de toda entrada, segredos só no servidor, uploads e URLs de usuário validados, saída de IA tratada como não confiável. Cumpra o checklist antes do merge.
+9. **Limite de arquivo**: > 300 linhas deve ser dividido por domínio/feature. Funções longas → auxiliares nomeadas.
+10. **Sem duplicação**: reutilize antes de recriar. Sem mocks em dev/prod (só em testes).
+11. **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, `test:`, `docs:`); branch descritiva (`feature/...`).
+
+## Depois de alterar
+
+Reflita em 1–2 parágrafos sobre escalabilidade/manutenibilidade e cubra com testes (≥ 80% quando aplicável).
