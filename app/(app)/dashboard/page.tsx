@@ -30,21 +30,26 @@ export default async function DashboardPage() {
           doneAnalyses.reduce((acc, a) => {
             const result = a.result_json as PerformanceResult | null;
             return acc + (result?.score ?? 0);
-          }, 0) / doneAnalyses.filter((a) => (a.result_json as PerformanceResult)?.score).length || 1,
+          }, 0) /
+            doneAnalyses.filter(
+              (a) => (a.result_json as PerformanceResult)?.score,
+            ).length || 1,
         )
       : null;
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Bem-vindo,</p>
           <h1 className="font-display text-3xl font-bold">{displayName}</h1>
         </div>
         <form action={signOutAction}>
-          <Button type="submit" variant="ghost" size="sm">
-            Sair
-          </Button>
+          <div className="border rounded-full p-0 ml-22 mt-4">
+            <Button type="submit" variant="ghost" size="sm">
+              Sair
+            </Button>
+          </div>
         </form>
       </header>
 
@@ -107,7 +112,12 @@ export default async function DashboardPage() {
             Nova análise de performance
           </Link>
         </Button>
-        <Button asChild size="lg" variant="secondary" className="h-auto flex-col gap-2 py-6">
+        <Button
+          asChild
+          size="lg"
+          variant="secondary"
+          className="h-auto flex-col gap-2 py-6"
+        >
           <Link href="/boards/new">
             <Sparkles className="size-6" aria-hidden />
             Cadastrar prancha mágica
@@ -117,8 +127,13 @@ export default async function DashboardPage() {
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-xl font-medium">Análises recentes</h2>
-          <Link href="/analyses" className="text-sm text-primary hover:underline">
+          <h2 className="font-display text-xl font-medium">
+            Análises recentes
+          </h2>
+          <Link
+            href="/analyses"
+            className="text-sm text-primary hover:underline"
+          >
             Ver todas
           </Link>
         </div>
