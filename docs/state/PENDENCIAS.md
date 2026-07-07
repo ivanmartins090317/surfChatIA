@@ -1,7 +1,8 @@
 # Pendências — Surf Performance & Board AI
 
 > Consolidado a partir do checklist de [implementação 03/07/2026](../implementation/2026-07-03-fundacao-mvp-inicial.md).  
-> **Status:** código MVP scaffolded; validação de ambiente, IA e deploy pendente.
+> **Status:** infra remota (migrations + OpenAI) configurada; validação E2E dos fluxos principais pendente.  
+> **Última revisão:** 07/07/2026 — migrations aplicadas, `OPENAI_API_KEY` configurada com créditos, `npm run build` OK.
 
 ---
 
@@ -9,8 +10,9 @@
 
 Itens bloqueadores para os fluxos principais funcionarem de ponta a ponta.
 
-- [ ] Confirmar `npm run db:push` no projeto Supabase remoto (5 migrations: profiles, media/analyses, boards, storage policies, buckets)
-- [ ] Configurar `OPENAI_API_KEY` em `.env.local` e testar uma análise de performance completa
+- [x] Confirmar `npm run db:push` no projeto Supabase remoto (5 migrations: profiles, media/analyses, boards, storage policies, buckets)
+- [x] Configurar `OPENAI_API_KEY` em `.env.local` *(créditos inseridos na conta OpenAI)*
+- [ ] Testar uma análise de performance completa com IA real (upload/link → feedback estruturado)
 - [ ] Testar upload de mídia e fotos de prancha nos buckets privados (`media`, `boards`)
 - [ ] Validar edição de perfil e persistência dos dados
 - [ ] Validar isolamento RLS entre dois usuários distintos
@@ -21,7 +23,7 @@ Itens bloqueadores para os fluxos principais funcionarem de ponta a ponta.
 
 Critérios de saída ainda não validados:
 
-- [ ] `npm run build` validado localmente com env de produção
+- [x] `npm run build` validado localmente com env de produção (`.env.local`, 07/07/2026)
 - [ ] Deploy (Vercel + Supabase prod)
 
 ---
@@ -41,7 +43,7 @@ Critérios de saída ainda não validados:
 Critérios de saída ainda não validados:
 
 - [ ] Upload de vídeo/imagem testado com bucket `media` no Supabase remoto
-- [ ] Análise IA completa com `OPENAI_API_KEY` configurada *(também em prioridade imediata)*
+- [ ] Análise IA completa com `OPENAI_API_KEY` configurada *(chave OK; falta teste E2E)*
 - [ ] Link malicioso rejeitado em fluxo real (não só unit test)
 
 ---
@@ -50,7 +52,7 @@ Critérios de saída ainda não validados:
 
 Critérios de saída ainda não validados:
 
-- [ ] `npm run db:push` aplicado no projeto Supabase remoto *(também em prioridade imediata)*
+- [x] `npm run db:push` aplicado no projeto Supabase remoto *(também em prioridade imediata)*
 - [ ] Upload de ≥3 fotos testado no bucket `boards`
 - [ ] Ficha técnica gerada e persistida com IA real
 - [ ] Resumo “por que funciona para você” validado com perfil completo
@@ -89,11 +91,11 @@ flowchart TD
   F --> G[Build + testes + deploy]
 ```
 
-1. **Infra:** `db:push` → buckets e policies ativos
-2. **IA:** chave OpenAI → análise de performance end-to-end
+1. ~~**Infra:** `db:push` → buckets e policies ativos~~ ✅
+2. **IA:** chave OpenAI ✅ → análise de performance end-to-end *(próximo)*
 3. **Auth/dados:** perfil + RLS
 4. **Módulos:** prancha mágica → compatibilidade
-5. **Qualidade:** testes, build, security/design checklist, deploy
+5. **Qualidade:** testes, build ✅ parcial, security/design checklist, deploy
 
 ---
 

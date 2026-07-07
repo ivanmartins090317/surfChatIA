@@ -98,6 +98,7 @@ Mensagens de erro devem indicar **causa** e **correção**. Nunca engolir exceç
 | `docs/PLANO_EXECUCAO.md` | **Roadmap do MVP** — fases, entregáveis, schemas, critérios de saída |
 | `docs/DESIGN_SYSTEM.md` | **Antes de criar qualquer tela** — tokens, componentes, padrões por módulo, a11y |
 | `docs/SECURITY.md` | **Antes do merge** — RLS, SSRF (links de vídeo), LLM, uploads, checklist DoD |
+| `docs/PLANOS_E_LIMITES.md` | Planos SaaS, créditos, limites de uso e roadmap de monetização |
 | `.cursor/rules/project-general.mdc` | Regras detalhadas sempre ativas no Agent |
 
 **Não copie** conteúdo desses docs nas respostas ou no código — leia o arquivo e aplique. Referencie paths em vez de duplicar.

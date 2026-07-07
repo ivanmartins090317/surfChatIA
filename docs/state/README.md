@@ -5,9 +5,11 @@ Documento vivo com **pendências abertas**, prioridades e próximos passos. Atua
 | Documento | Conteúdo |
 |-----------|----------|
 | [PENDENCIAS.md](./PENDENCIAS.md) | Checklist consolidado do que falta validar/implementar |
+| [Relatório de testes manuais](../relatorio-testes-manuais.html) | Homologação E2E (POP-QA-SURF-001) — 24 TCs, evidências em `docs/evidencias/` |
 | [Implementação](../implementation/README.md) | Registro do que já foi entregue |
+| [Planos e limites](../PLANOS_E_LIMITES.md) | Estratégia SaaS — créditos, planos e monetização |
 
-**Última atualização:** 03/07/2026
+**Última atualização:** 07/07/2026
 
 ## Convenção
 

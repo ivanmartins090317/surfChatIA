@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relatório de Testes Manuais — Surf Performance & Board AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-page: #0B0F14;
+      --bg-card: #141A22;
+      --bg-card2: #1B222B;
+      --bg-card3: #252E39;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --accent: #C4FA4E;
+      --accent-hover: #CBFB50;
+      --accent-glow: rgba(196, 250, 78, 0.15);
+      --on-accent: #0B0F14;
+      --aqua: #2DD9BE;
+      --aqua-glow: rgba(45, 217, 190, 0.12);
+      --pass: #3CCB7F;
+      --pass-bg: rgba(60, 203, 127, 0.12);
+      --fail: #FF5D5D;
+      --fail-bg: rgba(255, 93, 93, 0.12);
+      --block: #F5B849;
+      --block-bg: rgba(245, 184, 73, 0.12);
+      --pending: #6B7787;
+      --pending-bg: rgba(107, 119, 135, 0.12);
+      --info: #5B9DFF;
+      --info-bg: rgba(91, 157, 255, 0.12);
+      --text-primary: #F5F8FA;
+      --text-secondary: #A7B0BD;
+      --text-tertiary: #6B7787;
+      --radius: 16px;
+      --radius-lg: 20px;
+      --font-display: 'Space Grotesk', system-ui, sans-serif;
+      --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --grad-primary: linear-gradient(135deg, #C4FA4E 0%, #7BE28A 100%);
+      --grad-ocean: linear-gradient(160deg, #1B222B 0%, #0B2E33 100%);
+      --grad-surface-glow: radial-gradient(120% 120% at 50% 0%, rgba(196, 250, 78, 0.10), transparent 60%);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Lightbox */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 20, 0.92);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    #lightbox.active { display: flex; }
+    #lightbox img {
+      max-width: 95vw;
+      max-height: 90vh;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+    }
+    #lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+    }
+
+    /* Topbar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 1rem; }
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--grad-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .topbar-brand h1 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .topbar-brand span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .badge-version {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(196, 250, 78, 0.25);
+    }
+
+    /* Hero */
+    .hero {
+      background: var(--grad-ocean);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-surface-glow);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 3rem;
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--aqua);
+      background: var(--aqua-glow);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .hero h2 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .hero > .hero-inner > p {
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin-bottom: 1.5rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .hero-meta-item label {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+      margin-bottom: 0.25rem;
+    }
+    .hero-meta-item span { font-size: 0.875rem; font-weight: 500; }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Scoreboard */
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .score-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .score-card.pct .score-num {
+      background: var(--grad-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .score-icon { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    .score-num {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      font-feature-settings: "tnum";
+      line-height: 1.1;
+    }
+    .score-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+    .score-card.pass { border-color: rgba(60, 203, 127, 0.3); }
+    .score-card.fail { border-color: rgba(255, 93, 93, 0.3); }
+    .score-card.block { border-color: rgba(245, 184, 73, 0.3); }
+
+    /* Progress */
+    .progress-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .progress-section h3 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .progress-bar-wrap {
+      height: 10px;
+      background: var(--bg-card3);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--grad-primary);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      margin-top: 0.5rem;
+    }
+
+    /* Section title */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .section-title .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    /* Flow accordion */
+    .flow-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .flow-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .flow-header:hover { background: var(--bg-card2); }
+    .flow-header-left { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .flow-id {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: var(--aqua-glow);
+      color: var(--aqua);
+    }
+    .flow-title { font-weight: 600; font-size: 0.9375rem; }
+    .flow-chevron {
+      color: var(--text-tertiary);
+      transition: transform 0.2s;
+      font-size: 0.75rem;
+    }
+    .flow-block.open .flow-chevron { transform: rotate(180deg); }
+    .flow-body {
+      display: none;
+      padding: 0 1.25rem 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+    .flow-block.open .flow-body { display: block; }
+
+    /* Table */
+    .test-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      margin-top: 1rem;
+    }
+    .test-table th {
+      text-align: left;
+      padding: 0.75rem;
+      color: var(--text-tertiary);
+      font-weight: 600;
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+    }
+    .test-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      color: var(--text-secondary);
+    }
+    .test-table td:first-child {
+      font-weight: 600;
+      color: var(--accent);
+      white-space: nowrap;
+      font-feature-settings: "tnum";
+    }
+    .test-table tr:last-child td { border-bottom: none; }
+
+    /* Status badges */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .status.dot::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .status.pass { background: var(--pass-bg); color: var(--pass); }
+    .status.pass.dot::before { background: var(--pass); }
+    .status.fail { background: var(--fail-bg); color: var(--fail); }
+    .status.fail.dot::before { background: var(--fail); }
+    .status.block { background: var(--block-bg); color: var(--block); }
+    .status.block.dot::before { background: var(--block); }
+    .status.pending { background: var(--pending-bg); color: var(--pending); }
+    .status.pending.dot::before { background: var(--pending); }
+
+    /* Evidence */
+    .evidence-section { margin-top: 1.5rem; }
+    .evidence-section h4 {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    .evidence-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+    .evidence-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      background: var(--bg-card2);
+    }
+    .evidence-item:hover { border-color: var(--accent); }
+    .evidence-item img {
+      width: 100%;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      display: block;
+    }
+    .evidence-item.missing img { display: none; }
+    .evidence-item.missing::before {
+      content: '📷';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 16/10;
+      font-size: 2rem;
+      background: var(--bg-card3);
+    }
+    .evidence-caption {
+      padding: 0.5rem;
+      font-size: 0.6875rem;
+      color: var(--text-tertiary);
+      text-align: center;
+    }
+    .evidence-placeholder {
+      grid-column: 1 / -1;
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: 0.8125rem;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius);
+    }
+
+    /* Observations */
+    .obs-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--info-bg);
+      border: 1px solid rgba(91, 157, 255, 0.2);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+    .obs-box strong { color: var(--info); }
+
+    /* Bugs */
+    .bug-empty {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: 0.875rem;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+    }
+    .bug-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .bug-card.critico { border-left: 3px solid var(--fail); }
+    .bug-card.alto { border-left: 3px solid var(--block); }
+    .bug-card.medio { border-left: 3px solid var(--info); }
+    .bug-card.baixo { border-left: 3px solid var(--pending); }
+    .bug-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 1rem 1.25rem;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .bug-id {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: var(--aqua);
+      letter-spacing: 0.04em;
+    }
+    .bug-title { font-weight: 600; margin-top: 0.25rem; }
+    .severity {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .severity.critico { background: var(--fail-bg); color: var(--fail); }
+    .severity.alto { background: var(--block-bg); color: var(--block); }
+    .severity.medio { background: var(--info-bg); color: var(--info); }
+    .severity.baixo { background: var(--pending-bg); color: var(--pending); }
+    .bug-body {
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0.5rem 1rem;
+      font-size: 0.8125rem;
+    }
+    .bug-body dt { color: var(--text-tertiary); font-weight: 600; }
+    .bug-body dd { color: var(--text-secondary); }
+
+    /* Matrix */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .matrix-table th, .matrix-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .matrix-table th {
+      background: var(--bg-card2);
+      color: var(--text-tertiary);
+      font-size: 0.6875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .matrix-table tr:last-child td { border-bottom: none; }
+    .matrix-total {
+      font-weight: 700;
+      background: var(--accent-glow) !important;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-tertiary);
+      font-size: 0.8125rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+    .footer strong { color: var(--accent); }
+
+    @media (max-width: 768px) {
+      .topbar, .hero-inner, .container { padding-left: 1rem; padding-right: 1rem; }
+      .test-table { font-size: 0.75rem; }
+      .test-table th:nth-child(3), .test-table td:nth-child(3) { display: none; }
+      .bug-body { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="lightbox" onclick="closeLightbox()">
+    <span id="lightbox-close" onclick="event.stopPropagation(); closeLightbox();">&#x2715;</span>
+    <img id="lightbox-img" src="" alt="Evidência ampliada" onclick="event.stopPropagation()" />
+  </div>
+
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="logo-mark" aria-hidden="true">🏄</div>
+      <div>
+        <h1>Surf Performance & Board AI</h1>
+        <span>Relatório de Testes Manuais · MVP</span>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <span class="badge-version">POP-QA-SURF-001</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-tag">QA Report</div>
+      <h2>Homologação Manual — MVP</h2>
+      <p>Validação E2E dos fluxos P0/P1: autenticação, perfil, análise de performance com IA, prancha mágica, compatibilidade e RLS.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><label>Projeto</label><span>Surf Performance & Board AI</span></div>
+        <div class="hero-meta-item"><label>Plataforma</label><span>Web · Next.js 15 + Supabase</span></div>
+        <div class="hero-meta-item"><label>Executor</label><span id="meta-executor">—</span></div>
+        <div class="hero-meta-item"><label>Data</label><span id="meta-data">—</span></div>
+        <div class="hero-meta-item"><label>Ambiente</label><span id="meta-ambiente">Local · localhost:3000</span></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="container">
+
+    <div class="scoreboard" id="scoreboard">
+      <div class="score-card total">
+        <div class="score-icon">🧪</div>
+        <div class="score-num" id="sc-total">0</div>
+        <div class="score-label">Total de Casos</div>
+      </div>
+      <div class="score-card pass">
+        <div class="score-icon">✅</div>
+        <div class="score-num" id="sc-pass">0</div>
+        <div class="score-label">Aprovados</div>
+      </div>
+      <div class="score-card fail">
+        <div class="score-icon">❌</div>
+        <div class="score-num" id="sc-fail">0</div>
+        <div class="score-label">Reprovados</div>
+      </div>
+      <div class="score-card block">
+        <div class="score-icon">⚠️</div>
+        <div class="score-num" id="sc-block">0</div>
+        <div class="score-label">Bloqueados</div>
+      </div>
+      <div class="score-card pct">
+        <div class="score-icon">📊</div>
+        <div class="score-num" id="sc-pct">—</div>
+        <div class="score-label">Taxa de Aprovação</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <h3>Progresso geral de aprovação</h3>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+      <div class="progress-labels">
+        <span>0%</span>
+        <span id="progress-pct-label">0%</span>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <div class="icon">🧪</div>
+      Casos de Teste por Fluxo
+    </div>
+
+    <!-- FL-01 Autenticação -->
+    <div class="flow-block open" id="flow-auth">
+      <div class="flow-header" onclick="toggleFlow('flow-auth')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-01</span>
+          <span class="flow-title">Autenticação — Signup, Login, Logout, Recuperação</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-01</td>
+              <td>Criar conta com e-mail e senha válidos</td>
+              <td>App rodando; e-mail não cadastrado</td>
+              <td>Signup concluído; redirecionamento ou confirmação; profile criado via trigger</td>
+              <td><span class="status pending dot" data-tc="TC-01">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-02</td>
+              <td>Login com credenciais válidas</td>
+              <td>Usuário já cadastrado</td>
+              <td>Login OK; redirect para dashboard; sessão persistida</td>
+              <td><span class="status pending dot" data-tc="TC-02">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-03</td>
+              <td>Logout</td>
+              <td>Usuário autenticado</td>
+              <td>Sessão encerrada; rotas protegidas redirecionam para /login</td>
+              <td><span class="status pending dot" data-tc="TC-03">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-04</td>
+              <td>Recuperação de senha</td>
+              <td>E-mail cadastrado</td>
+              <td>Formulário /forgot-password envia link; mensagem de sucesso exibida</td>
+              <td><span class="status pending dot" data-tc="TC-04">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-05</td>
+              <td>Rota protegida sem auth</td>
+              <td>Sem sessão ativa</td>
+              <td>Acesso a /dashboard ou /analyses redireciona para /login</td>
+              <td><span class="status pending dot" data-tc="TC-05">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-auth">
+            <div class="evidence-placeholder">Screenshots serão adicionados após execução (tc01…tc05)</div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+      </div>
+    </div>
+
+    <!-- FL-02 Perfil -->
+    <div class="flow-block" id="flow-profile">
+      <div class="flow-header" onclick="toggleFlow('flow-profile')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-02</span>
+          <span class="flow-title">Perfil surfista</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-06</td>
+              <td>Visualizar perfil em /profile</td>
+              <td>Usuário autenticado</td>
+              <td>Formulário carrega com dados atuais (nível, peso, altura, tipo de onda)</td>
+              <td><span class="status pending dot" data-tc="TC-06">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-07</td>
+              <td>Editar e salvar perfil</td>
+              <td>Usuário autenticado</td>
+              <td>Alterações salvas; toast/mensagem de sucesso; dados atualizados na UI</td>
+              <td><span class="status pending dot" data-tc="TC-07">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-08</td>
+              <td>Persistência após reload</td>
+              <td>TC-07 executado</td>
+              <td>Após F5, campos mantêm valores salvos (Supabase profiles)</td>
+              <td><span class="status pending dot" data-tc="TC-08">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-profile">
+            <div class="evidence-placeholder">tc07-perfil-salvo.jpeg · tc08-perfil-reload.jpeg</div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+      </div>
+    </div>
+
+    <!-- FL-03 Performance -->
+    <div class="flow-block open" id="flow-performance">
+      <div class="flow-header" onclick="toggleFlow('flow-performance')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-03</span>
+          <span class="flow-title">Análise de performance (IA + bucket media)</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-09</td>
+              <td>Análise por link YouTube (IA real)</td>
+              <td>OPENAI_API_KEY configurada; usuário logado</td>
+              <td>Redirect para /analyses/[id]; badge Pronto; Surf Score + resumo + listas estruturadas</td>
+              <td><span class="status pending dot" data-tc="TC-09">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-10</td>
+              <td>Upload de imagem (JPEG/PNG ≤10 MB)</td>
+              <td>Bucket media ativo; migrations aplicadas</td>
+              <td>Upload OK; análise IA concluída; status done em analyses</td>
+              <td><span class="status pending dot" data-tc="TC-10">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-11</td>
+              <td>Upload de vídeo (MP4/MOV ≤100 MB)</td>
+              <td>Bucket media ativo</td>
+              <td>Upload OK; processamento IA; resultado persistido</td>
+              <td><span class="status pending dot" data-tc="TC-11">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-12</td>
+              <td>Link malicioso rejeitado</td>
+              <td>Aba Link em /analyses/new</td>
+              <td>URL HTTP, domínio não permitido ou localhost rejeitados com mensagem clara</td>
+              <td><span class="status pending dot" data-tc="TC-12">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-13</td>
+              <td>Conteúdo do resultado na UI</td>
+              <td>TC-09 ou TC-10 aprovado</td>
+              <td>Exibe score, resumo, pontos fortes, melhorias e 3 prioridades de treino</td>
+              <td><span class="status pending dot" data-tc="TC-13">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-14</td>
+              <td>Listagem em /analyses</td>
+              <td>≥1 análise concluída</td>
+              <td>Análises aparecem ordenadas; link para detalhe funciona</td>
+              <td><span class="status pending dot" data-tc="TC-14">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-performance">
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc09-analise-link-pronta.jpeg')">
+              <img src="evidencias/tc09-analise-link-pronta.jpeg" alt="TC-09"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-09 — Análise por link</div>
+            </div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Prioridade imediata — validar TC-09 primeiro (link YouTube).</div>
+      </div>
+    </div>
+
+    <!-- FL-04 Prancha mágica -->
+    <div class="flow-block" id="flow-board">
+      <div class="flow-header" onclick="toggleFlow('flow-board')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-04</span>
+          <span class="flow-title">Prancha mágica (bucket boards + IA)</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-15</td>
+              <td>Upload de ≥3 fotos no bucket boards</td>
+              <td>/boards/new; usuário logado</td>
+              <td>Fotos enviadas; prancha criada sem erro de storage</td>
+              <td><span class="status pending dot" data-tc="TC-15">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-16</td>
+              <td>Ficha técnica gerada com IA</td>
+              <td>TC-15 + OPENAI_API_KEY</td>
+              <td>Spec JSON persistida; dimensões/volume/rocker exibidos na UI</td>
+              <td><span class="status pending dot" data-tc="TC-16">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-17</td>
+              <td>Resumo “por que funciona para você”</td>
+              <td>Perfil completo (TC-07)</td>
+              <td>Texto personalizado com base no perfil do surfista</td>
+              <td><span class="status pending dot" data-tc="TC-17">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-18</td>
+              <td>Detalhe em /boards/[id] e listagem</td>
+              <td>Prancha cadastrada</td>
+              <td>Página de detalhe carrega; item visível em /boards</td>
+              <td><span class="status pending dot" data-tc="TC-18">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-board">
+            <div class="evidence-placeholder">tc15-upload-tres-fotos.jpeg · tc16-ficha-tecnica.jpeg</div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+      </div>
+    </div>
+
+    <!-- FL-05 Compatibilidade -->
+    <div class="flow-block" id="flow-compat">
+      <div class="flow-header" onclick="toggleFlow('flow-compat')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-05</span>
+          <span class="flow-title">Compatibilidade de prancha (P1)</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-19</td>
+              <td>Nova análise de compatibilidade E2E</td>
+              <td>Perfil + prancha mágica cadastrados</td>
+              <td>Fluxo /compatibility/new concluído com IA; registro persistido</td>
+              <td><span class="status pending dot" data-tc="TC-19">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-20</td>
+              <td>Veredito, prós e contras na UI</td>
+              <td>TC-19 aprovado</td>
+              <td>Veredito claro + prós/contras + condições ideais renderizados</td>
+              <td><span class="status pending dot" data-tc="TC-20">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-compat">
+            <div class="evidence-placeholder">tc19-compatibilidade-resultado.jpeg</div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Depende de FL-02 e FL-04.</div>
+      </div>
+    </div>
+
+    <!-- FL-06 Segurança -->
+    <div class="flow-block" id="flow-security">
+      <div class="flow-header" onclick="toggleFlow('flow-security')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-06</span>
+          <span class="flow-title">Segurança — RLS e isolamento</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-21</td>
+              <td>Isolamento RLS entre dois usuários</td>
+              <td>Contas A e B com análises/pranchas distintas</td>
+              <td>Usuário A não vê dados de B em listagens nem por URL direta</td>
+              <td><span class="status pending dot" data-tc="TC-21">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-22</td>
+              <td>Storage privado por usuário</td>
+              <td>Uploads de A e B</td>
+              <td>Arquivos no bucket acessíveis só pelo dono (policy RLS)</td>
+              <td><span class="status pending dot" data-tc="TC-22">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-security">
+            <div class="evidence-placeholder">tc21-rls-usuario-b.jpeg</div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Usar navegador anônimo ou perfil separado para usuário B.</div>
+      </div>
+    </div>
+
+    <!-- FL-07 Shell -->
+    <div class="flow-block" id="flow-shell">
+      <div class="flow-header" onclick="toggleFlow('flow-shell')">
+        <div class="flow-header-left">
+          <span class="flow-id">FL-07</span>
+          <span class="flow-title">Shell, dashboard e navegação</span>
+        </div>
+        <span class="flow-chevron">▼</span>
+      </div>
+      <div class="flow-body">
+        <table class="test-table">
+          <thead>
+            <tr><th>#</th><th>Caso de Teste</th><th>Pré-condição</th><th>Resultado Esperado</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TC-23</td>
+              <td>Dashboard com CTAs dos módulos</td>
+              <td>Usuário autenticado</td>
+              <td>/dashboard carrega; links para análises, pranchas e compatibilidade</td>
+              <td><span class="status pending dot" data-tc="TC-23">Pendente</span></td>
+            </tr>
+            <tr>
+              <td>TC-24</td>
+              <td>Navegação mobile (layout responsivo)</td>
+              <td>Viewport ≤390px ou DevTools mobile</td>
+              <td>Menu/navegação usável; alvos de toque ≥44px; sem overflow horizontal</td>
+              <td><span class="status pending dot" data-tc="TC-24">Pendente</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="evidence-section">
+          <h4>📸 Evidências Visuais</h4>
+          <div class="evidence-gallery" id="gallery-shell">
+            <div class="evidence-placeholder">tc23-dashboard.jpeg · tc24-mobile.jpeg</div>
+          </div>
+        </div>
+        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+      </div>
+    </div>
+
+    <!-- Bugs -->
+    <div class="section-title" style="margin-top: 2rem;">
+      <div class="icon">🐛</div>
+      Log de Bugs
+    </div>
+    <div class="bug-empty" id="bug-empty">
+      Nenhum bug registrado. Bugs reprovados serão adicionados como BG-01, BG-02…
+    </div>
+    <div id="bug-list"></div>
+
+    <!-- Matrix -->
+    <div class="section-title" style="margin-top: 2rem;">
+      <div class="icon">📊</div>
+      Matriz de Cobertura
+    </div>
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th>Fluxo</th>
+          <th>Total</th>
+          <th>Aprovados</th>
+          <th>Reprovados</th>
+          <th>Bloqueados</th>
+          <th>Taxa</th>
+        </tr>
+      </thead>
+      <tbody id="matrix-body">
+        <tr data-flow="auth"><td>FL-01 — Autenticação</td><td class="m-total">5</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="profile"><td>FL-02 — Perfil</td><td class="m-total">3</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="performance"><td>FL-03 — Performance</td><td class="m-total">6</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="board"><td>FL-04 — Prancha mágica</td><td class="m-total">4</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="compat"><td>FL-05 — Compatibilidade</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="security"><td>FL-06 — Segurança</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="shell"><td>FL-07 — Shell</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr class="matrix-total">
+          <td>TOTAL</td>
+          <td id="mat-total">24</td>
+          <td id="mat-pass">0</td>
+          <td id="mat-fail">0</td>
+          <td id="mat-block">0</td>
+          <td id="mat-pct">0%</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </main>
+
+  <footer class="footer">
+    Surf Performance & Board AI · <strong>POP-QA-SURF-001</strong> · Design System dark-first
+  </footer>
+
+  <script>
+    const testData = {
+      auth:        { total: 5, pass: 0, fail: 0, block: 0 },
+      profile:     { total: 3, pass: 0, fail: 0, block: 0 },
+      performance: { total: 6, pass: 0, fail: 0, block: 0 },
+      board:       { total: 4, pass: 0, fail: 0, block: 0 },
+      compat:      { total: 2, pass: 0, fail: 0, block: 0 },
+      security:    { total: 2, pass: 0, fail: 0, block: 0 },
+      shell:       { total: 2, pass: 0, fail: 0, block: 0 },
+    };
+
+    function initScoreboard() {
+      let total = 0, pass = 0, fail = 0, block = 0;
+      Object.values(testData).forEach(d => {
+        total += d.total;
+        pass += d.pass;
+        fail += d.fail;
+        block += d.block;
+      });
+      const executed = pass + fail + block;
+      const pct = executed > 0 ? Math.round((pass / executed) * 100) : 0;
+
+      document.getElementById('sc-total').textContent = total;
+      document.getElementById('sc-pass').textContent = pass;
+      document.getElementById('sc-fail').textContent = fail;
+      document.getElementById('sc-block').textContent = block;
+      document.getElementById('sc-pct').textContent = executed > 0 ? pct + '%' : '—';
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-pct-label').textContent = pct + '%';
+
+      document.getElementById('mat-total').textContent = total;
+      document.getElementById('mat-pass').textContent = pass;
+      document.getElementById('mat-fail').textContent = fail;
+      document.getElementById('mat-block').textContent = block;
+      document.getElementById('mat-pct').textContent = executed > 0 ? pct + '%' : '0%';
+
+      document.querySelectorAll('#matrix-body tr[data-flow]').forEach(row => {
+        const key = row.dataset.flow;
+        const d = testData[key];
+        if (!d) return;
+        const ex = d.pass + d.fail + d.block;
+        const p = ex > 0 ? Math.round((d.pass / ex) * 100) : 0;
+        row.querySelector('.m-total').textContent = d.total;
+        row.querySelector('.m-pass').textContent = d.pass;
+        row.querySelector('.m-fail').textContent = d.fail;
+        row.querySelector('.m-block').textContent = d.block;
+        row.querySelector('.m-pct').textContent = ex > 0 ? p + '%' : '0%';
+      });
+    }
+
+    function toggleFlow(id) {
+      document.getElementById(id).classList.toggle('open');
+    }
+
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.getElementById('lightbox-img').src = '';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('meta-executor').textContent = '—';
+      document.getElementById('meta-data').textContent = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+      initScoreboard();
+    });
+  </script>
+</body>
+</html>
