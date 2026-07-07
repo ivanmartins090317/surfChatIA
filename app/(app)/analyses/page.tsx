@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { AnalysisListCard } from "@/components/performance-analysis/analysis-list-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatDatePtBr } from "@/lib/utils";
 import { requireAuthUser } from "@/lib/supabase/server";
-import { listPerformanceAnalyses } from "@/services/analysis-service";
+import { listPerformanceAnalysesWithMedia } from "@/services/analysis-service";
 
 export const metadata = { title: "Análises" };
 
 export default async function AnalysesPage() {
   const user = await requireAuthUser();
-  const analyses = await listPerformanceAnalyses(user.id).catch(() => []);
+  const analyses = await listPerformanceAnalysesWithMedia(user.id).catch(
+    () => [],
+  );
 
   return (
     <div className="space-y-6">
@@ -39,27 +40,9 @@ export default async function AnalysesPage() {
         </Card>
       ) : (
         <ul className="space-y-3">
-          {analyses.map((analysis) => (
-            <li key={analysis.id}>
-              <Link href={`/analyses/${analysis.id}`}>
-                <Card className="hover:border-white/14">
-                  <CardContent className="flex items-center justify-between py-4">
-                    <div>
-                      <p className="font-medium">Performance</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDatePtBr(analysis.created_at)}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        analysis.status === "done" ? "success" : "info"
-                      }
-                    >
-                      {analysis.status === "done" ? "Pronto" : analysis.status}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              </Link>
+          {analyses.map((item) => (
+            <li key={item.analysis.id}>
+              <AnalysisListCard item={item} />
             </li>
           ))}
         </ul>

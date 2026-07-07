@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ActionResult, Board } from "@/lib/domain/types";
+import { toActionErrorMessage } from "@/lib/errors/action-error";
 import { requireAuthUser } from "@/lib/supabase/server";
 import {
   createMagicBoard,
   processMagicBoardSpec,
+  updateMagicBoard,
   uploadBoardPhoto,
 } from "@/services/board-service";
 
@@ -28,51 +29,88 @@ export async function createBoardDraftAction(
 ): Promise<ActionResult<{ boardId: string }>> {
   try {
     const user = await requireAuthUser();
-    const parsed = boardMetaSchema.parse({
-      name: formData.get("name") || undefined,
-      length_in: formData.get("length_in") || undefined,
-      width_in: formData.get("width_in") || undefined,
-      thickness_in: formData.get("thickness_in") || undefined,
-      volume_l: formData.get("volume_l") || undefined,
-      mar_pequeno: formData.get("mar_pequeno") || undefined,
-      mar_grande: formData.get("mar_grande") || undefined,
-      pontos_fortes: formData.get("pontos_fortes") || undefined,
-      pontos_fracos: formData.get("pontos_fracos") || undefined,
-    });
+    const boardInput = parseBoardFormData(formData);
 
-    const sensation = {
-      mar_pequeno: parsed.mar_pequeno,
-      mar_grande: parsed.mar_grande,
-      pontos_fortes: parsed.pontos_fortes
-        ? parsed.pontos_fortes.split("\n").filter(Boolean)
-        : undefined,
-      pontos_fracos: parsed.pontos_fracos
-        ? parsed.pontos_fracos.split("\n").filter(Boolean)
-        : undefined,
-    };
-
-    const board = await createMagicBoard(user.id, {
-      name: parsed.name ?? null,
-      length_in: parsed.length_in ?? null,
-      width_in: parsed.width_in ?? null,
-      thickness_in: parsed.thickness_in ?? null,
-      volume_l: parsed.volume_l ?? null,
-      sensation_json: sensation,
-    });
-
-    const files = formData.getAll("photos").filter((f) => f instanceof File);
-    for (const file of files) {
-      if (file instanceof File && file.size > 0) {
-        await uploadBoardPhoto(user.id, board.id, file);
-      }
-    }
+    const board = await createMagicBoard(user.id, boardInput);
+    await uploadPhotosFromFormData(user.id, board.id, formData);
 
     revalidatePath("/boards");
     return { success: true, data: { boardId: board.id } };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao criar prancha.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(error, "Erro ao criar prancha."),
+    };
+  }
+}
+
+function parseBoardFormData(formData: FormData) {
+  const parsed = boardMetaSchema.parse({
+    name: formData.get("name") || undefined,
+    length_in: formData.get("length_in") || undefined,
+    width_in: formData.get("width_in") || undefined,
+    thickness_in: formData.get("thickness_in") || undefined,
+    volume_l: formData.get("volume_l") || undefined,
+    mar_pequeno: formData.get("mar_pequeno") || undefined,
+    mar_grande: formData.get("mar_grande") || undefined,
+    pontos_fortes: formData.get("pontos_fortes") || undefined,
+    pontos_fracos: formData.get("pontos_fracos") || undefined,
+  });
+
+  const sensation = {
+    mar_pequeno: parsed.mar_pequeno,
+    mar_grande: parsed.mar_grande,
+    pontos_fortes: parsed.pontos_fortes
+      ? parsed.pontos_fortes.split("\n").filter(Boolean)
+      : undefined,
+    pontos_fracos: parsed.pontos_fracos
+      ? parsed.pontos_fracos.split("\n").filter(Boolean)
+      : undefined,
+  };
+
+  return {
+    name: parsed.name ?? null,
+    length_in: parsed.length_in ?? null,
+    width_in: parsed.width_in ?? null,
+    thickness_in: parsed.thickness_in ?? null,
+    volume_l: parsed.volume_l ?? null,
+    sensation_json: sensation,
+  };
+}
+
+async function uploadPhotosFromFormData(
+  userId: string,
+  boardId: string,
+  formData: FormData,
+) {
+  const files = formData.getAll("photos").filter((f) => f instanceof File);
+  for (const file of files) {
+    if (file instanceof File && file.size > 0) {
+      await uploadBoardPhoto(userId, boardId, file);
+    }
+  }
+}
+
+export async function updateBoardAction(
+  boardId: string,
+  formData: FormData,
+): Promise<ActionResult<{ boardId: string }>> {
+  try {
+    const user = await requireAuthUser();
+    const boardInput = parseBoardFormData(formData);
+
+    await updateMagicBoard(user.id, boardId, boardInput);
+    await uploadPhotosFromFormData(user.id, boardId, formData);
+
+    revalidatePath(`/boards/${boardId}`);
+    revalidatePath(`/boards/${boardId}/edit`);
+    revalidatePath("/boards");
+    return { success: true, data: { boardId } };
+  } catch (error) {
+    return {
+      success: false,
+      error: toActionErrorMessage(error, "Erro ao atualizar prancha."),
+    };
   }
 }
 
@@ -84,11 +122,12 @@ export async function generateBoardSpecAction(
     const board = await processMagicBoardSpec(user.id, boardId);
     revalidatePath(`/boards/${boardId}`);
     revalidatePath("/boards");
-    redirect(`/boards/${board.id}`);
+    return { success: true, data: board };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao gerar ficha.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(error, "Erro ao gerar ficha técnica."),
+    };
   }
 }
 
@@ -109,8 +148,9 @@ export async function uploadBoardPhotosAction(
     revalidatePath(`/boards/${boardId}`);
     return { success: true };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro no upload.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(error, "Erro no upload das fotos."),
+    };
   }
 }

@@ -9,22 +9,16 @@ import type {
   WaveType,
 } from "@/lib/domain/types";
 import { validateExternalVideoUrl } from "@/lib/security/url-validator";
+import {
+  ALLOWED_IMAGE_MIMES,
+  ALLOWED_VIDEO_MIMES,
+  MAX_IMAGE_BYTES,
+  MAX_VIDEO_BYTES,
+} from "@/lib/media/upload-limits";
 import { createClient } from "@/lib/supabase/server";
 
-export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
-const ALLOWED_VIDEO_MIMES = new Set([
-  "video/mp4",
-  "video/quicktime",
-  "video/webm",
-]);
-
-const ALLOWED_IMAGE_MIMES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const ALLOWED_VIDEO_MIMES_SET = ALLOWED_VIDEO_MIMES;
+const ALLOWED_IMAGE_MIMES_SET = ALLOWED_IMAGE_MIMES;
 
 const createMediaSchema = z.object({
   type: z.enum(["video", "image", "link"]),
@@ -91,7 +85,7 @@ export async function uploadMediaFile(
   }
 
   const allowed =
-    type === "video" ? ALLOWED_VIDEO_MIMES : ALLOWED_IMAGE_MIMES;
+    type === "video" ? ALLOWED_VIDEO_MIMES_SET : ALLOWED_IMAGE_MIMES_SET;
   if (!allowed.has(mime)) {
     throw new Error("Formato de arquivo não suportado.");
   }
@@ -153,6 +147,34 @@ export async function getMediaItem(
   }
 
   return data as MediaItem | null;
+}
+
+export async function downloadMediaFileBuffer(
+  storagePath: string,
+): Promise<{ buffer: Buffer; mimeType: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.storage
+    .from("media")
+    .download(storagePath);
+
+  if (error || !data) {
+    throw new Error("Não foi possível baixar a mídia para análise.");
+  }
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+  const ext = storagePath.split(".").pop()?.toLowerCase();
+  const mimeByExt: Record<string, string> = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    mp4: "video/mp4",
+    mov: "video/quicktime",
+    webm: "video/webm",
+  };
+  const mimeType = mimeByExt[ext ?? ""] ?? data.type ?? "application/octet-stream";
+
+  return { buffer, mimeType };
 }
 
 export async function createSignedMediaUrl(

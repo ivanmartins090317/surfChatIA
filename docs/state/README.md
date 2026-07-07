@@ -9,7 +9,7 @@ Documento vivo com **pendências abertas**, prioridades e próximos passos. Atua
 | [Implementação](../implementation/README.md) | Registro do que já foi entregue |
 | [Planos e limites](../PLANOS_E_LIMITES.md) | Estratégia SaaS — créditos, planos e monetização |
 
-**Última atualização:** 07/07/2026
+**Última atualização:** 07/07/2026 — TC-09/10/14 aprovados (performance link + imagem)
 
 ## Convenção
 
@@ -20,7 +20,7 @@ Documento vivo com **pendências abertas**, prioridades e próximos passos. Atua
 
 | Prioridade | Abertos |
 |------------|---------|
-| 🔴 Imediato (próxima sessão) | 5 |
-| 🟡 Validação E2E (Fases 1–4) | 12 |
+| 🔴 Imediato (próxima sessão) | 3 |
+| 🟡 Validação E2E (Fases 1–4) | 9 |
 | 🟢 Polish / lançamento (Fase 5) | 5 |
-| **Total** | **22** |
+| **Total** | **17** |

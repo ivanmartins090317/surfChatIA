@@ -106,6 +106,36 @@ export async function uploadBoardPhoto(
   return path;
 }
 
+export async function updateMagicBoard(
+  userId: string,
+  boardId: string,
+  input: z.infer<typeof createBoardSchema>,
+): Promise<Board> {
+  const parsed = createBoardSchema.parse(input);
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("boards")
+    .update({
+      name: parsed.name,
+      length_in: parsed.length_in,
+      width_in: parsed.width_in,
+      thickness_in: parsed.thickness_in,
+      volume_l: parsed.volume_l,
+      sensation_json: parsed.sensation_json,
+    })
+    .eq("id", boardId)
+    .eq("user_id", userId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error("Não foi possível atualizar a prancha.");
+  }
+
+  return data as Board;
+}
+
 export async function processMagicBoardSpec(
   userId: string,
   boardId: string,

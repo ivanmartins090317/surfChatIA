@@ -1,12 +1,14 @@
 "use client";
 
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createBoardMatchAction } from "@/actions/board-match-actions";
+import { BoardMeasurementsFields } from "@/components/board-spec/board-measurements-fields";
+import { BoardPhotosDropzone } from "@/components/board-spec/board-photos-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -17,52 +19,64 @@ import {
 } from "@/components/ui/select";
 import type { Board } from "@/lib/domain/types";
 
+const MIN_MATCH_PHOTOS = 1;
+
 interface BoardMatchFormProps {
   magicBoards: Board[];
 }
 
 export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
+  const router = useRouter();
   const [referenceId, setReferenceId] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError(null);
+
+    if (photos.length < MIN_MATCH_PHOTOS) {
+      const message = "Envie pelo menos uma foto da prancha candidata.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
     if (referenceId) {
       formData.set("reference_board_id", referenceId);
+    }
+    for (const photo of photos) {
+      formData.append("photos", photo);
     }
 
     startTransition(async () => {
       const result = await createBoardMatchAction(formData);
-      if (result && !result.success) {
+      if (!result.success || !result.data) {
         setError(result.error ?? "Erro na análise.");
         toast.error(result.error);
+        return;
       }
+      router.push(`/compatibility/${result.data.analysisId}`);
     });
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <label className="flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-white/14 p-6">
-        <UploadCloud className="size-10 text-muted-foreground" aria-hidden />
-        <span className="text-sm text-muted-foreground">
-          Fotos da prancha candidata
-        </span>
-        <input
-          type="file"
-          name="photos"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          required
-          className="sr-only"
-        />
-      </label>
+      <BoardPhotosDropzone
+        minPhotos={MIN_MATCH_PHOTOS}
+        emptyHint="Fotos da prancha candidata — JPEG/PNG/WebP"
+        disabled={isPending}
+        onFilesChange={setPhotos}
+        onValidationError={(message) => setError(message)}
+      />
 
       {magicBoards.length > 0 && (
         <div className="space-y-2">
@@ -82,25 +96,17 @@ export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
         </div>
       )}
 
-      <fieldset className="grid gap-4 sm:grid-cols-3">
-        <legend className="mb-2 text-sm text-muted-foreground">
-          Medidas anunciadas (opcional)
-        </legend>
-        <div className="space-y-2">
-          <Label htmlFor="length_in">Comprimento (&quot;)</Label>
-          <Input id="length_in" name="length_in" type="number" step="0.1" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="width_in">Largura (&quot;)</Label>
-          <Input id="width_in" name="width_in" type="number" step="0.01" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="volume_l">Volume (L)</Label>
-          <Input id="volume_l" name="volume_l" type="number" step="0.1" />
-        </div>
-      </fieldset>
+      <BoardMeasurementsFields
+        disabled={isPending}
+        showThickness={false}
+        legend="Medidas anunciadas (opcional)"
+      />
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isPending || photos.length < MIN_MATCH_PHOTOS}
+      >
         {isPending ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden />

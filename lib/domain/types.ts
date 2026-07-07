@@ -83,12 +83,31 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface CriterioScore {
+  nome: string;
+  nota: number;
+  comentario: string;
+}
+
+export interface MelhoriaDetalhada {
+  titulo: string;
+  observacao: string;
+  impacto: string;
+  dica_pratica: string;
+}
+
 export interface PerformanceResult {
   resumo: string;
   pontos_fortes: string[];
   melhorias: string[];
+  melhorias_detalhadas?: MelhoriaDetalhada[];
   prioridades_treino: [string, string, string];
   score?: number;
+  criterios_score?: CriterioScore[];
+  /** Presente quando a análise usou visão em foto ou frames de vídeo */
+  manobra_observada?: string;
+  /** Detalhes técnicos visíveis no frame ou nos frames do vídeo */
+  detalhes_frame?: string;
 }
 
 export interface BoardSpecResult {

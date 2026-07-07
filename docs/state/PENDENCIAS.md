@@ -1,8 +1,8 @@
 # Pendências — Surf Performance & Board AI
 
 > Consolidado a partir do checklist de [implementação 03/07/2026](../implementation/2026-07-03-fundacao-mvp-inicial.md).  
-> **Status:** infra remota (migrations + OpenAI) configurada; validação E2E dos fluxos principais pendente.  
-> **Última revisão:** 07/07/2026 — migrations aplicadas, `OPENAI_API_KEY` configurada com créditos, `npm run build` OK.
+> **Status:** FL-03 Performance e FL-04 Prancha mágica validados E2E; perfil e RLS pendentes.  
+> **Última revisão:** 07/07/2026 — TC-15 a TC-18 aprovados; FL-04 completo (4/4 TCs).
 
 ---
 
@@ -12,8 +12,9 @@ Itens bloqueadores para os fluxos principais funcionarem de ponta a ponta.
 
 - [x] Confirmar `npm run db:push` no projeto Supabase remoto (5 migrations: profiles, media/analyses, boards, storage policies, buckets)
 - [x] Configurar `OPENAI_API_KEY` em `.env.local` *(créditos inseridos na conta OpenAI)*
-- [ ] Testar uma análise de performance completa com IA real (upload/link → feedback estruturado)
-- [ ] Testar upload de mídia e fotos de prancha nos buckets privados (`media`, `boards`)
+- [x] Testar uma análise de performance completa com IA real (link YouTube — TC-09; imagem + visão — TC-10; vídeo + frames — TC-11)
+- [x] Testar upload de vídeo no bucket `media` *(TC-11, 07/07/2026)*
+- [x] Testar upload de fotos de prancha no bucket `boards` *(TC-15, 07/07/2026)*
 - [ ] Validar edição de perfil e persistência dos dados
 - [ ] Validar isolamento RLS entre dois usuários distintos
 
@@ -42,9 +43,11 @@ Critérios de saída ainda não validados:
 
 Critérios de saída ainda não validados:
 
-- [ ] Upload de vídeo/imagem testado com bucket `media` no Supabase remoto
-- [ ] Análise IA completa com `OPENAI_API_KEY` configurada *(chave OK; falta teste E2E)*
-- [ ] Link malicioso rejeitado em fluxo real (não só unit test)
+- [x] Análise IA completa via link YouTube *(TC-09, 07/07/2026)*
+- [x] Upload de imagem no bucket `media` + IA visão *(TC-10, 07/07/2026)*
+- [x] Listagem diferencia Imagem / Link / Vídeo com score e preview *(TC-14)*
+- [x] Upload de vídeo no bucket `media` + IA frames *(TC-11, 07/07/2026)*
+- [x] Link malicioso rejeitado em fluxo real *(TC-12, 07/07/2026)*
 
 ---
 
@@ -53,9 +56,10 @@ Critérios de saída ainda não validados:
 Critérios de saída ainda não validados:
 
 - [x] `npm run db:push` aplicado no projeto Supabase remoto *(também em prioridade imediata)*
-- [ ] Upload de ≥3 fotos testado no bucket `boards`
-- [ ] Ficha técnica gerada e persistida com IA real
-- [ ] Resumo “por que funciona para você” validado com perfil completo
+- [x] Upload de ≥3 fotos testado no bucket `boards` *(TC-15, 07/07/2026)*
+- [x] Ficha técnica gerada e persistida com IA real *(TC-16, 07/07/2026)*
+- [x] Resumo “por que funciona para você” validado com perfil completo *(TC-17, 07/07/2026)*
+- [x] Detalhe em `/boards/[id]` e listagem validados *(TC-18, 07/07/2026)*
 
 ---
 
@@ -92,10 +96,11 @@ flowchart TD
 ```
 
 1. ~~**Infra:** `db:push` → buckets e policies ativos~~ ✅
-2. **IA:** chave OpenAI ✅ → análise de performance end-to-end *(próximo)*
-3. **Auth/dados:** perfil + RLS
-4. **Módulos:** prancha mágica → compatibilidade
-5. **Qualidade:** testes, build ✅ parcial, security/design checklist, deploy
+2. ~~**IA performance:** link ✅ · imagem ✅ · vídeo ✅ · segurança URL ✅~~ *(FL-03 completo)*
+3. ~~**Prancha mágica:** upload bucket boards ✅ · ficha técnica IA ✅ · detalhe/listagem ✅~~ *(FL-04 completo)*
+4. **Auth/dados:** perfil + RLS
+5. **Módulos:** compatibilidade
+6. **Qualidade:** testes, build ✅ parcial, security/design checklist, deploy
 
 ---
 
@@ -104,3 +109,5 @@ flowchart TD
 - [Implementação 03/07/2026](../implementation/2026-07-03-fundacao-mvp-inicial.md)
 - [Plano de Execução](../PLANO_EXECUCAO.md)
 - [Segurança](../SECURITY.md)
+- [Relatório de testes manuais](../relatorio-testes-manuais.html)
+

@@ -52,10 +52,12 @@ function SelectContent({
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-elev-2",
+          "relative z-[100] max-h-[min(16rem,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-y-auto rounded-md border border-border bg-popover text-popover-foreground shadow-elev-2",
+          "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className,
         )}
         position={position}
+        collisionPadding={{ top: 8, right: 8, bottom: 96, left: 8 }}
         {...props}
       >
         <SelectPrimitive.Viewport className="p-1">

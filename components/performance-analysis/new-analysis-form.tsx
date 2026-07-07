@@ -1,12 +1,14 @@
 "use client";
 
-import { Loader2, UploadCloud } from "lucide-react";
-import { useRef, useState, useTransition } from "react";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   createAnalysisFromFileAction,
   createAnalysisFromLinkAction,
 } from "@/actions/analysis-actions";
+import { MediaFileDropzone } from "@/components/performance-analysis/media-file-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,14 +22,15 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ANALYSIS_FOCUS, WAVE_TYPES } from "@/lib/domain/types";
-import { cn } from "@/lib/utils";
 
 export function NewAnalysisForm() {
+  const router = useRouter();
   const [waveType, setWaveType] = useState("");
   const [focus, setFocus] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
-  const fileRef = useRef<HTMLInputElement>(null);
 
   function appendContext(formData: FormData) {
     if (waveType) formData.set("wave_type", waveType);
@@ -35,11 +38,14 @@ export function NewAnalysisForm() {
   }
 
   function submitFile(type: "video" | "image") {
-    const file = fileRef.current?.files?.[0];
+    const file = type === "video" ? videoFile : imageFile;
     if (!file) {
-      setError("Selecione um arquivo antes de analisar.");
+      const message = "Selecione um arquivo antes de analisar.";
+      setError(message);
+      toast.error(message);
       return;
     }
+
     setError(null);
     const formData = new FormData();
     formData.set("file", file);
@@ -48,10 +54,12 @@ export function NewAnalysisForm() {
 
     startTransition(async () => {
       const result = await createAnalysisFromFileAction(formData);
-      if (result && !result.success) {
+      if (!result.success || !result.data) {
         setError(result.error ?? "Erro no upload.");
         toast.error(result.error);
+        return;
       }
+      router.push(`/analyses/${result.data.analysisId}`);
     });
   }
 
@@ -60,10 +68,12 @@ export function NewAnalysisForm() {
     appendContext(formData);
     startTransition(async () => {
       const result = await createAnalysisFromLinkAction(formData);
-      if (result && !result.success) {
+      if (!result.success || !result.data) {
         setError(result.error ?? "Erro ao analisar link.");
         toast.error(result.error);
+        return;
       }
+      router.push(`/analyses/${result.data.analysisId}`);
     });
   }
 
@@ -122,28 +132,16 @@ export function NewAnalysisForm() {
         </TabsList>
 
         <TabsContent value="file" className="space-y-4">
-          <label
-            className={cn(
-              "flex min-h-[200px] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/14 p-8 transition-colors hover:border-primary/50",
-            )}
-          >
-            <UploadCloud className="size-12 text-muted-foreground" aria-hidden />
-            <span className="text-center text-sm text-muted-foreground">
-              Arraste um vídeo ou toque para enviar
-              <br />
-              MP4, MOV, WebM — máx. 100 MB
-            </span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="video/mp4,video/quicktime,video/webm"
-              className="sr-only"
-            />
-          </label>
+          <MediaFileDropzone
+            mediaType="video"
+            disabled={isPending}
+            onFileChange={setVideoFile}
+            onValidationError={(message) => setError(message)}
+          />
           <Button
             type="button"
             className="w-full"
-            disabled={isPending}
+            disabled={isPending || !videoFile}
             onClick={() => submitFile("video")}
           >
             {isPending ? (
@@ -158,25 +156,26 @@ export function NewAnalysisForm() {
         </TabsContent>
 
         <TabsContent value="image" className="space-y-4">
-          <label className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/14 p-8">
-            <UploadCloud className="size-12 text-muted-foreground" aria-hidden />
-            <span className="text-sm text-muted-foreground">
-              JPEG, PNG ou WebP — máx. 10 MB
-            </span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-            />
-          </label>
+          <MediaFileDropzone
+            mediaType="image"
+            disabled={isPending}
+            onFileChange={setImageFile}
+            onValidationError={(message) => setError(message)}
+          />
           <Button
             type="button"
             className="w-full"
-            disabled={isPending}
+            disabled={isPending || !imageFile}
             onClick={() => submitFile("image")}
           >
-            {isPending ? "Analisando…" : "Analisar imagem"}
+            {isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+                Analisando…
+              </>
+            ) : (
+              "Analisar imagem"
+            )}
           </Button>
         </TabsContent>
 

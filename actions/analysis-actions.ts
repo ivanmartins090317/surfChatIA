@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ActionResult, Analysis } from "@/lib/domain/types";
+import { toActionErrorMessage } from "@/lib/errors/action-error";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { createPerformanceAnalysis } from "@/services/analysis-service";
 import {
@@ -37,11 +37,15 @@ export async function createAnalysisFromLinkAction(
 
     const analysis = await createPerformanceAnalysis(user.id, media.id);
     revalidatePath("/analyses");
-    redirect(`/analyses/${analysis.id}`);
+    return { success: true, data: { analysisId: analysis.id } };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao analisar link.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(
+        error,
+        "Não foi possível analisar o link. Verifique a URL e tente novamente.",
+      ),
+    };
   }
 }
 
@@ -72,11 +76,15 @@ export async function createAnalysisFromFileAction(
     await uploadMediaFile(user.id, media.id, file, mediaType);
     const analysis = await createPerformanceAnalysis(user.id, media.id);
     revalidatePath("/analyses");
-    redirect(`/analyses/${analysis.id}`);
+    return { success: true, data: { analysisId: analysis.id } };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao processar upload.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(
+        error,
+        "Não foi possível processar o arquivo. Tente novamente ou envie um link.",
+      ),
+    };
   }
 }
 
@@ -100,8 +108,9 @@ export async function retryAnalysisAction(
     revalidatePath(`/analyses/${analysisId}`);
     return { success: true, data: analysis };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro ao reprocessar.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(error, "Erro ao reprocessar a análise."),
+    };
   }
 }

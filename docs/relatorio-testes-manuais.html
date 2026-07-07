@@ -772,61 +772,71 @@
               <td>Análise por link YouTube (IA real)</td>
               <td>OPENAI_API_KEY configurada; usuário logado</td>
               <td>Redirect para /analyses/[id]; badge Pronto; Surf Score + resumo + listas estruturadas</td>
-              <td><span class="status pending dot" data-tc="TC-09">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-09">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-10</td>
               <td>Upload de imagem (JPEG/PNG ≤10 MB)</td>
               <td>Bucket media ativo; migrations aplicadas</td>
               <td>Upload OK; análise IA concluída; status done em analyses</td>
-              <td><span class="status pending dot" data-tc="TC-10">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-10">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-11</td>
               <td>Upload de vídeo (MP4/MOV ≤100 MB)</td>
               <td>Bucket media ativo</td>
               <td>Upload OK; processamento IA; resultado persistido</td>
-              <td><span class="status pending dot" data-tc="TC-11">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-11">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-12</td>
               <td>Link malicioso rejeitado</td>
               <td>Aba Link em /analyses/new</td>
               <td>URL HTTP, domínio não permitido ou localhost rejeitados com mensagem clara</td>
-              <td><span class="status pending dot" data-tc="TC-12">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-12">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-13</td>
               <td>Conteúdo do resultado na UI</td>
               <td>TC-09 ou TC-10 aprovado</td>
               <td>Exibe score, resumo, pontos fortes, melhorias e 3 prioridades de treino</td>
-              <td><span class="status pending dot" data-tc="TC-13">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-13">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-14</td>
               <td>Listagem em /analyses</td>
               <td>≥1 análise concluída</td>
               <td>Análises aparecem ordenadas; link para detalhe funciona</td>
-              <td><span class="status pending dot" data-tc="TC-14">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-14">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
         <div class="evidence-section">
           <h4>📸 Evidências Visuais</h4>
           <div class="evidence-gallery" id="gallery-performance">
-            <div class="evidence-item" onclick="openLightbox('evidencias/tc09-analise-link-pronta.jpeg')">
-              <img src="evidencias/tc09-analise-link-pronta.jpeg" alt="TC-09"
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc10-upload-imagem-analise.png')">
+              <img src="evidencias/tc10-upload-imagem-analise.png" alt="TC-10"
                 onerror="this.parentElement.classList.add('missing')" />
-              <div class="evidence-caption">TC-09 — Análise por link</div>
+              <div class="evidence-caption">TC-10 — Upload imagem + IA visão ✅</div>
+            </div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc11-upload-video-pronto.png')">
+              <img src="evidencias/tc11-upload-video-pronto.png" alt="TC-11"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-11 — Upload vídeo + IA frames ✅</div>
+            </div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc12-link-https-rejeitado.png')">
+              <img src="evidencias/tc12-link-https-rejeitado.png" alt="TC-12"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-12 — Link HTTP rejeitado (SSRF/allowlist) ✅</div>
             </div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Prioridade imediata — validar TC-09 primeiro (link YouTube).</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-09 ✅ link YouTube · TC-10 ✅ imagem com IA visão · TC-11 ✅ vídeo MP4/MOV (upload até 100 MB após fix bodySizeLimit; análise com frames + score por critérios) · TC-12 ✅ link malicioso rejeitado (HTTP, domínio não permitido, localhost) · TC-13 ✅ UI resultado · TC-14 ✅ listagem diferenciada. FL-03 completo.</div>
       </div>
     </div>
 
     <!-- FL-04 Prancha mágica -->
-    <div class="flow-block" id="flow-board">
+    <div class="flow-block open" id="flow-board">
       <div class="flow-header" onclick="toggleFlow('flow-board')">
         <div class="flow-header-left">
           <span class="flow-id">FL-04</span>
@@ -845,38 +855,42 @@
               <td>Upload de ≥3 fotos no bucket boards</td>
               <td>/boards/new; usuário logado</td>
               <td>Fotos enviadas; prancha criada sem erro de storage</td>
-              <td><span class="status pending dot" data-tc="TC-15">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-15">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-16</td>
               <td>Ficha técnica gerada com IA</td>
               <td>TC-15 + OPENAI_API_KEY</td>
               <td>Spec JSON persistida; dimensões/volume/rocker exibidos na UI</td>
-              <td><span class="status pending dot" data-tc="TC-16">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-16">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-17</td>
               <td>Resumo “por que funciona para você”</td>
               <td>Perfil completo (TC-07)</td>
               <td>Texto personalizado com base no perfil do surfista</td>
-              <td><span class="status pending dot" data-tc="TC-17">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-17">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-18</td>
               <td>Detalhe em /boards/[id] e listagem</td>
               <td>Prancha cadastrada</td>
               <td>Página de detalhe carrega; item visível em /boards</td>
-              <td><span class="status pending dot" data-tc="TC-18">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-18">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
         <div class="evidence-section">
           <h4>📸 Evidências Visuais</h4>
           <div class="evidence-gallery" id="gallery-board">
-            <div class="evidence-placeholder">tc15-upload-tres-fotos.jpeg · tc16-ficha-tecnica.jpeg</div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc18-board-detalhe-ficha-tecnica.png')">
+              <img src="evidencias/tc18-board-detalhe-ficha-tecnica.png" alt="TC-18"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-15–18 — Upload bucket boards + ficha técnica IA + detalhe ✅</div>
+            </div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-15 ✅ upload de ≥3 fotos no bucket boards sem erro de storage · TC-16 ✅ ficha técnica gerada com IA (shape, rails, fundo, dimensões) persistida e exibida na UI · TC-17 ✅ resumo “Por que funciona para você” personalizado com base no perfil · TC-18 ✅ detalhe em /boards/[id] e listagem funcionando. FL-04 completo.</div>
       </div>
     </div>
 
@@ -1032,18 +1046,18 @@
       <tbody id="matrix-body">
         <tr data-flow="auth"><td>FL-01 — Autenticação</td><td class="m-total">5</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
         <tr data-flow="profile"><td>FL-02 — Perfil</td><td class="m-total">3</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
-        <tr data-flow="performance"><td>FL-03 — Performance</td><td class="m-total">6</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
-        <tr data-flow="board"><td>FL-04 — Prancha mágica</td><td class="m-total">4</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="performance"><td>FL-03 — Performance</td><td class="m-total">6</td><td class="m-pass">6</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
+        <tr data-flow="board"><td>FL-04 — Prancha mágica</td><td class="m-total">4</td><td class="m-pass">4</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr data-flow="compat"><td>FL-05 — Compatibilidade</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
         <tr data-flow="security"><td>FL-06 — Segurança</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
         <tr data-flow="shell"><td>FL-07 — Shell</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
         <tr class="matrix-total">
           <td>TOTAL</td>
           <td id="mat-total">24</td>
-          <td id="mat-pass">0</td>
+          <td id="mat-pass">10</td>
           <td id="mat-fail">0</td>
           <td id="mat-block">0</td>
-          <td id="mat-pct">0%</td>
+          <td id="mat-pct">100%</td>
         </tr>
       </tbody>
     </table>
@@ -1058,8 +1072,8 @@
     const testData = {
       auth:        { total: 5, pass: 0, fail: 0, block: 0 },
       profile:     { total: 3, pass: 0, fail: 0, block: 0 },
-      performance: { total: 6, pass: 0, fail: 0, block: 0 },
-      board:       { total: 4, pass: 0, fail: 0, block: 0 },
+      performance: { total: 6, pass: 6, fail: 0, block: 0 },
+      board:       { total: 4, pass: 4, fail: 0, block: 0 },
       compat:      { total: 2, pass: 0, fail: 0, block: 0 },
       security:    { total: 2, pass: 0, fail: 0, block: 0 },
       shell:       { total: 2, pass: 0, fail: 0, block: 0 },

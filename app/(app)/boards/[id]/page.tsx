@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BoardSpecResult, BoardSensation } from "@/lib/domain/types";
 import { BOARD_STATUS } from "@/lib/domain/types";
+import { formatBoardMeasurementsSummary } from "@/lib/board/measurements";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { getBoard } from "@/services/board-service";
 
@@ -27,13 +28,18 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <Button asChild variant="ghost" size="sm">
           <Link href="/boards">← Pranchas</Link>
         </Button>
-        <Badge variant={board.status === "ready" ? "success" : "info"}>
-          {BOARD_STATUS[board.status]}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/boards/${board.id}/edit`}>Editar</Link>
+          </Button>
+          <Badge variant={board.status === "ready" ? "success" : "info"}>
+            {BOARD_STATUS[board.status]}
+          </Badge>
+        </div>
       </div>
 
       <h1 className="font-display text-3xl font-bold">
@@ -89,12 +95,9 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
             <CardTitle>Medidas</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-4 tabular-nums">
-            {board.length_in != null && <span>{board.length_in}&quot; comprimento</span>}
-            {board.width_in != null && <span>{board.width_in}&quot; largura</span>}
-            {board.thickness_in != null && (
-              <span>{board.thickness_in}&quot; espessura</span>
-            )}
-            {board.volume_l != null && <span>{board.volume_l} L</span>}
+            {formatBoardMeasurementsSummary(board).map((label) => (
+              <span key={label}>{label}</span>
+            ))}
           </CardContent>
         </Card>
       )}

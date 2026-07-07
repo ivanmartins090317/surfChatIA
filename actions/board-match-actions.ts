@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { ActionResult, Analysis } from "@/lib/domain/types";
+import { toActionErrorMessage } from "@/lib/errors/action-error";
 import { requireAuthUser } from "@/lib/supabase/server";
 import {
   createBoardMatchAnalysis,
@@ -40,11 +40,15 @@ export async function createBoardMatchAction(
     });
 
     revalidatePath("/compatibility");
-    redirect(`/compatibility/${analysis.id}`);
+    return { success: true, data: { analysisId: analysis.id } };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Erro na compatibilidade.";
-    return { success: false, error: message };
+    return {
+      success: false,
+      error: toActionErrorMessage(
+        error,
+        "Não foi possível analisar a compatibilidade. Tente novamente.",
+      ),
+    };
   }
 }
 
