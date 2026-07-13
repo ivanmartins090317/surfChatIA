@@ -3,7 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === "/") return true;
-  const authRoutes = ["/login", "/signup", "/forgot-password"];
+  const authRoutes = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/auth/callback",
+  ];
   return authRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );

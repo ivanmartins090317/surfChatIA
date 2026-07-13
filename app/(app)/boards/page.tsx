@@ -33,7 +33,7 @@ export default async function BoardsPage() {
 
       {boards.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+          <CardContent className="flex flex-col items-center gap-4 p-4 py-12 text-center md:p-6 md:py-12">
             <Sparkles className="size-10 text-muted-foreground" aria-hidden />
             <p className="text-muted-foreground">
               Cadastre a prancha que funciona melhor para você.
@@ -49,8 +49,8 @@ export default async function BoardsPage() {
             <li key={board.id}>
               <Link href={`/boards/${board.id}`}>
                 <Card className="hover:border-white/14">
-                  <CardContent className="flex items-center justify-between py-4">
-                    <div>
+                  <CardContent className="flex items-center justify-between gap-4 p-4 md:p-6">
+                    <div className="space-y-1.5">
                       <p className="font-medium">
                         {board.name ?? "Prancha mágica"}
                       </p>
@@ -64,6 +64,7 @@ export default async function BoardsPage() {
                       variant={
                         board.status === "ready" ? "success" : "info"
                       }
+                      className="shrink-0 self-center"
                     >
                       {BOARD_STATUS[board.status]}
                     </Badge>

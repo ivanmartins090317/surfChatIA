@@ -31,7 +31,7 @@ export function AnalysisListCard({ item }: AnalysisListCardProps) {
   return (
     <Link href={`/analyses/${analysis.id}`}>
       <Card className="hover:border-white/14">
-        <CardContent className="flex items-center gap-4 py-4">
+        <CardContent className="flex items-start gap-4 p-4 md:items-center md:gap-5 md:p-6">
           {previewUrl ? (
             <div className="size-14 shrink-0 overflow-hidden rounded-xl border border-white/08 bg-muted">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -51,7 +51,7 @@ export function AnalysisListCard({ item }: AnalysisListCardProps) {
             </div>
           )}
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               {media && (
                 <Badge variant="default" className="text-xs">
@@ -64,13 +64,13 @@ export function AnalysisListCard({ item }: AnalysisListCardProps) {
                 </Badge>
               )}
             </div>
-            <p className="mt-1 truncate font-medium">{title}</p>
+            <p className="truncate font-medium">{title}</p>
             <p className="text-sm text-muted-foreground">
               {formatDatePtBr(analysis.created_at)}
               {subtitle ? ` · ${subtitle}` : ""}
             </p>
             {result?.resumo && analysis.status === "done" && (
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              <p className="line-clamp-2 text-sm text-muted-foreground">
                 {result.resumo}
               </p>
             )}
@@ -78,7 +78,7 @@ export function AnalysisListCard({ item }: AnalysisListCardProps) {
 
           <Badge
             variant={analysis.status === "done" ? "success" : "info"}
-            className="shrink-0"
+            className="shrink-0 self-center"
           >
             {analysis.status === "done" ? "Pronto" : analysis.status}
           </Badge>

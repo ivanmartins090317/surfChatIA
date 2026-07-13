@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,10 +9,14 @@ import { signInAction } from "@/actions/auth-actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resetSuccess = searchParams.get("reset") === "success";
+  const authCallbackError = searchParams.get("error") === "auth_callback";
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -29,6 +34,21 @@ export function LoginForm() {
 
   return (
     <form action={handleSubmit} className="space-y-4">
+      {resetSuccess && (
+        <Alert variant="success">
+          <AlertDescription>
+            Senha atualizada com sucesso. Faça login com a nova senha.
+          </AlertDescription>
+        </Alert>
+      )}
+      {authCallbackError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Link inválido ou expirado. Solicite um novo link em &quot;Esqueci minha
+            senha&quot;.
+          </AlertDescription>
+        </Alert>
+      )}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -47,10 +67,9 @@ export function LoginForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Senha</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           minLength={8}

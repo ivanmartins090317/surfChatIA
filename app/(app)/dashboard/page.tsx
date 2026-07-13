@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Activity, Sparkles, UploadCloud } from "lucide-react";
-import { signOutAction } from "@/actions/auth-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,23 +38,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <header className="flex gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">Bem-vindo,</p>
-          <h1 className="font-display text-3xl font-bold">{displayName}</h1>
-        </div>
-        <form action={signOutAction}>
-          <div className="border rounded-full p-0 ml-22 mt-4">
-            <Button type="submit" variant="ghost" size="sm">
-              Sair
-            </Button>
-          </div>
-        </form>
+      <header>
+        <p className="text-sm text-muted-foreground">Bem-vindo,</p>
+        <h1 className="font-display text-3xl font-bold">{displayName}</h1>
       </header>
 
       {!profileComplete && (
         <Card className="border-warning/30 bg-warning/5">
-          <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <CardContent className="flex flex-col gap-4 p-4 py-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
             <p className="text-sm">
               Complete seu perfil para análises de prancha mais precisas.
             </p>
@@ -139,7 +129,7 @@ export default async function DashboardPage() {
         </div>
         {analyses.length === 0 ? (
           <Card>
-            <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+            <CardContent className="flex flex-col items-center gap-4 p-4 py-12 text-center md:p-6 md:py-12">
               <Activity className="size-10 text-muted-foreground" aria-hidden />
               <p className="text-muted-foreground">
                 Nenhuma análise ainda. Envie sua primeira session para receber
@@ -156,8 +146,8 @@ export default async function DashboardPage() {
               <li key={analysis.id}>
                 <Link href={`/analyses/${analysis.id}`}>
                   <Card className="transition-colors hover:border-white/14">
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div>
+                    <CardContent className="flex items-center justify-between gap-4 p-4 md:p-6">
+                      <div className="space-y-1.5">
                         <p className="font-medium">Análise de performance</p>
                         <p className="text-sm text-muted-foreground">
                           {formatDatePtBr(analysis.created_at)}
@@ -171,6 +161,7 @@ export default async function DashboardPage() {
                               ? "destructive"
                               : "info"
                         }
+                        className="shrink-0 self-center"
                       >
                         {analysis.status === "done"
                           ? "Pronto"

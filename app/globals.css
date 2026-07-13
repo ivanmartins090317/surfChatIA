@@ -100,11 +100,7 @@
   }
 
   .grad-surface-glow {
-    background: radial-gradient(
-      120% 120% at 50% 0%,
-      rgba(196, 250, 78, 0.1),
-      transparent 60%
-    );
+    background: radial-gradient(120% 120% at 50% 0%, transparent 60%);
   }
 
   .glow-focus {

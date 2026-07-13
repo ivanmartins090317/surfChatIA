@@ -79,8 +79,19 @@ export interface Profile {
   weight_kg: number | null;
   height_cm: number | null;
   wave_type: WaveType | null;
+  role: "user" | "admin";
   created_at: string;
   updated_at: string;
+}
+
+export interface ProductFeedbackListItem {
+  id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  page_path: string | null;
+  created_at: string;
+  display_name: string | null;
 }
 
 export interface CriterioScore {

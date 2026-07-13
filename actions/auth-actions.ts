@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { rateLimitAuthAction } from "@/lib/security/rate-limit";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/domain/types";
 
@@ -105,8 +106,9 @@ export async function resetPasswordAction(
   }
 
   const supabase = await createClient();
+  const redirectTo = `${getSiteUrl()}/auth/callback?next=/reset-password`;
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/login`,
+    redirectTo,
   });
 
   if (error) {
@@ -116,5 +118,48 @@ export async function resetPasswordAction(
     };
   }
 
+  return { success: true };
+}
+
+export async function updatePasswordAction(
+  formData: FormData,
+): Promise<ActionResult<void>> {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirm_password") ?? "");
+
+  if (password.length < 8) {
+    return {
+      success: false,
+      error: "A senha deve ter pelo menos 8 caracteres.",
+    };
+  }
+
+  if (password !== confirmPassword) {
+    return { success: false, error: "As senhas não coincidem." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      success: false,
+      error: "Sessão expirada. Solicite um novo link de recuperação.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    return {
+      success: false,
+      error: "Não foi possível atualizar a senha. Solicite um novo link.",
+    };
+  }
+
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
   return { success: true };
 }

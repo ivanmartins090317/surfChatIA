@@ -662,35 +662,49 @@
               <td>Criar conta com e-mail e senha válidos</td>
               <td>App rodando; e-mail não cadastrado</td>
               <td>Signup concluído; redirecionamento ou confirmação; profile criado via trigger</td>
-              <td><span class="status pending dot" data-tc="TC-01">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-01">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-02</td>
               <td>Login com credenciais válidas</td>
               <td>Usuário já cadastrado</td>
               <td>Login OK; redirect para dashboard; sessão persistida</td>
-              <td><span class="status pending dot" data-tc="TC-02">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-02">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-03</td>
               <td>Logout</td>
               <td>Usuário autenticado</td>
               <td>Sessão encerrada; rotas protegidas redirecionam para /login</td>
-              <td><span class="status pending dot" data-tc="TC-03">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-03">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-04</td>
               <td>Recuperação de senha</td>
               <td>E-mail cadastrado</td>
               <td>Formulário /forgot-password envia link; mensagem de sucesso exibida</td>
-              <td><span class="status pending dot" data-tc="TC-04">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-04">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-05</td>
               <td>Rota protegida sem auth</td>
               <td>Sem sessão ativa</td>
               <td>Acesso a /dashboard ou /analyses redireciona para /login</td>
-              <td><span class="status pending dot" data-tc="TC-05">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-05">Aprovado</span></td>
+            </tr>
+            <tr>
+              <td>TC-25</td>
+              <td>Rotas profundas protegidas sem auth</td>
+              <td>Navegador anônimo; sem cookies de sessão</td>
+              <td>/profile, /boards/new, /analyses/new, /compatibility/new e /analyses/[uuid] redirecionam para /login com ?redirect= preservado</td>
+              <td><span class="status pass dot" data-tc="TC-25">Aprovado</span></td>
+            </tr>
+            <tr>
+              <td>TC-26</td>
+              <td>Acesso bloqueado após logout</td>
+              <td>Usuário autenticado; logout concluído</td>
+              <td>/dashboard, /analyses e /profile redirecionam para /login; voltar do navegador não expõe dados autenticados</td>
+              <td><span class="status pass dot" data-tc="TC-26">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
@@ -700,7 +714,7 @@
             <div class="evidence-placeholder">Screenshots serão adicionados após execução (tc01…tc05)</div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-01 ✅ criar conta · TC-02 ✅ login · TC-03 ✅ logout · TC-04 ✅ recuperação de senha · TC-05 ✅ rotas /dashboard e /analyses protegidas · TC-25 ✅ rotas profundas redirecionam para /login com ?redirect= · TC-26 ✅ acesso bloqueado após logout. FL-01 completo.</div>
       </div>
     </div>
 
@@ -724,31 +738,31 @@
               <td>Visualizar perfil em /profile</td>
               <td>Usuário autenticado</td>
               <td>Formulário carrega com dados atuais (nível, peso, altura, tipo de onda)</td>
-              <td><span class="status pending dot" data-tc="TC-06">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-06">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-07</td>
               <td>Editar e salvar perfil</td>
               <td>Usuário autenticado</td>
               <td>Alterações salvas; toast/mensagem de sucesso; dados atualizados na UI</td>
-              <td><span class="status pending dot" data-tc="TC-07">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-07">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-08</td>
               <td>Persistência após reload</td>
               <td>TC-07 executado</td>
               <td>Após F5, campos mantêm valores salvos (Supabase profiles)</td>
-              <td><span class="status pending dot" data-tc="TC-08">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-08">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
         <div class="evidence-section">
           <h4>📸 Evidências Visuais</h4>
           <div class="evidence-gallery" id="gallery-profile">
-            <div class="evidence-placeholder">tc07-perfil-salvo.jpeg · tc08-perfil-reload.jpeg</div>
+            <div class="evidence-placeholder">TC-06 — perfil carregado com dados (nome, nível, peso, altura, tipo de onda) ✅</div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-06 ✅ visualizar perfil em /profile · TC-07 ✅ editar e salvar · TC-08 ✅ persistência após reload (Supabase profiles). FL-02 completo.</div>
       </div>
     </div>
 
@@ -1044,8 +1058,8 @@
         </tr>
       </thead>
       <tbody id="matrix-body">
-        <tr data-flow="auth"><td>FL-01 — Autenticação</td><td class="m-total">5</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
-        <tr data-flow="profile"><td>FL-02 — Perfil</td><td class="m-total">3</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="auth"><td>FL-01 — Autenticação</td><td class="m-total">7</td><td class="m-pass">7</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
+        <tr data-flow="profile"><td>FL-02 — Perfil</td><td class="m-total">3</td><td class="m-pass">3</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr data-flow="performance"><td>FL-03 — Performance</td><td class="m-total">6</td><td class="m-pass">6</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr data-flow="board"><td>FL-04 — Prancha mágica</td><td class="m-total">4</td><td class="m-pass">4</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr data-flow="compat"><td>FL-05 — Compatibilidade</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
@@ -1053,8 +1067,8 @@
         <tr data-flow="shell"><td>FL-07 — Shell</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
         <tr class="matrix-total">
           <td>TOTAL</td>
-          <td id="mat-total">24</td>
-          <td id="mat-pass">10</td>
+          <td id="mat-total">26</td>
+          <td id="mat-pass">20</td>
           <td id="mat-fail">0</td>
           <td id="mat-block">0</td>
           <td id="mat-pct">100%</td>
@@ -1070,8 +1084,8 @@
 
   <script>
     const testData = {
-      auth:        { total: 5, pass: 0, fail: 0, block: 0 },
-      profile:     { total: 3, pass: 0, fail: 0, block: 0 },
+      auth:        { total: 7, pass: 7, fail: 0, block: 0 },
+      profile:     { total: 3, pass: 3, fail: 0, block: 0 },
       performance: { total: 6, pass: 6, fail: 0, block: 0 },
       board:       { total: 4, pass: 4, fail: 0, block: 0 },
       compat:      { total: 2, pass: 0, fail: 0, block: 0 },
