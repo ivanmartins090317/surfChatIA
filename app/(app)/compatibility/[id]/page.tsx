@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BoardMatchResult } from "@/lib/domain/types";
 import { BOARD_MATCH_VERDICT_LABELS } from "@/lib/domain/types";
+import { formatDatePtBr } from "@/lib/utils";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { getBoardMatchAnalysis } from "@/services/board-match-service";
 
@@ -36,10 +37,16 @@ export default async function CompatibilityResultPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Button asChild variant="ghost" size="sm">
-        <Link href="/compatibility/new">← Nova análise</Link>
+        <Link href="/compatibility">← Match</Link>
       </Button>
 
-      <h1 className="font-display text-3xl font-bold">Resultado</h1>
+      <div className="space-y-1">
+        <h1 className="font-display text-3xl font-bold">Resultado</h1>
+        <p className="text-sm text-muted-foreground">
+          Salvo em {formatDatePtBr(analysis.created_at)} — disponível no seu
+          histórico de Match.
+        </p>
+      </div>
 
       {result && (
         <>

@@ -7,6 +7,7 @@ import { toActionErrorMessage } from "@/lib/errors/action-error";
 import { requireAuthUser } from "@/lib/supabase/server";
 import {
   createMagicBoard,
+  createSignedBoardPhotoUrl,
   processMagicBoardSpec,
   updateMagicBoard,
   uploadBoardPhoto,
@@ -151,6 +152,30 @@ export async function uploadBoardPhotosAction(
     return {
       success: false,
       error: toActionErrorMessage(error, "Erro no upload das fotos."),
+    };
+  }
+}
+
+export async function fetchBoardPhotoUrlAction(
+  storagePath: string,
+): Promise<ActionResult<{ url: string }>> {
+  try {
+    const user = await requireAuthUser();
+
+    if (!storagePath.startsWith(`${user.id}/`)) {
+      return { success: false, error: "Foto não encontrada." };
+    }
+
+    const url = await createSignedBoardPhotoUrl(storagePath);
+    if (!url) {
+      return { success: false, error: "Não foi possível carregar a foto." };
+    }
+
+    return { success: true, data: { url } };
+  } catch (error) {
+    return {
+      success: false,
+      error: toActionErrorMessage(error, "Erro ao carregar foto."),
     };
   }
 }

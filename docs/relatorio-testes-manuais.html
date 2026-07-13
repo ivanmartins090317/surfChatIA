@@ -711,7 +711,11 @@
         <div class="evidence-section">
           <h4>📸 Evidências Visuais</h4>
           <div class="evidence-gallery" id="gallery-auth">
-            <div class="evidence-placeholder">Screenshots serão adicionados após execução (tc01…tc05)</div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc01-criar-conta-sucesso.png')">
+              <img src="evidencias/tc01-criar-conta-sucesso.png" alt="TC-01"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-01 — Criar conta com e-mail e senha válidos ✅</div>
+            </div>
           </div>
         </div>
         <div class="obs-box"><strong>Observações:</strong> TC-01 ✅ criar conta · TC-02 ✅ login · TC-03 ✅ logout · TC-04 ✅ recuperação de senha · TC-05 ✅ rotas /dashboard e /analyses protegidas · TC-25 ✅ rotas profundas redirecionam para /login com ?redirect= · TC-26 ✅ acesso bloqueado após logout. FL-01 completo.</div>
@@ -928,14 +932,14 @@
               <td>Nova análise de compatibilidade E2E</td>
               <td>Perfil + prancha mágica cadastrados</td>
               <td>Fluxo /compatibility/new concluído com IA; registro persistido</td>
-              <td><span class="status pending dot" data-tc="TC-19">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-19">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-20</td>
               <td>Veredito, prós e contras na UI</td>
               <td>TC-19 aprovado</td>
               <td>Veredito claro + prós/contras + condições ideais renderizados</td>
-              <td><span class="status pending dot" data-tc="TC-20">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-20">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
@@ -945,7 +949,7 @@
             <div class="evidence-placeholder">tc19-compatibilidade-resultado.jpeg</div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Depende de FL-02 e FL-04.</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-19 ✅ fluxo /compatibility/new com prancha mágica · TC-20 ✅ veredito, prós, contras e condições ideais na UI · IA visão nas fotos candidatas validada E2E (13/07/2026). Pós-teste: nav Match destacada em /compatibility/[id], histórico em /compatibility, data de salvamento no resultado. FL-05 completo.</div>
       </div>
     </div>
 
@@ -969,24 +973,33 @@
               <td>Isolamento RLS entre dois usuários</td>
               <td>Contas A e B com análises/pranchas distintas</td>
               <td>Usuário A não vê dados de B em listagens nem por URL direta</td>
-              <td><span class="status pending dot" data-tc="TC-21">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-21">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-22</td>
               <td>Storage privado por usuário</td>
               <td>Uploads de A e B</td>
               <td>Arquivos no bucket acessíveis só pelo dono (policy RLS)</td>
-              <td><span class="status pending dot" data-tc="TC-22">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-22">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
         <div class="evidence-section">
           <h4>📸 Evidências Visuais</h4>
           <div class="evidence-gallery" id="gallery-security">
-            <div class="evidence-placeholder">tc21-rls-usuario-b.jpeg</div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc21-22-isolamento-rls-dois-usuarios.png')">
+              <img src="evidencias/tc21-22-isolamento-rls-dois-usuarios.png" alt="TC-21"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-21 — Isolamento RLS: Ivan Martins vs Ivan Barbosa ✅</div>
+            </div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc21-22-isolamento-rls-dois-usuarios.png')">
+              <img src="evidencias/tc21-22-isolamento-rls-dois-usuarios.png" alt="TC-22"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-22 — Storage/dados isolados por usuário (política RLS) ✅</div>
+            </div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Usar navegador anônimo ou perfil separado para usuário B.</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-21 ✅ duas contas criadas (Ivan Martins e Ivan Barbosa); login separado em cada sessão; dashboard, métricas e conteúdo distintos — usuário A não vê dados de B. TC-22 ✅ uploads e informações isolados por dono; política de isolamento RLS confirmada. FL-06 completo.</div>
       </div>
     </div>
 
@@ -1010,24 +1023,33 @@
               <td>Dashboard com CTAs dos módulos</td>
               <td>Usuário autenticado</td>
               <td>/dashboard carrega; links para análises, pranchas e compatibilidade</td>
-              <td><span class="status pending dot" data-tc="TC-23">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-23">Aprovado</span></td>
             </tr>
             <tr>
               <td>TC-24</td>
               <td>Navegação mobile (layout responsivo)</td>
               <td>Viewport ≤390px ou DevTools mobile</td>
               <td>Menu/navegação usável; alvos de toque ≥44px; sem overflow horizontal</td>
-              <td><span class="status pending dot" data-tc="TC-24">Pendente</span></td>
+              <td><span class="status pass dot" data-tc="TC-24">Aprovado</span></td>
             </tr>
           </tbody>
         </table>
         <div class="evidence-section">
           <h4>📸 Evidências Visuais</h4>
           <div class="evidence-gallery" id="gallery-shell">
-            <div class="evidence-placeholder">tc23-dashboard.jpeg · tc24-mobile.jpeg</div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc23-24-navegacao-mobile-pranchas.png')">
+              <img src="evidencias/tc23-24-navegacao-mobile-pranchas.png" alt="TC-23"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-23 — Navegação entre módulos (Home, Análises, Pranchas, Match, Perfil) ✅</div>
+            </div>
+            <div class="evidence-item" onclick="openLightbox('evidencias/tc23-24-navegacao-mobile-pranchas.png')">
+              <img src="evidencias/tc23-24-navegacao-mobile-pranchas.png" alt="TC-24"
+                onerror="this.parentElement.classList.add('missing')" />
+              <div class="evidence-caption">TC-24 — Layout mobile (Safari ≤390px, nav inferior, alvos ≥44px) ✅</div>
+            </div>
           </div>
         </div>
-        <div class="obs-box"><strong>Observações:</strong> Testes pendentes de execução.</div>
+        <div class="obs-box"><strong>Observações:</strong> TC-23 ✅ /dashboard carrega com CTAs para análises, pranchas e compatibilidade (Match) · TC-24 ✅ navegação mobile usável, alvos de toque adequados, sem overflow horizontal. FL-07 completo.</div>
       </div>
     </div>
 
@@ -1062,13 +1084,13 @@
         <tr data-flow="profile"><td>FL-02 — Perfil</td><td class="m-total">3</td><td class="m-pass">3</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr data-flow="performance"><td>FL-03 — Performance</td><td class="m-total">6</td><td class="m-pass">6</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr data-flow="board"><td>FL-04 — Prancha mágica</td><td class="m-total">4</td><td class="m-pass">4</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
-        <tr data-flow="compat"><td>FL-05 — Compatibilidade</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
-        <tr data-flow="security"><td>FL-06 — Segurança</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
-        <tr data-flow="shell"><td>FL-07 — Shell</td><td class="m-total">2</td><td class="m-pass">0</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">0%</td></tr>
+        <tr data-flow="compat"><td>FL-05 — Compatibilidade</td><td class="m-total">2</td><td class="m-pass">2</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
+        <tr data-flow="security"><td>FL-06 — Segurança</td><td class="m-total">2</td><td class="m-pass">2</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
+        <tr data-flow="shell"><td>FL-07 — Shell</td><td class="m-total">2</td><td class="m-pass">2</td><td class="m-fail">0</td><td class="m-block">0</td><td class="m-pct">100%</td></tr>
         <tr class="matrix-total">
           <td>TOTAL</td>
           <td id="mat-total">26</td>
-          <td id="mat-pass">20</td>
+          <td id="mat-pass">26</td>
           <td id="mat-fail">0</td>
           <td id="mat-block">0</td>
           <td id="mat-pct">100%</td>
@@ -1088,9 +1110,9 @@
       profile:     { total: 3, pass: 3, fail: 0, block: 0 },
       performance: { total: 6, pass: 6, fail: 0, block: 0 },
       board:       { total: 4, pass: 4, fail: 0, block: 0 },
-      compat:      { total: 2, pass: 0, fail: 0, block: 0 },
-      security:    { total: 2, pass: 0, fail: 0, block: 0 },
-      shell:       { total: 2, pass: 0, fail: 0, block: 0 },
+      compat:      { total: 2, pass: 2, fail: 0, block: 0 },
+      security:    { total: 2, pass: 2, fail: 0, block: 0 },
+      shell:       { total: 2, pass: 2, fail: 0, block: 0 },
     };
 
     function initScoreboard() {

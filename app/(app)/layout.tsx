@@ -2,6 +2,9 @@ import { AppShellClient } from "@/components/layout/app-shell-client";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { getProfile } from "@/services/profile-service";
 
+/** Análises IA + ffmpeg podem levar até ~60s — requer Vercel Pro. */
+export const maxDuration = 60;
+
 export default async function AppLayout({
   children,
 }: {

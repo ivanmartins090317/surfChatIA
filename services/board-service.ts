@@ -257,3 +257,37 @@ export async function createSignedBoardPhotoUrl(
   if (error) return null;
   return data.signedUrl;
 }
+
+export interface BoardPhotoView {
+  path: string;
+  url: string;
+}
+
+/** Quantas fotos carregam na página; o restante abre sob demanda. */
+export const BOARD_GALLERY_VISIBLE_COUNT = 2;
+
+export async function getBoardPhotoViews(
+  photoPaths: string[],
+): Promise<BoardPhotoView[]> {
+  const views = await Promise.all(
+    photoPaths.map(async (path) => {
+      const url = await createSignedBoardPhotoUrl(path);
+      return url ? { path, url } : null;
+    }),
+  );
+
+  return views.filter((view): view is BoardPhotoView => view !== null);
+}
+
+export async function getInitialBoardPhotoViews(photoPaths: string[]): Promise<{
+  visible: BoardPhotoView[];
+  extraPaths: string[];
+}> {
+  const visiblePaths = photoPaths.slice(0, BOARD_GALLERY_VISIBLE_COUNT);
+  const extraPaths = photoPaths.slice(BOARD_GALLERY_VISIBLE_COUNT);
+
+  return {
+    visible: await getBoardPhotoViews(visiblePaths),
+    extraPaths,
+  };
+}

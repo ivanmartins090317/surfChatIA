@@ -12,9 +12,19 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/analyses", label: "Análises", icon: Activity },
   { href: "/boards", label: "Pranchas", icon: Sparkles },
-  { href: "/compatibility/new", label: "Match", icon: GitCompareArrows },
+  {
+    href: "/compatibility",
+    label: "Match",
+    icon: GitCompareArrows,
+    activePrefix: "/compatibility",
+  },
   { href: "/profile", label: "Perfil", icon: User },
 ] as const;
+
+function isNavActive(pathname: string, item: (typeof NAV_ITEMS)[number]) {
+  const prefix = "activePrefix" in item ? item.activePrefix : item.href;
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
 
 interface AppNavProps {
   pathname: string;
@@ -28,9 +38,9 @@ export function AppNav({ pathname }: AppNavProps) {
           Surf AI Coach
         </Link>
         <div className="flex flex-1 flex-col gap-1">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const isActive =
-              pathname === href || pathname.startsWith(`${href}/`);
+          {NAV_ITEMS.map((item) => {
+            const { href, label, icon: Icon } = item;
+            const isActive = isNavActive(pathname, item);
             return (
               <Link
                 key={href}
@@ -55,8 +65,9 @@ export function AppNav({ pathname }: AppNavProps) {
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         aria-label="Navegação principal"
       >
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || pathname.startsWith(`${href}/`);
+        {NAV_ITEMS.map((item) => {
+          const { href, label, icon: Icon } = item;
+          const isActive = isNavActive(pathname, item);
           return (
             <Link
               key={href}

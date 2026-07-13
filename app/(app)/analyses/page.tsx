@@ -16,12 +16,12 @@ export default async function AnalysesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="font-display text-3xl font-bold">Análises</h1>
           <p className="text-muted-foreground">Histórico de feedback de performance.</p>
         </div>
-        <Button asChild>
+        <Button asChild className="shrink-0">
           <Link href="/analyses/new">
             <Plus className="size-4" aria-hidden />
             Nova

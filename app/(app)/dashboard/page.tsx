@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Sparkles, UploadCloud } from "lucide-react";
+import { Activity, GitCompareArrows, Sparkles, UploadCloud } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Button asChild size="lg" className="h-auto flex-col gap-2 py-6">
           <Link href="/analyses/new">
             <UploadCloud className="size-6" aria-hidden />
@@ -111,6 +111,17 @@ export default async function DashboardPage() {
           <Link href="/boards/new">
             <Sparkles className="size-6" aria-hidden />
             Cadastrar prancha mágica
+          </Link>
+        </Button>
+        <Button
+          asChild
+          size="lg"
+          variant="secondary"
+          className="h-auto flex-col gap-2 py-6 sm:col-span-2 lg:col-span-1"
+        >
+          <Link href="/compatibility">
+            <GitCompareArrows className="size-6" aria-hidden />
+            Compatibilidade de prancha
           </Link>
         </Button>
       </div>

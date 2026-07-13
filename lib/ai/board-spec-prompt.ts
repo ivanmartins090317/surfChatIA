@@ -72,6 +72,8 @@ Gere ficha técnica detalhada e explique por que combina com o perfil.`;
 
 export function buildBoardMatchSystemPrompt(): string {
   return `Você compara uma prancha candidata com o perfil do surfista e opcionalmente uma prancha mágica de referência.
+As fotos anexadas mostram a prancha candidata — analise visualmente shape, tail, rails, rocker aparente, volume estimado e estado geral.
+Cruze o que vê nas imagens com as medidas anunciadas e o perfil do surfista.
 Responda SOMENTE em JSON:
 {
   "veredito": "match" | "partial" | "no_match",
@@ -80,7 +82,7 @@ Responda SOMENTE em JSON:
   "condicoes_ideais": ["string"],
   "distancia_da_magica": "string opcional"
 }
-Use português do Brasil.`;
+Use português do Brasil. Explique jargão brevemente entre parênteses.`;
 }
 
 export function buildBoardMatchUserPrompt(input: {
@@ -102,7 +104,7 @@ Onda: ${input.profile.wave_type ?? "?"}`
     : "Perfil incompleto.";
 
   return `[CANDIDATA]
-Fotos: ${input.photoCount}
+Fotos anexadas: ${input.photoCount} (analise visualmente deck, fundo, rails, rabeta e bico)
 Medidas anunciadas: ${JSON.stringify(input.advertisedMeasurements ?? {})}
 
 [REFERÊNCIA]

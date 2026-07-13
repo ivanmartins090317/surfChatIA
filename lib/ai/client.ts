@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { hasOpenAiKey } from "@/lib/env";
 
-const AI_TIMEOUT_MS = 90_000;
+const AI_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 90_000;
 const VISION_MODEL = "gpt-4o-mini";
 const TEXT_MODEL = "gpt-4o-mini";
 

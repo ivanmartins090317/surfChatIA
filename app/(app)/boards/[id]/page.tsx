@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BoardPhotoGallery } from "@/components/board-spec/board-photo-gallery";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import type { BoardSpecResult, BoardSensation } from "@/lib/domain/types";
 import { BOARD_STATUS } from "@/lib/domain/types";
 import { formatBoardMeasurementsSummary } from "@/lib/board/measurements";
 import { requireAuthUser } from "@/lib/supabase/server";
-import { getBoard } from "@/services/board-service";
+import { getBoard, getInitialBoardPhotoViews } from "@/services/board-service";
 
 interface BoardDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,6 +24,8 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
     notFound();
   }
 
+  const { visible: visiblePhotos, extraPaths } =
+    await getInitialBoardPhotoViews(board.photo_paths);
   const spec = board.spec_json as BoardSpecResult | null;
   const sensation = board.sensation_json as BoardSensation | null;
 
@@ -51,6 +54,12 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
           <AlertDescription>Gerando ficha técnica…</AlertDescription>
         </Alert>
       )}
+
+      <BoardPhotoGallery
+        visiblePhotos={visiblePhotos}
+        extraPhotoPaths={extraPaths}
+        totalCount={board.photo_paths.length}
+      />
 
       {board.ai_summary && (
         <Card className="grad-surface-glow">
@@ -113,10 +122,6 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
           </CardContent>
         </Card>
       )}
-
-      <p className="text-sm text-muted-foreground">
-        {board.photo_paths.length} foto(s) enviada(s)
-      </p>
     </div>
   );
 }

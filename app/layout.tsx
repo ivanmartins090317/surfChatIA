@@ -1,7 +1,7 @@
 import { Space_Grotesk, Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { Toaster } from "sonner";
 import type { Metadata } from "next";
+import { AppToaster } from "@/components/layout/app-toaster";
 import "./globals.css";
 
 const display = Space_Grotesk({
@@ -33,17 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark">
-      <body className={`${display.variable} ${sans.variable} min-h-dvh`}>
+    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+      <body
+        className={`${display.variable} ${sans.variable} min-h-dvh`}
+        suppressHydrationWarning
+      >
         <NuqsAdapter>{children}</NuqsAdapter>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            classNames: {
-              toast: "glass border-border text-foreground",
-            },
-          }}
-        />
+        <AppToaster />
       </body>
     </html>
   );
