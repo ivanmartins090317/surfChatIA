@@ -1,6 +1,11 @@
 import { ExternalLink, ImageIcon, Link2, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from "@/components/ui/card";
 import {
   getAnalysisListSubtitle,
   getAnalysisMediaLabel,
@@ -20,6 +25,19 @@ function MediaIcon({ type }: { type: MediaItem["type"] }) {
   return <Video className={className} aria-hidden />;
 }
 
+function getMediaContextHint(media: MediaItem): string | null {
+  if (media.type === "image") {
+    return "Análise visual do frame com IA de visão.";
+  }
+  if (media.type === "link") {
+    return "Orientação por contexto — o vídeo não é assistido pela IA.";
+  }
+  if (media.type === "video") {
+    return `${MEDIA_TYPES.video} analisado em múltiplos frames com IA de visão.`;
+  }
+  return null;
+}
+
 export function AnalysisMediaHeader({
   media,
   previewUrl,
@@ -27,29 +45,26 @@ export function AnalysisMediaHeader({
   if (!media) return null;
 
   const subtitle = getAnalysisListSubtitle(media);
+  const contextHint = getMediaContextHint(media);
 
   return (
-    <Card>
-      <CardContent className="space-y-4 py-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="default" className="gap-1.5">
-            <MediaIcon type={media.type} />
-            {getAnalysisMediaLabel(media)}
-          </Badge>
-          {media.type === "image" && (
-            <span className="text-xs text-muted-foreground">
-              Análise visual do frame (IA com visão)
-            </span>
-          )}
-          {media.type === "link" && (
-            <span className="text-xs text-muted-foreground">
-              Orientação por contexto — vídeo não assistido pela IA
-            </span>
-          )}
-        </div>
+    <Card className="overflow-hidden">
+      <CardHeader className="space-y-3 pb-4">
+        <Badge variant="default" className="w-fit gap-1.5">
+          <MediaIcon type={media.type} />
+          {getAnalysisMediaLabel(media)}
+        </Badge>
+
+        {contextHint && (
+          <CardDescription className="text-sm leading-relaxed">
+            {contextHint}
+          </CardDescription>
+        )}
 
         {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {subtitle}
+          </p>
         )}
 
         {media.type === "link" && media.external_url && (
@@ -57,30 +72,28 @@ export function AnalysisMediaHeader({
             href={media.external_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            className="inline-flex max-w-full items-center gap-1.5 text-sm text-primary hover:underline"
           >
-            <ExternalLink className="size-3.5" aria-hidden />
-            {media.external_url}
+            <ExternalLink className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate">{media.external_url}</span>
           </a>
         )}
+      </CardHeader>
 
-        {previewUrl && media.type === "image" && (
-          <div className="overflow-hidden rounded-xl border border-white/08">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewUrl}
-              alt="Foto analisada na session"
-              className="max-h-64 w-full object-contain bg-black/20"
-            />
+      {previewUrl && media.type === "image" && (
+        <CardContent className="pt-0">
+          <div className="overflow-hidden rounded-2xl border border-white/08 bg-muted/20">
+            <div className="flex items-center justify-center p-4 md:p-6">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={previewUrl}
+                alt="Foto analisada na session"
+                className="max-h-64 w-auto max-w-full rounded-lg object-contain md:max-h-80"
+              />
+            </div>
           </div>
-        )}
-
-        {media.type === "video" && (
-          <p className="text-sm text-muted-foreground">
-            {MEDIA_TYPES.video} analisado em múltiplos frames com IA de visão.
-          </p>
-        )}
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }
