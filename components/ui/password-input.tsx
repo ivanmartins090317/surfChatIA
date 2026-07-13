@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-interface PasswordInputProps extends Omit<React.ComponentProps<"input">, "type"> {}
+type PasswordInputProps = Omit<React.ComponentProps<"input">, "type">;
 
 export function PasswordInput({ className, ...props }: PasswordInputProps) {
   const [isVisible, setIsVisible] = useState(false);
