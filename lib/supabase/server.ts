@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -43,7 +44,7 @@ export async function getAuthUser() {
 export async function requireAuthUser() {
   const user = await getAuthUser();
   if (!user) {
-    throw new Error("Não autenticado");
+    redirect("/login");
   }
   return user;
 }

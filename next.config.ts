@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "100mb",
     },
+    // Next.js 15.5+ trunca o body em 10 MB antes das Server Actions sem isso
+    middlewareClientMaxBodySize: "100mb",
   },
   images: {
     remotePatterns: [

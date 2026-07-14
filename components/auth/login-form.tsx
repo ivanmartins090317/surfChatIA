@@ -24,11 +24,12 @@ export function LoginForm() {
     setError(null);
     startTransition(async () => {
       const result = await signInAction(formData);
-      if (result && !result.success) {
+      if (!result.success || !result.data) {
         setError(result.error ?? "Erro ao entrar.");
-      } else {
-        router.refresh();
+        return;
       }
+      router.push(result.data.redirectTo);
+      router.refresh();
     });
   }
 
