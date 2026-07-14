@@ -1,8 +1,8 @@
 # Pendências — Surf Performance & Board AI
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
-> **Status atual:** MVP funcional homologado (26/26 TCs) · Etapa 1.1–1.3 em fechamento · deploy e monetização **não implementados**.  
-> **Última revisão:** 13/07/2026 — IA visão board-match validada E2E (TC-20 revalidado).
+> **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · monetização **não implementada**.  
+> **Última revisão:** 14/07/2026 — rate limit Postgres + Sentry + migration 007 aplicada.
 
 ---
 
@@ -18,7 +18,7 @@
 | Shell / mobile | ✅ Validado | FL-07 (2/2) |
 | Monetização | ❌ Não existe | — |
 | Pagamentos | ❌ Não existe | — |
-| Deploy produção | ❌ Não feito | — |
+| Deploy produção | 🟡 Live (2.1–2.2 ✅ · 2.3 pendente) | smoke test prod OK |
 | Legal (LGPD / Termos) | ❌ Não existe | — |
 
 **Total homologação:** 26/26 TCs aprovados (100%).
@@ -77,33 +77,45 @@ flowchart LR
 
 ---
 
-## Etapa 2 — Infraestrutura de produção 🔴
+## Etapa 2 — Infraestrutura de produção 🟡
 
-> **Em andamento.** Config Vercel pronta no repo — conectar projeto e publicar. Guia: [DEPLOY_VERCEL.md](../DEPLOY_VERCEL.md).
+> **2.1 concluída (14/07/2026).** App em URL pública na Vercel · auth e IA validados em prod. **2.2 concluída (14/07/2026)** — rate limit Postgres + Sentry. Próximo: 2.3 landing.
 
-### 2.1 Deploy
+### 2.1 Deploy ✅ *(14/07/2026)*
 
-- [ ] Projeto Vercel criado e conectado ao repositório
-- [ ] Variáveis de ambiente de produção configuradas (Supabase, OpenAI, `NEXT_PUBLIC_SITE_URL`)
-- [ ] Supabase prod: redirect URLs (`/auth/callback`) + Site URL
-- [ ] Supabase prod: SMTP/e-mail (confirmação, reset de senha)
-- [ ] Domínio customizado (opcional no beta, recomendado antes de cobrar)
-- [ ] `npm run db:push` confirmado no projeto Supabase de produção (6 migrations incl. feedback)
-- [ ] Smoke test pós-deploy: signup → análise → prancha mágica
+- [x] Projeto Vercel criado e conectado ao repositório *(14/07/2026)*
+- [x] Variáveis de ambiente de produção configuradas (Supabase, OpenAI, `NEXT_PUBLIC_SITE_URL`) *(14/07/2026)*
+- [x] Supabase prod: redirect URLs (`/auth/callback`) + Site URL *(14/07/2026)*
+- [x] `npm run db:push` confirmado no projeto Supabase de produção (6 migrations incl. feedback) *(14/07/2026)*
+- [x] Smoke test pós-deploy: signup → análise → prancha mágica *(14/07/2026)*
 - [x] `vercel.json` (região gru1) + `maxDuration` 60s + timeout IA ajustado para Vercel
 - [x] Guia de deploy documentado → [DEPLOY_VERCEL.md](../DEPLOY_VERCEL.md)
 
-### 2.2 Rate limit e observabilidade
+> **URL atual:** `*.vercel.app` — suficiente para beta fechado. Domínio e SMTP customizado ficam em [2.4](#24-aguardando-domínio-prprio-).
 
-- [ ] Migrar `rateLimitAiAction` de `Map` in-memory para Postgres (ou Redis)
-- [ ] Rate limit auth persistido (mesma abordagem)
-- [ ] Observabilidade: Sentry ou equivalente (erros IA/upload, sem PII)
-- [ ] Alertas básicos: falha de build CI, erro 5xx, custo OpenAI (dashboard manual OK no beta)
+### 2.2 Rate limit e observabilidade ✅ *(14/07/2026)*
+
+- [x] Migrar `rateLimitAiAction` de `Map` in-memory para Postgres (`007_rate_limit.sql` + RPC `check_rate_limit`)
+- [x] Rate limit auth persistido (mesma abordagem — bucket `auth:{email}`)
+- [x] Observabilidade: Sentry (`@sentry/nextjs`, scrub PII, tags `area:ai|upload|rate-limit`)
+- [x] Alertas básicos documentados: CI (GitHub Actions), Sentry (issues IA/upload), OpenAI usage manual
 
 ### 2.3 Landing e comunicação
 
 - [ ] Landing `/` com features, prova social e CTA (sem prometer “ilimitado”)
 - [ ] Página `/planos` (placeholder com planos previstos — pode ser “em breve” no beta)
+
+### 2.4 Aguardando domínio próprio ⏸️
+
+> **Pendente — bloqueado até registrar domínio.** Não impede Etapas 2.2, 2.3 nem 3. Retomar antes de lançamento público ou cobrança (Etapas 4–5).
+
+- [ ] Registrar domínio (ex.: `surfcoach.com.br`, `surfboardai.app`)
+- [ ] Vercel → **Settings → Domains** — adicionar domínio e configurar DNS (CNAME/A)
+- [ ] Atualizar `NEXT_PUBLIC_SITE_URL` com a URL final → redeploy
+- [ ] Supabase Auth → **Site URL** + **Redirect URLs** (`https://seudominio/auth/callback`)
+- [ ] SMTP customizado (Resend, SendGrid, etc.) — remetente `@seudominio` · Supabase → Auth → SMTP
+
+**Enquanto isso:** auth e e-mails seguem pelo Supabase padrão na URL `.vercel.app` ✅
 
 **Critério de saída Etapa 2:** app acessível em URL pública · auth e IA funcionando em prod · rate limit persistente.
 
@@ -226,14 +238,15 @@ flowchart LR
 ## Ordem de trabalho (agora)
 
 ```
-1. Etapa 2   → deploy Vercel (seguir DEPLOY_VERCEL.md)
+1. Etapa 2.3 → landing `/` + página `/planos` placeholder
 2. Etapa 1   → fechar DoD visual §15 (revisão formal rápida)
 3. Etapa 3   → créditos + paywall
-4. Etapa 4   → Stripe/MP
-5. Etapa 5   → legal + go-live
+4. Etapa 2.4 → domínio + SMTP *(quando tiver domínio registrado)*
+5. Etapa 4   → Stripe/MP
+6. Etapa 5   → legal + go-live
 ```
 
-**Sessão atual sugerida:** **Etapa 2.1** — conectar repo no Vercel + env vars + smoke test.
+**Sessão atual sugerida:** **Etapa 2.3** — landing `/` + página `/planos` placeholder para beta com amigos.
 
 ---
 

@@ -10,6 +10,7 @@ import {
 } from "@/lib/ai/board-spec-prompt";
 import { parseBoardMatchResult } from "@/lib/ai/board-spec-parser";
 import type { Analysis, BoardMatchResult } from "@/lib/domain/types";
+import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getBoard } from "@/services/board-service";
@@ -106,7 +107,7 @@ export async function createBoardMatchAnalysis(input: {
   referenceBoardId?: string | null;
   advertisedMeasurements?: Record<string, number | null> | null;
 }): Promise<Analysis> {
-  const rate = rateLimitAiAction(input.userId);
+  const rate = await rateLimitAiAction(input.userId);
   if (!rate.allowed) {
     throw new Error("Limite diário de análises atingido.");
   }
@@ -168,6 +169,12 @@ export async function createBoardMatchAnalysis(input: {
       .update({ status: "error" })
       .eq("id", row.id)
       .eq("user_id", input.userId);
+
+    reportServerError(error, {
+      area: "ai",
+      operation: "create_board_match_analysis",
+      userId: input.userId,
+    });
 
     const message =
       error instanceof Error ? error.message : "Erro na análise.";

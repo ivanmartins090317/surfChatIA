@@ -5,6 +5,10 @@ const serverEnvSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1).optional(),
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_ORG: z.string().min(1).optional(),
+  SENTRY_PROJECT: z.string().min(1).optional(),
+  SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

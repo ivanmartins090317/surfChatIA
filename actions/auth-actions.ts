@@ -18,7 +18,7 @@ export async function signUpAction(
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("display_name") ?? "").trim();
 
-  const rate = rateLimitAuthAction(getIdentifier(formData));
+  const rate = await rateLimitAuthAction(getIdentifier(formData));
   if (!rate.allowed) {
     return {
       success: false,
@@ -59,7 +59,7 @@ export async function signInAction(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
-  const rate = rateLimitAuthAction(getIdentifier(formData));
+  const rate = await rateLimitAuthAction(getIdentifier(formData));
   if (!rate.allowed) {
     return {
       success: false,
@@ -93,7 +93,7 @@ export async function resetPasswordAction(
 ): Promise<ActionResult<void>> {
   const email = String(formData.get("email") ?? "").trim();
 
-  const rate = rateLimitAuthAction(getIdentifier(formData));
+  const rate = await rateLimitAuthAction(getIdentifier(formData));
   if (!rate.allowed) {
     return {
       success: false,

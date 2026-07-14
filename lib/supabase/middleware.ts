@@ -1,7 +1,19 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function isDevOnlyRoute(pathname: string): boolean {
+  if (process.env.NODE_ENV !== "development") {
+    return false;
+  }
+
+  return pathname === "/api/dev/sentry-test";
+}
+
 function isPublicRoute(pathname: string): boolean {
+  if (isDevOnlyRoute(pathname)) {
+    return true;
+  }
+
   if (pathname === "/") return true;
   const authRoutes = [
     "/login",

@@ -7,6 +7,7 @@ import type {
 } from "@/lib/domain/types";
 import type { PerformanceAnalysisListItem } from "@/lib/domain/analysis-display";
 import { extractVideoFrames } from "@/lib/media/extract-video-frames";
+import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -58,7 +59,7 @@ export async function createPerformanceAnalysis(
   userId: string,
   mediaItemId: string,
 ): Promise<Analysis> {
-  const rate = rateLimitAiAction(userId);
+  const rate = await rateLimitAiAction(userId);
   if (!rate.allowed) {
     throw new Error("Limite diário de análises atingido. Tente amanhã.");
   }
@@ -161,6 +162,12 @@ export async function createPerformanceAnalysis(
       .update({ status: "error" })
       .eq("id", mediaItemId)
       .eq("user_id", userId);
+
+    reportServerError(error, {
+      area: "ai",
+      operation: "create_performance_analysis",
+      userId,
+    });
 
     const message =
       error instanceof Error ? error.message : "Erro ao processar análise.";

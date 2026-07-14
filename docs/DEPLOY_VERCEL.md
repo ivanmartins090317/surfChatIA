@@ -38,8 +38,12 @@ Configure para **Production**, **Preview** e **Development**:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | anon ou publishable key |
 | `SUPABASE_URL` | ✅ | Mesmo URL do projeto Supabase |
 | `SUPABASE_ANON_KEY` | ✅ | Mesma anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Opcional | Só se usar operações admin server-side |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ Prod | Obrigatória para rate limit persistente (Etapa 2.2) |
 | `OPENAI_API_KEY` | ✅ | `sk-...` — server-only |
+| `SENTRY_DSN` | Recomendado | Erros server-side (IA, upload, rate limit) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Recomendado | Mesmo DSN — erros no browser (`global-error`) |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | Opcional | Upload de source maps no deploy |
+| `SENTRY_AUTH_TOKEN` | Opcional | Token para source maps via CI/Vercel |
 
 **Não** adicione `SUPABASE_DB_PASSWORD` na Vercel (só para CLI local / migrations).
 
@@ -99,14 +103,51 @@ Execute na URL de produção:
 
 | Item | Status |
 |------|--------|
-| Rate limit in-memory | Perde estado entre instâncias — migrar Postgres na Etapa 2.2 |
+| Rate limit | ✅ Postgres persistente (migration `007_rate_limit`) — requer `SUPABASE_SERVICE_ROLE_KEY` |
 | ffmpeg (vídeo) | Bundle pesado; pode exigir Vercel Pro e cold start maior |
 | Timeout IA | 55s em Vercel (`lib/ai/client.ts`); `maxDuration = 60` no layout autenticado |
 | Domínio customizado | Opcional — Vercel → Settings → Domains |
 
 ---
 
-## 7. Checklist Etapa 2.1
+## 7. Etapa 2.2 — Rate limit + observabilidade
+
+### Migration
+
+Após deploy do código, aplique a migration no Supabase de produção:
+
+```bash
+npm run db:push
+```
+
+Isso cria a tabela `rate_limit_buckets` e a RPC `check_rate_limit`.
+
+### Sentry (recomendado para beta)
+
+1. Acesse [sentry.io/signup](https://sentry.io/signup) (plano **Developer** é grátis)
+2. **Create project** → plataforma **Next.js**
+3. Nome sugerido: `surf-ai-coach`
+4. Copie o **DSN** (formato `https://xxx@oYYY.ingest.sentry.io/ZZZ`)
+5. Na **Vercel → Environment Variables** (Production + Preview):
+
+   | Variável | Valor |
+   |----------|--------|
+   | `SENTRY_DSN` | DSN copiado |
+   | `NEXT_PUBLIC_SENTRY_DSN` | **mesmo DSN** |
+
+6. **Redeploy** na Vercel
+7. Teste local (dev): adicione as mesmas vars em `.env.local` → `npm run dev` → abra `http://localhost:3000/api/dev/sentry-test`
+8. Teste produção: force um erro real (ex.: upload corrompido) ou aguarde o primeiro issue natural
+
+**Alertas sugeridos** (Sentry → Alerts → Create Alert):
+- Novo issue com tag `area:ai` ou `area:upload`
+- Spike de erros (ex.: >5 em 1h)
+
+E-mails são scrubbed antes do envio (`lib/observability/report-server-error.ts`).
+
+---
+
+## 8. Checklist Etapa 2.1
 
 - [ ] Projeto Vercel criado e conectado ao repositório
 - [ ] Variáveis de ambiente configuradas

@@ -9,6 +9,7 @@ import type {
   WaveType,
 } from "@/lib/domain/types";
 import { validateExternalVideoUrl } from "@/lib/security/url-validator";
+import { reportServerError } from "@/lib/observability/report-server-error";
 import {
   ALLOWED_IMAGE_MIMES,
   ALLOWED_VIDEO_MIMES,
@@ -99,6 +100,11 @@ export async function uploadMediaFile(
     .upload(path, buffer, { contentType: mime, upsert: false });
 
   if (uploadError) {
+    reportServerError(uploadError, {
+      area: "upload",
+      operation: "upload_media_file",
+      userId,
+    });
     throw new Error("Falha no upload. Tente novamente.");
   }
 
@@ -109,6 +115,11 @@ export async function uploadMediaFile(
     .eq("user_id", userId);
 
   if (updateError) {
+    reportServerError(updateError, {
+      area: "upload",
+      operation: "finalize_media_upload",
+      userId,
+    });
     throw new Error("Não foi possível finalizar o upload.");
   }
 

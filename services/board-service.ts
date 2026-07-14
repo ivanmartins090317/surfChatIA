@@ -8,6 +8,7 @@ import {
 } from "@/lib/ai/board-spec-prompt";
 import { parseBoardSpecResult } from "@/lib/ai/board-spec-parser";
 import type { Board, BoardSensation } from "@/lib/domain/types";
+import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/services/profile-service";
@@ -89,6 +90,11 @@ export async function uploadBoardPhoto(
     .upload(path, buffer, { contentType: mime, upsert: false });
 
   if (uploadError) {
+    reportServerError(uploadError, {
+      area: "upload",
+      operation: "upload_board_photo",
+      userId,
+    });
     throw new Error("Falha no upload da foto.");
   }
 
@@ -100,6 +106,11 @@ export async function uploadBoardPhoto(
     .eq("user_id", userId);
 
   if (updateError) {
+    reportServerError(updateError, {
+      area: "upload",
+      operation: "register_board_photo",
+      userId,
+    });
     throw new Error("Não foi possível registrar a foto.");
   }
 
@@ -140,7 +151,7 @@ export async function processMagicBoardSpec(
   userId: string,
   boardId: string,
 ): Promise<Board> {
-  const rate = rateLimitAiAction(userId);
+  const rate = await rateLimitAiAction(userId);
   if (!rate.allowed) {
     throw new Error("Limite diário de análises atingido.");
   }
@@ -204,6 +215,12 @@ export async function processMagicBoardSpec(
       .update({ status: "error" })
       .eq("id", boardId)
       .eq("user_id", userId);
+
+    reportServerError(error, {
+      area: "ai",
+      operation: "process_magic_board_spec",
+      userId,
+    });
 
     const message =
       error instanceof Error ? error.message : "Erro ao gerar ficha.";
