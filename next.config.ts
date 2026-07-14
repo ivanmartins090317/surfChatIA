@@ -24,7 +24,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["ffmpeg-static", "fluent-ffmpeg"],
+  serverExternalPackages: ["ffmpeg-static", "ffprobe-static", "fluent-ffmpeg"],
   experimental: {
     // Alinhado a MAX_VIDEO_BYTES em lib/media/upload-limits.ts (100 MB)
     serverActions: {

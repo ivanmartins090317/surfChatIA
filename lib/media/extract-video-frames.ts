@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
+import ffprobeStatic from "ffprobe-static";
 
 const FRAME_PERCENTAGES = [0.2, 0.5, 0.8] as const;
 const MAX_FRAMES = FRAME_PERCENTAGES.length;
@@ -14,11 +15,18 @@ export interface ExtractedVideoFrame {
   timestampLabel: string;
 }
 
-function ensureFfmpegPath(): void {
+function ensureFfmpegBinaries(): void {
   if (!ffmpegPath) {
     throw new Error("ffmpeg não disponível no servidor.");
   }
+
+  const probePath = ffprobeStatic.path;
+  if (!probePath) {
+    throw new Error("ffprobe não disponível no servidor.");
+  }
+
   ffmpeg.setFfmpegPath(ffmpegPath);
+  ffmpeg.setFfprobePath(probePath);
 }
 
 async function getVideoDurationSeconds(videoPath: string): Promise<number> {
@@ -66,7 +74,7 @@ export async function extractVideoFrames(
   buffer: Buffer,
   mimeType: string,
 ): Promise<ExtractedVideoFrame[]> {
-  ensureFfmpegPath();
+  ensureFfmpegBinaries();
 
   const workDir = await mkdtemp(join(tmpdir(), "surf-video-"));
   const extension = mimeType.includes("quicktime") ? "mov" : "mp4";
