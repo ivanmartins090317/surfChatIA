@@ -50,25 +50,27 @@ function assertProductionBackend(): void {
   }
 }
 
-async function invokeCheckRateLimit(
-  key: string,
-  limit: number,
-  windowSeconds: number,
-): Promise<{ data: RateLimitRpcRow | null; error: Error | null }> {
-  const supabase = createAdminClient();
-  const rpc = supabase.rpc as unknown as (
-    fn: string,
+interface RateLimitSupabaseRpc {
+  rpc(
+    fn: "check_rate_limit",
     args: {
       p_bucket_key: string;
       p_limit: number;
       p_window_seconds: number;
     },
-  ) => Promise<{
+  ): Promise<{
     data: RateLimitRpcRow | null;
     error: { message: string } | null;
   }>;
+}
 
-  const { data, error } = await rpc("check_rate_limit", {
+async function invokeCheckRateLimit(
+  key: string,
+  limit: number,
+  windowSeconds: number,
+): Promise<{ data: RateLimitRpcRow | null; error: Error | null }> {
+  const supabase = createAdminClient() as unknown as RateLimitSupabaseRpc;
+  const { data, error } = await supabase.rpc("check_rate_limit", {
     p_bucket_key: key,
     p_limit: limit,
     p_window_seconds: windowSeconds,
