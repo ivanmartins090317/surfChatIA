@@ -87,12 +87,35 @@ export async function initAnalysisFileUploadAction(input: {
   }
 }
 
+const videoFrameSchema = z.object({
+  base64: z.string().min(100).max(2_000_000),
+  mime_type: z.literal("image/jpeg"),
+  timestamp_label: z.string().min(1).max(16),
+});
+
 export async function completeAnalysisFileUploadAction(input: {
   media_id: string;
   storage_path: string;
+  media_type: "video" | "image";
+  video_frames?: z.infer<typeof videoFrameSchema>[];
 }): Promise<ActionResult<{ analysisId: string }>> {
   try {
     const user = await requireAuthUser();
+
+    if (input.media_type === "video") {
+      const frames = z.array(videoFrameSchema).length(3).parse(input.video_frames);
+      await finalizeMediaFileUpload(user.id, input.media_id, input.storage_path);
+      const analysis = await createPerformanceAnalysis(user.id, input.media_id, {
+        videoFrames: frames.map((frame) => ({
+          base64: frame.base64,
+          mimeType: frame.mime_type,
+          timestampLabel: frame.timestamp_label,
+        })),
+      });
+      revalidatePath("/analyses");
+      return { success: true, data: { analysisId: analysis.id } };
+    }
+
     await finalizeMediaFileUpload(user.id, input.media_id, input.storage_path);
     const analysis = await createPerformanceAnalysis(user.id, input.media_id);
     revalidatePath("/analyses");

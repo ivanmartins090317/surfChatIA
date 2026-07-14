@@ -6,6 +6,7 @@ import type {
   PerformanceResult,
 } from "@/lib/domain/types";
 import type { PerformanceAnalysisListItem } from "@/lib/domain/analysis-display";
+import type { ExtractedVideoFrame } from "@/lib/media/extract-video-frames";
 import { extractVideoFrames } from "@/lib/media/extract-video-frames";
 import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
@@ -55,9 +56,14 @@ async function attachPreviewUrls(
   );
 }
 
+export interface CreatePerformanceAnalysisOptions {
+  videoFrames?: ExtractedVideoFrame[];
+}
+
 export async function createPerformanceAnalysis(
   userId: string,
   mediaItemId: string,
+  options?: CreatePerformanceAnalysisOptions,
 ): Promise<Analysis> {
   const rate = await rateLimitAiAction(userId);
   if (!rate.allowed) {
@@ -108,18 +114,32 @@ export async function createPerformanceAnalysis(
     }
 
     if (media.type === "video" && media.storage_path) {
-      const { buffer, mimeType } = await downloadMediaFileBuffer(
-        media.storage_path,
-      );
-      if (!mimeType.startsWith("video/")) {
-        throw new Error("Arquivo não é um vídeo válido para análise.");
+      if (options?.videoFrames?.length) {
+        images = options.videoFrames.map((frame) => ({
+          base64: frame.base64,
+          mimeType: frame.mimeType,
+        }));
+        videoFrameTimestamps = options.videoFrames.map(
+          (frame) => frame.timestampLabel,
+        );
+      } else if (process.env.NODE_ENV === "development") {
+        const { buffer, mimeType } = await downloadMediaFileBuffer(
+          media.storage_path,
+        );
+        if (!mimeType.startsWith("video/")) {
+          throw new Error("Arquivo não é um vídeo válido para análise.");
+        }
+        const frames = await extractVideoFrames(buffer, mimeType);
+        images = frames.map((frame) => ({
+          base64: frame.base64,
+          mimeType: frame.mimeType,
+        }));
+        videoFrameTimestamps = frames.map((frame) => frame.timestampLabel);
+      } else {
+        throw new Error(
+          "Frames do vídeo não foram enviados. Atualize a página e tente novamente.",
+        );
       }
-      const frames = await extractVideoFrames(buffer, mimeType);
-      images = frames.map((frame) => ({
-        base64: frame.base64,
-        mimeType: frame.mimeType,
-      }));
-      videoFrameTimestamps = frames.map((frame) => frame.timestampLabel);
     }
 
     const raw = await runPerformanceAnalysis({

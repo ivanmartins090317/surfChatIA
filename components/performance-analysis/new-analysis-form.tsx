@@ -10,6 +10,7 @@ import {
   initAnalysisFileUploadAction,
 } from "@/actions/analysis-actions";
 import { uploadMediaFileToStorage } from "@/lib/media/upload-client";
+import { extractVideoFramesInBrowser } from "@/lib/media/extract-video-frames-browser";
 import { MediaFileDropzone } from "@/components/performance-analysis/media-file-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -74,9 +75,18 @@ export function NewAnalysisForm() {
           mimeType: file.type,
         });
 
+        const videoFrames =
+          type === "video" ? await extractVideoFramesInBrowser(file) : undefined;
+
         const completeResult = await completeAnalysisFileUploadAction({
           media_id: initResult.data.mediaId,
           storage_path: initResult.data.storagePath,
+          media_type: type,
+          video_frames: videoFrames?.map((frame) => ({
+            base64: frame.base64,
+            mime_type: frame.mimeType,
+            timestamp_label: frame.timestampLabel,
+          })),
         });
 
         if (!completeResult.success || !completeResult.data) {
