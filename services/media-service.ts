@@ -16,6 +16,11 @@ import {
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
 } from "@/lib/media/upload-limits";
+import {
+  buildMediaStoragePath,
+  inferMediaExtension,
+  isMediaStoragePathOwned,
+} from "@/lib/media/storage-path";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_VIDEO_MIMES_SET = ALLOWED_VIDEO_MIMES;
@@ -64,6 +69,123 @@ export async function createMediaItem(
   }
 
   return data as MediaItem;
+}
+
+const prepareMediaUploadSchema = z.object({
+  type: z.enum(["video", "image"]),
+  file_size: z.number().int().positive(),
+  mime_type: z.string().min(1),
+  file_name: z.string().min(1),
+  wave_type: createMediaSchema.shape.wave_type,
+  focus: createMediaSchema.shape.focus,
+});
+
+export interface PreparedMediaUpload {
+  mediaId: string;
+  storagePath: string;
+}
+
+function assertAllowedMediaUpload(
+  type: MediaType,
+  fileSize: number,
+  mimeType: string,
+): void {
+  const maxSize = type === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  if (fileSize > maxSize) {
+    throw new Error(
+      type === "video"
+        ? "Vídeo acima de 100 MB. Comprima ou envie um link."
+        : "Imagem acima de 10 MB. Reduza o tamanho.",
+    );
+  }
+
+  const allowed =
+    type === "video" ? ALLOWED_VIDEO_MIMES_SET : ALLOWED_IMAGE_MIMES_SET;
+  const mime = mimeType.toLowerCase();
+  if (!allowed.has(mime)) {
+    throw new Error("Formato de arquivo não suportado.");
+  }
+}
+
+export async function prepareMediaFileUpload(
+  userId: string,
+  input: z.infer<typeof prepareMediaUploadSchema>,
+): Promise<PreparedMediaUpload> {
+  const parsed = prepareMediaUploadSchema.parse(input);
+  assertAllowedMediaUpload(parsed.type, parsed.file_size, parsed.mime_type);
+
+  const media = await createMediaItem(userId, {
+    type: parsed.type,
+    wave_type: parsed.wave_type ?? null,
+    focus: parsed.focus ?? null,
+  });
+
+  const extension = inferMediaExtension(parsed.mime_type, parsed.file_name);
+  const storagePath = buildMediaStoragePath(userId, media.id, extension);
+
+  return { mediaId: media.id, storagePath };
+}
+
+export async function finalizeMediaFileUpload(
+  userId: string,
+  mediaId: string,
+  storagePath: string,
+): Promise<string> {
+  if (!isMediaStoragePathOwned(userId, mediaId, storagePath)) {
+    throw new Error("Caminho de upload inválido.");
+  }
+
+  const supabase = await createClient();
+  const folderPath = `${userId}/${mediaId}`;
+  const fileName = storagePath.slice(folderPath.length + 1);
+  const { data: objects, error: listError } = await supabase.storage
+    .from("media")
+    .list(folderPath, { search: fileName, limit: 1 });
+
+  if (listError || !objects?.length) {
+    throw new Error("Arquivo não encontrado no storage. Tente enviar novamente.");
+  }
+
+  const uploaded = objects[0];
+  const media = await getMediaItem(userId, mediaId);
+  if (!media || media.status !== "uploading") {
+    throw new Error("Upload inválido ou já finalizado.");
+  }
+
+  const detectedMime =
+    uploaded.metadata?.mimetype ??
+    (media.type === "video" ? "video/mp4" : "image/jpeg");
+
+  if (uploaded.metadata?.size) {
+    assertAllowedMediaUpload(
+      media.type as MediaType,
+      uploaded.metadata.size,
+      detectedMime,
+    );
+  } else {
+    const allowed =
+      media.type === "video" ? ALLOWED_VIDEO_MIMES_SET : ALLOWED_IMAGE_MIMES_SET;
+    if (!allowed.has(detectedMime.toLowerCase())) {
+      throw new Error("Formato de arquivo não suportado.");
+    }
+  }
+
+  const { error: updateError } = await supabase
+    .from("media_items")
+    .update({ storage_path: storagePath, status: "ready" })
+    .eq("id", mediaId)
+    .eq("user_id", userId);
+
+  if (updateError) {
+    reportServerError(updateError, {
+      area: "upload",
+      operation: "finalize_media_upload",
+      userId,
+    });
+    throw new Error("Não foi possível finalizar o upload.");
+  }
+
+  return storagePath;
 }
 
 export async function uploadMediaFile(

@@ -8,6 +8,8 @@ import { requireAuthUser } from "@/lib/supabase/server";
 import { createPerformanceAnalysis } from "@/services/analysis-service";
 import {
   createMediaItem,
+  finalizeMediaFileUpload,
+  prepareMediaFileUpload,
   uploadMediaFile,
 } from "@/services/media-service";
 
@@ -44,6 +46,63 @@ export async function createAnalysisFromLinkAction(
       error: toActionErrorMessage(
         error,
         "Não foi possível analisar o link. Verifique a URL e tente novamente.",
+      ),
+    };
+  }
+}
+
+export async function initAnalysisFileUploadAction(input: {
+  media_type: "video" | "image";
+  file_size: number;
+  mime_type: string;
+  file_name: string;
+  wave_type?: string;
+  focus?: string;
+}): Promise<ActionResult<{ mediaId: string; storagePath: string }>> {
+  try {
+    const user = await requireAuthUser();
+    const context = contextSchema.parse({
+      wave_type: input.wave_type || undefined,
+      focus: input.focus || undefined,
+    });
+
+    const prepared = await prepareMediaFileUpload(user.id, {
+      type: input.media_type,
+      file_size: input.file_size,
+      mime_type: input.mime_type,
+      file_name: input.file_name,
+      wave_type: context.wave_type ?? null,
+      focus: context.focus ?? null,
+    });
+
+    return { success: true, data: prepared };
+  } catch (error) {
+    return {
+      success: false,
+      error: toActionErrorMessage(
+        error,
+        "Não foi possível iniciar o upload. Tente novamente.",
+      ),
+    };
+  }
+}
+
+export async function completeAnalysisFileUploadAction(input: {
+  media_id: string;
+  storage_path: string;
+}): Promise<ActionResult<{ analysisId: string }>> {
+  try {
+    const user = await requireAuthUser();
+    await finalizeMediaFileUpload(user.id, input.media_id, input.storage_path);
+    const analysis = await createPerformanceAnalysis(user.id, input.media_id);
+    revalidatePath("/analyses");
+    return { success: true, data: { analysisId: analysis.id } };
+  } catch (error) {
+    return {
+      success: false,
+      error: toActionErrorMessage(
+        error,
+        "Não foi possível processar o arquivo. Tente novamente ou envie um link.",
       ),
     };
   }

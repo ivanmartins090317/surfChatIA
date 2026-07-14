@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
-  createAnalysisFromFileAction,
+  completeAnalysisFileUploadAction,
   createAnalysisFromLinkAction,
+  initAnalysisFileUploadAction,
 } from "@/actions/analysis-actions";
+import { uploadMediaFileToStorage } from "@/lib/media/upload-client";
 import { MediaFileDropzone } from "@/components/performance-analysis/media-file-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -47,19 +49,52 @@ export function NewAnalysisForm() {
     }
 
     setError(null);
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("media_type", type);
-    appendContext(formData);
 
     startTransition(async () => {
-      const result = await createAnalysisFromFileAction(formData);
-      if (!result.success || !result.data) {
-        setError(result.error ?? "Erro no upload.");
-        toast.error(result.error);
-        return;
+      try {
+        const initResult = await initAnalysisFileUploadAction({
+          media_type: type,
+          file_size: file.size,
+          mime_type: file.type,
+          file_name: file.name,
+          wave_type: waveType || undefined,
+          focus: focus || undefined,
+        });
+
+        if (!initResult.success || !initResult.data) {
+          const message = initResult.error ?? "Erro ao iniciar upload.";
+          setError(message);
+          toast.error(message);
+          return;
+        }
+
+        await uploadMediaFileToStorage({
+          storagePath: initResult.data.storagePath,
+          file,
+          mimeType: file.type,
+        });
+
+        const completeResult = await completeAnalysisFileUploadAction({
+          media_id: initResult.data.mediaId,
+          storage_path: initResult.data.storagePath,
+        });
+
+        if (!completeResult.success || !completeResult.data) {
+          const message = completeResult.error ?? "Erro ao finalizar upload.";
+          setError(message);
+          toast.error(message);
+          return;
+        }
+
+        router.push(`/analyses/${completeResult.data.analysisId}`);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : "Erro no upload. Tente novamente ou envie um link.";
+        setError(message);
+        toast.error(message);
       }
-      router.push(`/analyses/${result.data.analysisId}`);
     });
   }
 
