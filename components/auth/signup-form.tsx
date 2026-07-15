@@ -31,9 +31,9 @@ export function SignUpForm() {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
+    <form action={handleSubmit} className="space-y-6" aria-busy={isPending}>
       {error && (
-        <Alert variant="destructive">
+        <Alert id="signup-error" variant="destructive" role="alert">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -42,26 +42,55 @@ export function SignUpForm() {
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
-      <div className="space-y-2">
-        <Label htmlFor="display_name">Nome</Label>
-        <Input id="display_name" name="display_name" required minLength={2} />
+      <div className="space-y-3">
+        <Label htmlFor="display_name" className="text-foreground">
+          Nome <span className="text-primary" aria-hidden>*</span>
+        </Label>
+        <Input
+          id="display_name"
+          name="display_name"
+          required
+          minLength={2}
+          autoComplete="name"
+          placeholder="Seu nome"
+          className="h-12"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-error" : undefined}
+        />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">E-mail</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+      <div className="space-y-3">
+        <Label htmlFor="email" className="text-foreground">
+          E-mail <span className="text-primary" aria-hidden>*</span>
+        </Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="seu@email.com"
+          className="h-12"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-error" : undefined}
+        />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+      <div className="space-y-3">
+        <Label htmlFor="password" className="text-foreground">
+          Senha <span className="text-primary" aria-hidden>*</span>
+        </Label>
         <PasswordInput
           id="password"
           name="password"
           autoComplete="new-password"
           required
           minLength={8}
+          className="h-12"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-error" : undefined}
         />
-        <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
+        <p className="text-sm text-muted-foreground">Mínimo 8 caracteres.</p>
       </div>
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" size="lg" className="w-full" disabled={isPending}>
         {isPending ? (
           <>
             <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -71,9 +100,12 @@ export function SignUpForm() {
           "Criar conta"
         )}
       </Button>
-      <p className="text-center text-sm text-muted-foreground">
-        Já tem conta?{" "}
-        <Link href="/login" className="text-primary hover:underline">
+      <p className="text-center text-sm leading-relaxed text-muted-foreground">
+        Já tem uma conta?{" "}
+        <Link
+          href="/login"
+          className="inline-flex min-h-11 items-center rounded-xs font-semibold text-primary underline-offset-4 transition-colors hover:text-primary/80 hover:underline focus-visible:outline-none focus-visible:glow-focus"
+        >
           Entrar
         </Link>
       </p>
