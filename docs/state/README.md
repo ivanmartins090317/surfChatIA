@@ -7,6 +7,7 @@ Documento vivo com **pendências abertas**, prioridades e próximos passos. Atua
 | [PENDENCIAS.md](./PENDENCIAS.md) | **Plano de lançamento SaaS** — checklist por etapa (MVP → prod → monetização → go-live) |
 | [Relatório de testes manuais](../relatorio-testes-manuais.html) | Homologação E2E (POP-QA-SURF-001) — 26 TCs, evidências em `docs/evidencias/` |
 | [Implementação](../implementation/README.md) | Registro do que já foi entregue |
+| [Bugs corrigidos](./fixed_tasks/README.md) | Bugs de produção já corrigidos — sintoma, causa raiz e validação |
 | [Planos e limites](../PLANOS_E_LIMITES.md) | Estratégia SaaS — créditos, planos e monetização |
 
 **Última atualização:** 13/07/2026 — IA visão board-match validada E2E · 26/26 TCs
