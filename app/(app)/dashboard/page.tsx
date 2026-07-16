@@ -1,8 +1,14 @@
 import Link from "next/link";
-import { Activity, GitCompareArrows, Sparkles, UploadCloud } from "lucide-react";
+import {
+  Activity,
+  GitCompareArrows,
+  Sparkles,
+  UploadCloud,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { MetricCard } from "@/components/dashboard/metric-card";
 import { formatDatePtBr } from "@/lib/utils";
 import { requireAuthUser } from "@/lib/supabase/server";
 import type { Analysis, PerformanceResult } from "@/lib/domain/types";
@@ -57,46 +63,26 @@ export default async function DashboardPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-normal text-muted-foreground">
-              Análises
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-4xl font-bold tabular-nums">
-              {analyses.length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-normal text-muted-foreground">
-              Score médio
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-4xl font-bold tabular-nums text-primary">
-              {avgScore ?? "—"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-normal text-muted-foreground">
-              Pranchas mágicas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-display text-4xl font-bold tabular-nums">
-              {boards.length}
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          label="Análises"
+          value={analyses.length}
+          iconSrc="/icon_line_chart_01.svg"
+        />
+        <MetricCard
+          label="Score médio"
+          value={avgScore ?? "—"}
+          iconSrc="/icon_medal_01.svg"
+          valueClassName="text-primary"
+        />
+        <MetricCard
+          label="Pranchas mágicas"
+          value={boards.length}
+          iconSrc="/surf_board_icon_01.svg"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Button asChild size="lg" className="h-auto flex-col gap-2 py-6">
+        <Button asChild size="lg" className="flex gap-2 py-6">
           <Link href="/analyses/new">
             <UploadCloud className="size-6" aria-hidden />
             Nova análise de performance
@@ -106,7 +92,7 @@ export default async function DashboardPage() {
           asChild
           size="lg"
           variant="secondary"
-          className="h-auto flex-col gap-2 py-6"
+          className="flex gap-2 py-6"
         >
           <Link href="/boards/new">
             <Sparkles className="size-6" aria-hidden />
@@ -117,7 +103,7 @@ export default async function DashboardPage() {
           asChild
           size="lg"
           variant="secondary"
-          className="h-auto flex-col gap-2 py-6 sm:col-span-2 lg:col-span-1"
+          className="flex gap-2 py-6 sm:col-span-2 lg:col-span-1"
         >
           <Link href="/compatibility">
             <GitCompareArrows className="size-6" aria-hidden />
