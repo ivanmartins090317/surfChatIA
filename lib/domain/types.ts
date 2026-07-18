@@ -72,6 +72,14 @@ export const BOARD_MATCH_VERDICT_LABELS = {
 
 export type BoardMatchVerdict = keyof typeof BOARD_MATCH_VERDICT;
 
+export const MANEUVER_CONFIDENCE_LEVELS = {
+  alta: "Alta confiança",
+  media: "Confiança média",
+  baixa: "Baixa confiança",
+} as const;
+
+export type ManeuverConfidence = keyof typeof MANEUVER_CONFIDENCE_LEVELS;
+
 export interface Profile {
   id: string;
   display_name: string | null;
@@ -117,6 +125,8 @@ export interface PerformanceResult {
   criterios_score?: CriterioScore[];
   /** Presente quando a análise usou visão em foto ou frames de vídeo */
   manobra_observada?: string;
+  /** Nível de confiança da IA na identificação da manobra observada */
+  confianca_manobra?: ManeuverConfidence;
   /** Detalhes técnicos visíveis no frame ou nos frames do vídeo */
   detalhes_frame?: string;
 }

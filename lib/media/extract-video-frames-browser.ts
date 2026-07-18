@@ -1,10 +1,11 @@
+import { computeFrameTimestamps } from "@/lib/media/video-frame-sampling";
+
 export interface ClientVideoFrame {
   base64: string;
   mimeType: "image/jpeg";
   timestampLabel: string;
 }
 
-const FRAME_PERCENTAGES = [0.2, 0.5, 0.8] as const;
 const JPEG_QUALITY = 0.85;
 const MAX_FRAME_EDGE_PX = 1280;
 
@@ -98,11 +99,7 @@ export async function extractVideoFramesInBrowser(
 
     const frames: ClientVideoFrame[] = [];
 
-    for (const ratio of FRAME_PERCENTAGES) {
-      const seconds = Math.max(
-        0,
-        Math.min(video.duration - 0.1, video.duration * ratio),
-      );
+    for (const seconds of computeFrameTimestamps(video.duration)) {
       await seekVideoTo(video, seconds);
       frames.push(captureFrame(video, seconds));
     }

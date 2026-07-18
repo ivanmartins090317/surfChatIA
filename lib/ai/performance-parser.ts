@@ -23,6 +23,7 @@ const performanceResultSchema = z
     score: z.number().min(0).max(100).optional(),
     criterios_score: z.array(criterioScoreSchema).length(5).optional(),
     manobra_observada: z.string().min(3).optional(),
+    confianca_manobra: z.enum(["alta", "media", "baixa"]).optional(),
     detalhes_frame: z.string().min(3).optional(),
   })
   .superRefine((value, ctx) => {

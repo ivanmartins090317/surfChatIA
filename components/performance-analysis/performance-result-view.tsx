@@ -2,10 +2,36 @@ import { CheckCircle2, Lightbulb, Target, TrendingUp, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import type { MelhoriaDetalhada, PerformanceResult } from "@/lib/domain/types";
+import type {
+  MelhoriaDetalhada,
+  ManeuverConfidence,
+  PerformanceResult,
+} from "@/lib/domain/types";
+import { MANEUVER_CONFIDENCE_LEVELS } from "@/lib/domain/types";
 
 interface PerformanceResultViewProps {
   result: PerformanceResult;
+}
+
+const CONFIDENCE_BADGE_VARIANT: Record<
+  ManeuverConfidence,
+  "success" | "warning" | "destructive"
+> = {
+  alta: "success",
+  media: "warning",
+  baixa: "destructive",
+};
+
+function ManeuverConfidenceBadge({
+  confidence,
+}: {
+  confidence: ManeuverConfidence;
+}) {
+  return (
+    <Badge variant={CONFIDENCE_BADGE_VARIANT[confidence]}>
+      {MANEUVER_CONFIDENCE_LEVELS[confidence]}
+    </Badge>
+  );
 }
 
 function ScoreBreakdown({ result }: { result: PerformanceResult }) {
@@ -113,9 +139,14 @@ export function PerformanceResultView({ result }: PerformanceResultViewProps) {
       {result.manobra_observada && (
         <Card className="border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="size-5 text-primary" aria-hidden />
-              Manobra observada
+            <CardTitle className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <Zap className="size-5 text-primary" aria-hidden />
+                Manobra observada
+              </span>
+              {result.confianca_manobra && (
+                <ManeuverConfidenceBadge confidence={result.confianca_manobra} />
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">

@@ -5,9 +5,7 @@ import { randomUUID } from "node:crypto";
 import ffmpeg from "fluent-ffmpeg";
 import ffmpegPath from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
-
-const FRAME_PERCENTAGES = [0.2, 0.5, 0.8] as const;
-const MAX_FRAMES = FRAME_PERCENTAGES.length;
+import { computeFrameTimestamps } from "@/lib/media/video-frame-sampling";
 
 export interface ExtractedVideoFrame {
   base64: string;
@@ -83,11 +81,11 @@ export async function extractVideoFrames(
   try {
     await writeFile(videoPath, buffer);
     const duration = await getVideoDurationSeconds(videoPath);
+    const timestamps = computeFrameTimestamps(duration);
     const frames: ExtractedVideoFrame[] = [];
 
-    for (let index = 0; index < MAX_FRAMES; index += 1) {
-      const ratio = FRAME_PERCENTAGES[index];
-      const seconds = Math.max(0, Math.min(duration - 0.1, duration * ratio));
+    for (let index = 0; index < timestamps.length; index += 1) {
+      const seconds = timestamps[index];
       const framePath = join(workDir, `frame-${index}.jpg`);
 
       await extractFrameAt(videoPath, framePath, seconds);

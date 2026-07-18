@@ -2,6 +2,11 @@ import OpenAI from "openai";
 import { hasOpenAiKey } from "@/lib/env";
 
 const AI_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 90_000;
+/**
+ * Fase A do plano de especialização (docs/implementation/2026-07-17-plano-especializacao-ia-performance.md):
+ * testado gpt-4o para reduzir erro de nomenclatura de manobra, mas revertido para gpt-4o-mini
+ * (custo ~17x maior) enquanto valida-se o ganho real de precisão com os outros ajustes de prompt.
+ */
 const VISION_MODEL = "gpt-4o-mini";
 const TEXT_MODEL = "gpt-4o-mini";
 

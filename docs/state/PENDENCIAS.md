@@ -2,7 +2,7 @@
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
 > **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · monetização **não implementada**.  
-> **Última revisão:** 14/07/2026 — rate limit Postgres + Sentry + migration 007 aplicada.
+> **Última revisão:** 17/07/2026 — Fase A da especialização da IA de performance implementada, validação com mídia real em andamento.
 
 ---
 
@@ -16,12 +16,45 @@
 | Compatibilidade | ✅ Código + E2E | FL-05 (2/2) |
 | Segurança RLS | ✅ Validado | FL-06 (2/2) |
 | Shell / mobile | ✅ Validado | FL-07 (2/2) |
+| Especialização IA performance | 🟡 Fase A implementada, validação pendente | — |
 | Monetização | ❌ Não existe | — |
 | Pagamentos | ❌ Não existe | — |
 | Deploy produção | 🟡 Live (2.1–2.2 ✅ · 2.3 pendente) | smoke test prod OK |
 | Legal (LGPD / Termos) | ❌ Não existe | — |
 
 **Total homologação:** 26/26 TCs aprovados (100%).
+
+---
+
+## Iniciativa paralela — Especialização da IA de performance 🟡
+
+> Track independente das etapas de lançamento abaixo — foco em reduzir erros de nomenclatura de manobra e generalização nos pontos de melhoria. Referência completa: [Plano de especialização IA](../implementation/2026-07-17-plano-especializacao-ia-performance.md).
+
+### Fase A — Quick wins de prompt e frames
+
+**Código implementado (17/07/2026):**
+
+- [x] Taxonomia fechada de 11 manobras com critério visual objetivo (`lib/ai/performance-prompt.ts`)
+- [x] Campo `confianca_manobra` (alta/media/baixa) no prompt, parser Zod e tipos de domínio
+- [x] Regra para citar timestamp do frame em pelo menos 1 ponto de melhoria (vídeo)
+- [x] Extração de frames de 3 → 6, distribuição uniforme via função pura (`lib/media/video-frame-sampling.ts`), aplicada no extrator server (`extract-video-frames.ts`) e client (`extract-video-frames-browser.ts`)
+- [x] Validação do novo número de frames no server action (`actions/analysis-actions.ts`)
+- [x] Badge de confiança da manobra na UI (`performance-result-view.tsx`)
+- [x] `VISION_MODEL` testado com `gpt-4o` e **revertido para `gpt-4o-mini`** (17/07/2026) — validar primeiro o ganho da taxonomia/confiança/mais frames antes de pagar ~17x mais por `gpt-4o`
+- [x] Testes novos/atualizados: `video-frame-sampling.test.ts` (5 testes) + 2 casos em `security-and-parsers.test.ts` — suíte completa 43/43 ok
+- [x] `lint`, `typecheck` e `build` de produção validados sem regressão
+
+**Pendente:**
+
+- [ ] **Validação manual com mídia real** — usuário testando agora (17/07/2026) com `OPENAI_API_KEY` real, comparando erro de nomenclatura antes/depois, usando `gpt-4o-mini` + taxonomia/confiança/6 frames
+- [ ] Se `gpt-4o-mini` ainda errar manobra com frequência, reavaliar `gpt-4o` (ou eval set da Fase B) com dados concretos em mãos
+
+### Próximas fases (não iniciadas)
+
+- [ ] **Fase B** — eval set de qualidade (gabarito de 20–30 casos reais validados por coach/surfista experiente)
+- [ ] **Fase C** — captura de correções humanas por análise (nova tabela `analysis_corrections` + UI de correção)
+- [ ] **Fase D** — RAG/few-shot com exemplos validados injetados no prompt
+- [ ] **Fase E** — fine-tuning de modelo customizado (opcional, longo prazo, só com dataset maduro)
 
 ---
 

@@ -114,6 +114,7 @@ describe("parsePerformanceResult", () => {
   it("aceita campos opcionais de análise visual", () => {
     const raw = JSON.stringify({
       manobra_observada: "Cutback com compressão na boca da onda",
+      confianca_manobra: "alta",
       detalhes_frame: "Joelhos flexionados, olhar na parede, braço dianteiro estendido.",
       criterios_score: [
         { nome: "Entrada / take-off", nota: 10, comentario: "Não visível neste frame." },
@@ -149,6 +150,39 @@ describe("parsePerformanceResult", () => {
     });
     const parsed = parsePerformanceResult(raw);
     expect(parsed.manobra_observada).toContain("Cutback");
+    expect(parsed.confianca_manobra).toBe("alta");
     expect(parsed.score).toBe(68);
+  });
+
+  it("rejeita confianca_manobra fora do enum permitido", () => {
+    const raw = JSON.stringify({
+      manobra_observada: "Cutback",
+      confianca_manobra: "certeza_absoluta",
+      resumo: "Boa compressão no cutback com espaço para fechar o corpo na saída.",
+      pontos_fortes: ["Compressão", "Olhar na parede"],
+      melhorias_detalhadas: [
+        {
+          titulo: "Saída do cutback",
+          observacao: "Ombros abrem antes de completar o carve observado no frame.",
+          impacto: "Perde velocidade na saída da manobra.",
+          dica_pratica: "Mantenha o olhar na parede até o fim do carve.",
+        },
+        {
+          titulo: "Braço traseiro",
+          observacao: "Braço traseiro alto desbalanceia o corpo na compressão.",
+          impacto: "Reduz controle na transição seguinte.",
+          dica_pratica: "Mantenha o cotovelo traseiro mais baixo durante a manobra.",
+        },
+        {
+          titulo: "Pé dianteiro",
+          observacao: "Pouco peso no pé dianteiro na fase final do cutback.",
+          impacto: "Limita fechamento da manobra.",
+          dica_pratica: "Pressione o pé dianteiro ao iniciar a saída do cutback.",
+        },
+      ],
+      prioridades_treino: ["Cutback", "Transição de trilho", "Paddle power"],
+    });
+
+    expect(() => parsePerformanceResult(raw)).toThrow();
   });
 });
