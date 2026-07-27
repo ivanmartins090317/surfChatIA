@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   computeFrameTimestamps,
+  MIN_VIDEO_FRAMES,
   VIDEO_FRAME_COUNT,
 } from "@/lib/media/video-frame-sampling";
+
+describe("MIN_VIDEO_FRAMES", () => {
+  it("é positivo e menor que VIDEO_FRAME_COUNT", () => {
+    expect(MIN_VIDEO_FRAMES).toBeGreaterThan(0);
+    expect(MIN_VIDEO_FRAMES).toBeLessThan(VIDEO_FRAME_COUNT);
+  });
+});
 
 describe("computeFrameTimestamps", () => {
   it("gera VIDEO_FRAME_COUNT timestamps por padrão", () => {

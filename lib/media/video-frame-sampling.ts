@@ -7,6 +7,13 @@
 export const VIDEO_FRAME_COUNT = 6;
 
 /**
+ * Quantidade mínima de frames aceita quando a extração no navegador falha
+ * parcialmente (comum em dispositivos móveis com seek de vídeo mais lento).
+ * Abaixo disso a evidência visual é considerada insuficiente para análise.
+ */
+export const MIN_VIDEO_FRAMES = 2;
+
+/**
  * Distribui os timestamps de forma uniforme ao longo da duração do vídeo,
  * evitando os extremos exatos (0% e 100%), onde é mais comum haver frames
  * de transição, corte ou tela preta.

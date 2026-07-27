@@ -1,4 +1,7 @@
-import { computeFrameTimestamps } from "@/lib/media/video-frame-sampling";
+import {
+  computeFrameTimestamps,
+  MIN_VIDEO_FRAMES,
+} from "@/lib/media/video-frame-sampling";
 
 export interface ClientVideoFrame {
   base64: string;
@@ -6,8 +9,20 @@ export interface ClientVideoFrame {
   timestampLabel: string;
 }
 
+export interface ExtractVideoFramesProgress {
+  current: number;
+  total: number;
+}
+
+export interface ExtractVideoFramesOptions {
+  onProgress?: (progress: ExtractVideoFramesProgress) => void;
+}
+
 const JPEG_QUALITY = 0.85;
 const MAX_FRAME_EDGE_PX = 1280;
+const METADATA_TIMEOUT_MS = 20_000;
+const SEEK_TIMEOUT_MS = 20_000;
+const SEEK_RETRY_COUNT = 1;
 
 function formatTimestamp(seconds: number): string {
   const total = Math.max(0, Math.round(seconds));
@@ -16,21 +31,71 @@ function formatTimestamp(seconds: number): string {
   return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-function loadVideoMetadata(video: HTMLVideoElement): Promise<void> {
-  return new Promise((resolve, reject) => {
-    video.onloadedmetadata = () => resolve();
-    video.onerror = () => {
-      reject(new Error("Não foi possível ler o vídeo no navegador."));
-    };
-  });
+/**
+ * iOS Safari e alguns navegadores Android decodificam vídeo `blob:` de forma
+ * mais confiável quando o elemento está anexado ao DOM (mesmo invisível) do
+ * que quando existe apenas em memória.
+ */
+function attachHiddenVideoElement(video: HTMLVideoElement): void {
+  video.style.position = "fixed";
+  video.style.width = "1px";
+  video.style.height = "1px";
+  video.style.opacity = "0";
+  video.style.pointerEvents = "none";
+  document.body.appendChild(video);
 }
 
-function seekVideoTo(video: HTMLVideoElement, seconds: number): Promise<void> {
+const READY_STATE_BY_EVENT = {
+  loadedmetadata: 1, // HAVE_METADATA
+  loadeddata: 2, // HAVE_CURRENT_DATA
+} as const;
+
+function waitForEvent(
+  video: HTMLVideoElement,
+  eventName: "loadedmetadata" | "loadeddata",
+  timeoutMs: number,
+  timeoutMessage: string,
+): Promise<void> {
+  if (video.readyState >= READY_STATE_BY_EVENT[eventName]) {
+    return Promise.resolve();
+  }
+
   return new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(() => {
       cleanup();
-      reject(new Error("Tempo esgotado ao extrair frames do vídeo."));
-    }, 15_000);
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    function cleanup() {
+      window.clearTimeout(timeoutId);
+      video.removeEventListener(eventName, handleReady);
+      video.removeEventListener("error", handleError);
+    }
+
+    function handleReady() {
+      cleanup();
+      resolve();
+    }
+
+    function handleError() {
+      cleanup();
+      reject(new Error("Não foi possível ler o vídeo no navegador."));
+    }
+
+    video.addEventListener(eventName, handleReady);
+    video.addEventListener("error", handleError);
+  });
+}
+
+function seekVideoToOnce(
+  video: HTMLVideoElement,
+  seconds: number,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Tempo esgotado ao buscar o frame do vídeo."));
+    }, SEEK_TIMEOUT_MS);
 
     function cleanup() {
       window.clearTimeout(timeoutId);
@@ -45,6 +110,22 @@ function seekVideoTo(video: HTMLVideoElement, seconds: number): Promise<void> {
     video.addEventListener("seeked", handleSeeked);
     video.currentTime = seconds;
   });
+}
+
+async function seekVideoTo(
+  video: HTMLVideoElement,
+  seconds: number,
+): Promise<void> {
+  for (let attempt = 0; attempt <= SEEK_RETRY_COUNT; attempt += 1) {
+    try {
+      await seekVideoToOnce(video, seconds);
+      return;
+    } catch (error) {
+      if (attempt === SEEK_RETRY_COUNT) {
+        throw error;
+      }
+    }
+  }
 }
 
 function captureFrame(
@@ -79,35 +160,84 @@ function captureFrame(
   };
 }
 
+async function captureFramesAtTimestamps(
+  video: HTMLVideoElement,
+  timestamps: number[],
+  onProgress?: ExtractVideoFramesOptions["onProgress"],
+): Promise<ClientVideoFrame[]> {
+  const frames: ClientVideoFrame[] = [];
+
+  for (let index = 0; index < timestamps.length; index += 1) {
+    const seconds = timestamps[index];
+    onProgress?.({ current: index + 1, total: timestamps.length });
+
+    try {
+      await seekVideoTo(video, seconds);
+      frames.push(captureFrame(video, seconds));
+    } catch {
+      // Falha isolada em um frame não invalida a extração inteira — o
+      // dispositivo móvel pode falhar o seek em um ponto específico do
+      // vídeo (ex.: distância grande do keyframe anterior).
+    }
+  }
+
+  return frames;
+}
+
+function releaseVideoElement(video: HTMLVideoElement, objectUrl: string): void {
+  URL.revokeObjectURL(objectUrl);
+  video.removeAttribute("src");
+  video.load();
+  video.remove();
+}
+
 export async function extractVideoFramesInBrowser(
   file: File,
+  options?: ExtractVideoFramesOptions,
 ): Promise<ClientVideoFrame[]> {
   const video = document.createElement("video");
   video.preload = "auto";
   video.muted = true;
   video.playsInline = true;
+  attachHiddenVideoElement(video);
 
   const objectUrl = URL.createObjectURL(file);
   video.src = objectUrl;
 
   try {
-    await loadVideoMetadata(video);
+    await waitForEvent(
+      video,
+      "loadedmetadata",
+      METADATA_TIMEOUT_MS,
+      "Tempo esgotado ao carregar o vídeo. Verifique sua conexão e tente novamente.",
+    );
 
     if (!Number.isFinite(video.duration) || video.duration <= 0) {
       throw new Error("Não foi possível ler a duração do vídeo.");
     }
 
-    const frames: ClientVideoFrame[] = [];
+    await waitForEvent(
+      video,
+      "loadeddata",
+      METADATA_TIMEOUT_MS,
+      "Tempo esgotado ao carregar o vídeo. Verifique sua conexão e tente novamente.",
+    );
 
-    for (const seconds of computeFrameTimestamps(video.duration)) {
-      await seekVideoTo(video, seconds);
-      frames.push(captureFrame(video, seconds));
+    const timestamps = computeFrameTimestamps(video.duration);
+    const frames = await captureFramesAtTimestamps(
+      video,
+      timestamps,
+      options?.onProgress,
+    );
+
+    if (frames.length < MIN_VIDEO_FRAMES) {
+      throw new Error(
+        "Não foi possível extrair frames suficientes do vídeo neste dispositivo. Tente novamente, use um vídeo mais curto ou envie por um link.",
+      );
     }
 
     return frames;
   } finally {
-    URL.revokeObjectURL(objectUrl);
-    video.removeAttribute("src");
-    video.load();
+    releaseVideoElement(video, objectUrl);
   }
 }

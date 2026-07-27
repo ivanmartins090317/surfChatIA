@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionResult, Analysis } from "@/lib/domain/types";
 import { toActionErrorMessage } from "@/lib/errors/action-error";
-import { VIDEO_FRAME_COUNT } from "@/lib/media/video-frame-sampling";
+import {
+  MIN_VIDEO_FRAMES,
+  VIDEO_FRAME_COUNT,
+} from "@/lib/media/video-frame-sampling";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { createPerformanceAnalysis } from "@/services/analysis-service";
 import {
@@ -106,7 +109,8 @@ export async function completeAnalysisFileUploadAction(input: {
     if (input.media_type === "video") {
       const frames = z
         .array(videoFrameSchema)
-        .length(VIDEO_FRAME_COUNT)
+        .min(MIN_VIDEO_FRAMES)
+        .max(VIDEO_FRAME_COUNT)
         .parse(input.video_frames);
       await finalizeMediaFileUpload(user.id, input.media_id, input.storage_path);
       const analysis = await createPerformanceAnalysis(user.id, input.media_id, {

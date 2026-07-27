@@ -33,11 +33,20 @@ export function NewAnalysisForm() {
   const [error, setError] = useState<string | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [progressLabel, setProgressLabel] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function appendContext(formData: FormData) {
     if (waveType) formData.set("wave_type", waveType);
     if (focus) formData.set("focus", focus);
+  }
+
+  async function extractFramesWithProgress(file: File) {
+    setProgressLabel("Lendo o vídeo no dispositivo…");
+    return extractVideoFramesInBrowser(file, {
+      onProgress: ({ current, total }) =>
+        setProgressLabel(`Extraindo frame ${current} de ${total}…`),
+    });
   }
 
   function submitFile(type: "video" | "image") {
@@ -53,6 +62,13 @@ export function NewAnalysisForm() {
 
     startTransition(async () => {
       try {
+        // Extrai os frames antes de subir o arquivo: se o dispositivo não
+        // conseguir decodificar o vídeo, evitamos gastar tempo e dados do
+        // usuário com um upload que seria descartado depois.
+        const videoFrames =
+          type === "video" ? await extractFramesWithProgress(file) : undefined;
+
+        setProgressLabel("Enviando arquivo…");
         const initResult = await initAnalysisFileUploadAction({
           media_type: type,
           file_size: file.size,
@@ -75,9 +91,7 @@ export function NewAnalysisForm() {
           mimeType: file.type,
         });
 
-        const videoFrames =
-          type === "video" ? await extractVideoFramesInBrowser(file) : undefined;
-
+        setProgressLabel("Processando análise…");
         const completeResult = await completeAnalysisFileUploadAction({
           media_id: initResult.data.mediaId,
           storage_path: initResult.data.storagePath,
@@ -104,6 +118,8 @@ export function NewAnalysisForm() {
             : "Erro no upload. Tente novamente ou envie um link.";
         setError(message);
         toast.error(message);
+      } finally {
+        setProgressLabel(null);
       }
     });
   }
@@ -192,7 +208,7 @@ export function NewAnalysisForm() {
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                Analisando…
+                {progressLabel ?? "Analisando…"}
               </>
             ) : (
               "Analisar vídeo"
@@ -216,7 +232,7 @@ export function NewAnalysisForm() {
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                Analisando…
+                {progressLabel ?? "Analisando…"}
               </>
             ) : (
               "Analisar imagem"
