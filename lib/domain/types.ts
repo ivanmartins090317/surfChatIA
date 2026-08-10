@@ -80,6 +80,23 @@ export const MANEUVER_CONFIDENCE_LEVELS = {
 
 export type ManeuverConfidence = keyof typeof MANEUVER_CONFIDENCE_LEVELS;
 
+export const USER_PLANS = {
+  free: "Grátis",
+  surfista: "Surfista",
+  pro: "Pro",
+  coach: "Coach",
+} as const;
+
+export type UserPlan = keyof typeof USER_PLANS;
+
+export const ANALYSIS_CREDIT_TYPES = {
+  performance: "performance",
+  board_spec: "board_spec",
+  board_match: "board_match",
+} as const;
+
+export type AnalysisCreditType = keyof typeof ANALYSIS_CREDIT_TYPES;
+
 export interface Profile {
   id: string;
   display_name: string | null;
@@ -88,8 +105,24 @@ export interface Profile {
   height_cm: number | null;
   wave_type: WaveType | null;
   role: "user" | "admin";
+  plan: UserPlan;
+  credits_balance: number;
+  credits_period_used: number;
+  credits_reserved: number;
+  billing_period_start: string | null;
+  free_quota_granted: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface CreditsSnapshot {
+  plan: UserPlan;
+  remaining: number;
+  periodUsed: number;
+  balance: number;
+  reserved: number;
+  planQuota: number;
+  freeQuotaGranted: boolean;
 }
 
 export interface ProductFeedbackListItem {

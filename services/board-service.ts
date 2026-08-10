@@ -12,6 +12,10 @@ import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/services/profile-service";
+import {
+  runWithAnalysisCreditGate,
+  withSystemAutoRetries,
+} from "@/services/usage-service";
 
 export const MAX_BOARD_PHOTO_BYTES = 10 * 1024 * 1024;
 const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -151,81 +155,89 @@ export async function processMagicBoardSpec(
   userId: string,
   boardId: string,
 ): Promise<Board> {
-  const rate = await rateLimitAiAction(userId);
-  if (!rate.allowed) {
-    throw new Error("Limite diário de análises atingido.");
-  }
+  return runWithAnalysisCreditGate({
+    userId,
+    analysisType: "board_spec",
+    getAnalysisId: () => boardId,
+    operation: async () => {
+      const rate = await rateLimitAiAction(userId);
+      if (!rate.allowed) {
+        throw new Error("Limite diário de análises atingido.");
+      }
 
-  const board = await getBoard(userId, boardId);
-  if (!board) {
-    throw new Error("Prancha não encontrada.");
-  }
+      const board = await getBoard(userId, boardId);
+      if (!board) {
+        throw new Error("Prancha não encontrada.");
+      }
 
-  if (board.photo_paths.length < 3) {
-    throw new Error("Envie pelo menos 3 fotos antes de gerar a ficha.");
-  }
+      if (board.photo_paths.length < 3) {
+        throw new Error("Envie pelo menos 3 fotos antes de gerar a ficha.");
+      }
 
-  const supabase = await createClient();
-  await supabase
-    .from("boards")
-    .update({ status: "processing" })
-    .eq("id", boardId)
-    .eq("user_id", userId);
+      const supabase = await createClient();
+      await supabase
+        .from("boards")
+        .update({ status: "processing" })
+        .eq("id", boardId)
+        .eq("user_id", userId);
 
-  try {
-    const profile = await getProfile(userId);
-    const raw = await chatJsonCompletion(
-      buildBoardSpecSystemPrompt(),
-      buildBoardSpecUserPrompt({
-        profile,
-        measurements: {
-          length_in: board.length_in,
-          width_in: board.width_in,
-          thickness_in: board.thickness_in,
-          volume_l: board.volume_l,
-        },
-        sensation: board.sensation_json as BoardSensation | null,
-        photoCount: board.photo_paths.length,
-        name: board.name,
-      }),
-    );
+      try {
+        const profile = await getProfile(userId);
+        const parsed = await withSystemAutoRetries(async () => {
+          const raw = await chatJsonCompletion(
+            buildBoardSpecSystemPrompt(),
+            buildBoardSpecUserPrompt({
+              profile,
+              measurements: {
+                length_in: board.length_in,
+                width_in: board.width_in,
+                thickness_in: board.thickness_in,
+                volume_l: board.volume_l,
+              },
+              sensation: board.sensation_json as BoardSensation | null,
+              photoCount: board.photo_paths.length,
+              name: board.name,
+            }),
+          );
+          return parseBoardSpecResult(raw);
+        });
 
-    const parsed = parseBoardSpecResult(raw);
+        const { data, error } = await supabase
+          .from("boards")
+          .update({
+            status: "ready",
+            spec_json: parsed.spec,
+            ai_summary: parsed.ai_summary,
+          })
+          .eq("id", boardId)
+          .eq("user_id", userId)
+          .select("*")
+          .single();
 
-    const { data, error } = await supabase
-      .from("boards")
-      .update({
-        status: "ready",
-        spec_json: parsed.spec,
-        ai_summary: parsed.ai_summary,
-      })
-      .eq("id", boardId)
-      .eq("user_id", userId)
-      .select("*")
-      .single();
+        if (error || !data) {
+          throw new Error("Falha ao salvar ficha técnica.");
+        }
 
-    if (error || !data) {
-      throw new Error("Falha ao salvar ficha técnica.");
-    }
+        return data as Board;
+      } catch (error) {
+        await supabase
+          .from("boards")
+          .update({ status: "error" })
+          .eq("id", boardId)
+          .eq("user_id", userId);
 
-    return data as Board;
-  } catch (error) {
-    await supabase
-      .from("boards")
-      .update({ status: "error" })
-      .eq("id", boardId)
-      .eq("user_id", userId);
+        reportServerError(error, {
+          area: "ai",
+          operation: "process_magic_board_spec",
+          userId,
+        });
 
-    reportServerError(error, {
-      area: "ai",
-      operation: "process_magic_board_spec",
-      userId,
-    });
-
-    const message =
-      error instanceof Error ? error.message : "Erro ao gerar ficha.";
-    throw new Error(message);
-  }
+        const message =
+          error instanceof Error ? error.message : "Erro ao gerar ficha.";
+        throw new Error(message);
+      }
+    },
+  });
 }
 
 export async function listMagicBoards(userId: string): Promise<Board[]> {

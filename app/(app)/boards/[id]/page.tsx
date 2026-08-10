@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BoardPhotoGallery } from "@/components/board-spec/board-photo-gallery";
+import { ReanalysisConfirmButton } from "@/components/credits/reanalysis-confirm-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,22 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
         <Alert variant="info">
           <AlertDescription>Gerando ficha técnica…</AlertDescription>
         </Alert>
+      )}
+
+      {board.status === "error" && (
+        <div className="space-y-3">
+          <Alert variant="destructive">
+            <AlertDescription>
+              Falha ao gerar a ficha. Confirme a reanálise — se for
+              bem-sucedida, consumirá 1 crédito.
+            </AlertDescription>
+          </Alert>
+          <ReanalysisConfirmButton
+            mode="board_spec"
+            targetId={board.id}
+            label="Confirmar reanálise"
+          />
+        </div>
       )}
 
       <BoardPhotoGallery

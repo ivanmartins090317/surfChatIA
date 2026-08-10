@@ -7,6 +7,7 @@ import { toActionErrorMessage } from "@/lib/errors/action-error";
 import { rateLimitAuthAction } from "@/lib/security/rate-limit";
 import { getSiteUrl } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
+import { hasAcceptedLegalTerms } from "@/services/account-privacy-service";
 
 function getIdentifier(formData: FormData): string {
   return String(formData.get("email") ?? "unknown").toLowerCase();
@@ -25,6 +26,14 @@ export async function signUpAction(
       return {
         success: false,
         error: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+      };
+    }
+
+    if (!hasAcceptedLegalTerms(formData.get("accepted_legal"))) {
+      return {
+        success: false,
+        error:
+          "Aceite os Termos de Uso e a Política de Privacidade para criar a conta.",
       };
     }
 

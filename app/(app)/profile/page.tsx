@@ -1,3 +1,4 @@
+import { AccountPrivacyPanel } from "@/components/legal/account-privacy-panel";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAuthUser } from "@/lib/supabase/server";
@@ -31,6 +32,14 @@ export default async function ProfilePage() {
         </CardHeader>
         <CardContent>
           <ProfileForm profile={profile} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Privacidade e conta</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AccountPrivacyPanel />
         </CardContent>
       </Card>
     </div>

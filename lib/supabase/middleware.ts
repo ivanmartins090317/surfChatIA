@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isLegalPublicPath } from "@/components/legal/public-paths";
 
 function isDevOnlyRoute(pathname: string): boolean {
   if (process.env.NODE_ENV !== "development") {
@@ -15,6 +16,7 @@ function isPublicRoute(pathname: string): boolean {
   }
 
   if (pathname === "/") return true;
+  if (isLegalPublicPath(pathname)) return true;
   const authRoutes = [
     "/login",
     "/signup",

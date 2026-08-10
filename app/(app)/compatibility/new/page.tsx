@@ -1,14 +1,19 @@
-import { BoardMatchForm } from "@/components/board-spec/board-match-form";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { BoardMatchForm } from "@/components/board-spec/board-match-form";
+import { CreditsSummary } from "@/components/credits/credits-summary";
+import { Button } from "@/components/ui/button";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { listMagicBoards } from "@/services/board-service";
+import { getCreditsSnapshot } from "@/services/usage-service";
 
 export const metadata = { title: "Compatibilidade de prancha" };
 
 export default async function CompatibilityNewPage() {
   const user = await requireAuthUser();
-  const magicBoards = await listMagicBoards(user.id).catch(() => []);
+  const [magicBoards, credits] = await Promise.all([
+    listMagicBoards(user.id).catch(() => []),
+    getCreditsSnapshot(user.id),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -21,7 +26,12 @@ export default async function CompatibilityNewPage() {
           Compare uma prancha candidata com seu perfil e prancha mágica.
         </p>
       </div>
-      <BoardMatchForm magicBoards={magicBoards.filter((b) => b.status === "ready")} />
+      <CreditsSummary credits={credits} compact />
+      {credits.remaining >= 1 ? (
+        <BoardMatchForm
+          magicBoards={magicBoards.filter((b) => b.status === "ready")}
+        />
+      ) : null}
     </div>
   );
 }

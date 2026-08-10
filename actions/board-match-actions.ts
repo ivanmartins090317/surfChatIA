@@ -8,12 +8,19 @@ import {
   createBoardMatchAnalysis,
   uploadCandidatePhotos,
 } from "@/services/board-match-service";
+import {
+  canStartAnalysis,
+  NoCreditsError,
+} from "@/services/usage-service";
 
 export async function createBoardMatchAction(
   formData: FormData,
 ): Promise<ActionResult<{ analysisId: string }>> {
   try {
     const user = await requireAuthUser();
+    if (!(await canStartAnalysis(user.id))) {
+      throw new NoCreditsError();
+    }
     const files = formData.getAll("photos").filter((f) => f instanceof File) as File[];
     const referenceBoardId =
       String(formData.get("reference_board_id") ?? "") || null;

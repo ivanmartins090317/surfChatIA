@@ -228,7 +228,8 @@ A troca de provedor **não altera** o modelo de planos — só o custo interno p
 - [PLANO_EXECUCAO.md](./PLANO_EXECUCAO.md) — Fase 5 (polish e lançamento)
 - [SECURITY.md](./SECURITY.md) — LLM04 (custo/DoS), rate limits
 - [state/PENDENCIAS.md](./state/PENDENCIAS.md) — pendências de validação E2E
+- [state/PLANO_GO_LIVE_COBRANCA.md](./state/PLANO_GO_LIVE_COBRANCA.md) — trilhas A–I e scoreboard Done para cobrança
 
 ---
 
-**Última atualização:** 07/07/2026
+**Última atualização:** 10/08/2026

@@ -8,6 +8,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  CreditsPaywall,
+  CreditsSummary,
+} from "@/components/credits/credits-summary";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { formatDatePtBr } from "@/lib/utils";
 import { requireAuthUser } from "@/lib/supabase/server";
@@ -15,15 +19,17 @@ import type { Analysis, PerformanceResult } from "@/lib/domain/types";
 import { listPerformanceAnalyses } from "@/services/analysis-service";
 import { listMagicBoards } from "@/services/board-service";
 import { getProfile, isProfileComplete } from "@/services/profile-service";
+import { getCreditsSnapshot } from "@/services/usage-service";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const user = await requireAuthUser();
-  const [profile, analyses, boards] = await Promise.all([
+  const [profile, analyses, boards, credits] = await Promise.all([
     getProfile(user.id),
     listPerformanceAnalyses(user.id).catch(() => [] as Analysis[]),
     listMagicBoards(user.id).catch(() => []),
+    getCreditsSnapshot(user.id),
   ]);
 
   const displayName = profile?.display_name ?? "Surfista";
@@ -62,7 +68,19 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      {credits.remaining < 1 ? (
+        <CreditsPaywall />
+      ) : (
+        <CreditsSummary credits={credits} />
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Créditos"
+          value={credits.remaining}
+          iconSrc="/icon_medal_01.svg"
+          valueClassName="text-primary"
+        />
         <MetricCard
           label="Análises"
           value={analyses.length}

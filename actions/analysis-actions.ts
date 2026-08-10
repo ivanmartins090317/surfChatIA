@@ -16,6 +16,16 @@ import {
   prepareMediaFileUpload,
   uploadMediaFile,
 } from "@/services/media-service";
+import {
+  canStartAnalysis,
+  NoCreditsError,
+} from "@/services/usage-service";
+
+async function assertHasCredits(userId: string): Promise<void> {
+  if (!(await canStartAnalysis(userId))) {
+    throw new NoCreditsError();
+  }
+}
 
 const contextSchema = z.object({
   wave_type: z
@@ -29,6 +39,7 @@ export async function createAnalysisFromLinkAction(
 ): Promise<ActionResult<{ analysisId: string }>> {
   try {
     const user = await requireAuthUser();
+    await assertHasCredits(user.id);
     const externalUrl = String(formData.get("external_url") ?? "").trim();
     const context = contextSchema.parse({
       wave_type: formData.get("wave_type") || undefined,
@@ -65,6 +76,7 @@ export async function initAnalysisFileUploadAction(input: {
 }): Promise<ActionResult<{ mediaId: string; storagePath: string }>> {
   try {
     const user = await requireAuthUser();
+    await assertHasCredits(user.id);
     const context = contextSchema.parse({
       wave_type: input.wave_type || undefined,
       focus: input.focus || undefined,
@@ -180,8 +192,17 @@ export async function createAnalysisFromFileAction(
 
 export async function retryAnalysisAction(
   analysisId: string,
+  options?: { confirmed?: boolean },
 ): Promise<ActionResult<Analysis>> {
   try {
+    if (!options?.confirmed) {
+      return {
+        success: false,
+        error:
+          "Confirme a reanálise para continuar. Isso consumirá 1 crédito se for bem-sucedida.",
+      };
+    }
+
     const user = await requireAuthUser();
     const { getPerformanceAnalysis } = await import(
       "@/services/analysis-service"
@@ -196,6 +217,8 @@ export async function retryAnalysisAction(
       existing.media_item_id,
     );
     revalidatePath(`/analyses/${analysisId}`);
+    revalidatePath("/analyses");
+    revalidatePath("/dashboard");
     return { success: true, data: analysis };
   } catch (error) {
     return {

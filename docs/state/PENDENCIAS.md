@@ -200,7 +200,7 @@ flowchart LR
 ### 4.2 Operação
 
 - [ ] Job mensal: reset `credits_period_used` no início do ciclo de billing
-- [ ] Medir custo médio por análise (30 dias pós-lançamento)
+- [x] Medir custo médio por análise (baseline Trilha G 10/08/2026; revalidar billing + 30 dias pós-lançamento)
 - [ ] Recalibrar preços se margem < alvo
 
 **Critério de saída Etapa 4:** upgrade real funciona · webhook sincroniza plano · cancelamento respeitado.
@@ -270,21 +270,21 @@ flowchart LR
 
 ## Ordem de trabalho (agora)
 
+> **Plano operacional com trilhas paralelas e scoreboard Done:**  
+> → **[PLANO_GO_LIVE_COBRANCA.md](./PLANO_GO_LIVE_COBRANCA.md)** ← use este doc para marcar tarefas.
+
 ```
-1. Etapa 2.3 → landing `/` + página `/planos` placeholder
-2. Etapa 1   → fechar DoD visual §15 (revisão formal rápida)
-3. Etapa 3   → créditos + paywall
-4. Etapa 2.4 → domínio + SMTP *(quando tiver domínio registrado)*
-5. Etapa 4   → Stripe/MP
-6. Etapa 5   → legal + go-live
+Paralelo agora:  A créditos · B landing · C legal · D gateway · E domínio · F qualidade · G custo
+Depois:          H pagamentos (código)  →  I go-live comercial
 ```
 
-**Sessão atual sugerida:** **Etapa 2.3** — landing `/` + página `/planos` placeholder para beta com amigos.
+**Sessão atual sugerida:** trilha **A** (créditos + paywall) em paralelo com **D** (decidir Stripe vs MP).
 
 ---
 
 ## Referências
 
+- [Plano Go-Live + Cobrança](./PLANO_GO_LIVE_COBRANCA.md) — **checklist operacional A–I (Done)**
 - [Plano de Execução](../PLANO_EXECUCAO.md) — fases 0–5 originais
 - [Planos e Limites](../PLANOS_E_LIMITES.md) — créditos, preços, schema SaaS
 - [Segurança](../SECURITY.md) — checklist DoD

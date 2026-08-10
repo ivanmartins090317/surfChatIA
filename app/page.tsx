@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Activity, GitCompareArrows, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SiteFooter } from "@/components/legal/site-footer";
 import { OceanBackdrop } from "@/components/layout/ocean-backdrop";
 import { getAuthUser } from "@/lib/supabase/server";
 
@@ -92,6 +93,8 @@ export default async function LandingPage() {
             <HighlightRow />
           </div>
         </div>
+
+        <SiteFooter variant="public" />
       </div>
     </main>
   );

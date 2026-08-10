@@ -1,10 +1,6 @@
 import { runPerformanceAnalysis } from "@/lib/ai/analyze-performance";
 import { parsePerformanceResult } from "@/lib/ai/performance-parser";
-import type {
-  Analysis,
-  MediaItem,
-  PerformanceResult,
-} from "@/lib/domain/types";
+import type { Analysis, MediaItem } from "@/lib/domain/types";
 import type { PerformanceAnalysisListItem } from "@/lib/domain/analysis-display";
 import type { ExtractedVideoFrame } from "@/lib/media/extract-video-frames";
 import { extractVideoFrames } from "@/lib/media/extract-video-frames";
@@ -17,6 +13,10 @@ import {
   getMediaItem,
 } from "@/services/media-service";
 import { getProfile } from "@/services/profile-service";
+import {
+  runWithAnalysisCreditGate,
+  withSystemAutoRetries,
+} from "@/services/usage-service";
 
 interface AnalysisRowWithMedia extends Analysis {
   media_items: MediaItem | null;
@@ -65,134 +65,144 @@ export async function createPerformanceAnalysis(
   mediaItemId: string,
   options?: CreatePerformanceAnalysisOptions,
 ): Promise<Analysis> {
-  const rate = await rateLimitAiAction(userId);
-  if (!rate.allowed) {
-    throw new Error("Limite diário de análises atingido. Tente amanhã.");
-  }
-
-  const media = await getMediaItem(userId, mediaItemId);
-  if (!media) {
-    throw new Error("Mídia não encontrada.");
-  }
-
-  const supabase = await createClient();
-  const { data: analysisRow, error: insertError } = await supabase
-    .from("analyses")
-    .insert({
-      user_id: userId,
-      media_item_id: mediaItemId,
-      type: "performance",
-      status: "processing",
-    })
-    .select("*")
-    .single();
-
-  if (insertError || !analysisRow) {
-    throw new Error("Não foi possível iniciar a análise.");
-  }
-
-  await supabase
-    .from("media_items")
-    .update({ status: "processing" })
-    .eq("id", mediaItemId)
-    .eq("user_id", userId);
-
-  try {
-    const profile = await getProfile(userId);
-
-    let images: { base64: string; mimeType: string }[] | undefined;
-    let videoFrameTimestamps: string[] | undefined;
-
-    if (media.type === "image" && media.storage_path) {
-      const { buffer, mimeType } = await downloadMediaFileBuffer(
-        media.storage_path,
-      );
-      if (!mimeType.startsWith("image/")) {
-        throw new Error("Arquivo não é uma imagem válida para análise visual.");
+  return runWithAnalysisCreditGate({
+    userId,
+    analysisType: "performance",
+    getAnalysisId: (analysis) => analysis.id,
+    operation: async () => {
+      const rate = await rateLimitAiAction(userId);
+      if (!rate.allowed) {
+        throw new Error("Limite diário de análises atingido. Tente amanhã.");
       }
-      images = [{ base64: buffer.toString("base64"), mimeType }];
-    }
 
-    if (media.type === "video" && media.storage_path) {
-      if (options?.videoFrames?.length) {
-        images = options.videoFrames.map((frame) => ({
-          base64: frame.base64,
-          mimeType: frame.mimeType,
-        }));
-        videoFrameTimestamps = options.videoFrames.map(
-          (frame) => frame.timestampLabel,
-        );
-      } else if (process.env.NODE_ENV === "development") {
-        const { buffer, mimeType } = await downloadMediaFileBuffer(
-          media.storage_path,
-        );
-        if (!mimeType.startsWith("video/")) {
-          throw new Error("Arquivo não é um vídeo válido para análise.");
+      const media = await getMediaItem(userId, mediaItemId);
+      if (!media) {
+        throw new Error("Mídia não encontrada.");
+      }
+
+      const supabase = await createClient();
+      const { data: analysisRow, error: insertError } = await supabase
+        .from("analyses")
+        .insert({
+          user_id: userId,
+          media_item_id: mediaItemId,
+          type: "performance",
+          status: "processing",
+        })
+        .select("*")
+        .single();
+
+      if (insertError || !analysisRow) {
+        throw new Error("Não foi possível iniciar a análise.");
+      }
+
+      await supabase
+        .from("media_items")
+        .update({ status: "processing" })
+        .eq("id", mediaItemId)
+        .eq("user_id", userId);
+
+      try {
+        const profile = await getProfile(userId);
+
+        let images: { base64: string; mimeType: string }[] | undefined;
+        let videoFrameTimestamps: string[] | undefined;
+
+        if (media.type === "image" && media.storage_path) {
+          const { buffer, mimeType } = await downloadMediaFileBuffer(
+            media.storage_path,
+          );
+          if (!mimeType.startsWith("image/")) {
+            throw new Error(
+              "Arquivo não é uma imagem válida para análise visual.",
+            );
+          }
+          images = [{ base64: buffer.toString("base64"), mimeType }];
         }
-        const frames = await extractVideoFrames(buffer, mimeType);
-        images = frames.map((frame) => ({
-          base64: frame.base64,
-          mimeType: frame.mimeType,
-        }));
-        videoFrameTimestamps = frames.map((frame) => frame.timestampLabel);
-      } else {
-        throw new Error(
-          "Frames do vídeo não foram enviados. Atualize a página e tente novamente.",
-        );
+
+        if (media.type === "video" && media.storage_path) {
+          if (options?.videoFrames?.length) {
+            images = options.videoFrames.map((frame) => ({
+              base64: frame.base64,
+              mimeType: frame.mimeType,
+            }));
+            videoFrameTimestamps = options.videoFrames.map(
+              (frame) => frame.timestampLabel,
+            );
+          } else if (process.env.NODE_ENV === "development") {
+            const { buffer, mimeType } = await downloadMediaFileBuffer(
+              media.storage_path,
+            );
+            if (!mimeType.startsWith("video/")) {
+              throw new Error("Arquivo não é um vídeo válido para análise.");
+            }
+            const frames = await extractVideoFrames(buffer, mimeType);
+            images = frames.map((frame) => ({
+              base64: frame.base64,
+              mimeType: frame.mimeType,
+            }));
+            videoFrameTimestamps = frames.map((frame) => frame.timestampLabel);
+          } else {
+            throw new Error(
+              "Frames do vídeo não foram enviados. Atualize a página e tente novamente.",
+            );
+          }
+        }
+
+        const result = await withSystemAutoRetries(async () => {
+          const raw = await runPerformanceAnalysis({
+            media,
+            profile,
+            images,
+            videoFrameTimestamps,
+          });
+          return parsePerformanceResult(raw);
+        });
+
+        const { data: updated, error: updateError } = await supabase
+          .from("analyses")
+          .update({ status: "done", result_json: result })
+          .eq("id", analysisRow.id)
+          .eq("user_id", userId)
+          .select("*")
+          .single();
+
+        await supabase
+          .from("media_items")
+          .update({ status: "ready" })
+          .eq("id", mediaItemId)
+          .eq("user_id", userId);
+
+        if (updateError || !updated) {
+          throw new Error("Falha ao salvar resultado.");
+        }
+
+        return updated as Analysis;
+      } catch (error) {
+        await supabase
+          .from("analyses")
+          .update({ status: "error" })
+          .eq("id", analysisRow.id)
+          .eq("user_id", userId);
+
+        await supabase
+          .from("media_items")
+          .update({ status: "error" })
+          .eq("id", mediaItemId)
+          .eq("user_id", userId);
+
+        reportServerError(error, {
+          area: "ai",
+          operation: "create_performance_analysis",
+          userId,
+        });
+
+        const message =
+          error instanceof Error ? error.message : "Erro ao processar análise.";
+        throw new Error(message);
       }
-    }
-
-    const raw = await runPerformanceAnalysis({
-      media,
-      profile,
-      images,
-      videoFrameTimestamps,
-    });
-
-    const result: PerformanceResult = parsePerformanceResult(raw);
-
-    const { data: updated, error: updateError } = await supabase
-      .from("analyses")
-      .update({ status: "done", result_json: result })
-      .eq("id", analysisRow.id)
-      .eq("user_id", userId)
-      .select("*")
-      .single();
-
-    await supabase
-      .from("media_items")
-      .update({ status: "ready" })
-      .eq("id", mediaItemId)
-      .eq("user_id", userId);
-
-    if (updateError || !updated) {
-      throw new Error("Falha ao salvar resultado.");
-    }
-
-    return updated as Analysis;
-  } catch (error) {
-    await supabase
-      .from("analyses")
-      .update({ status: "error" })
-      .eq("id", analysisRow.id)
-      .eq("user_id", userId);
-
-    await supabase
-      .from("media_items")
-      .update({ status: "error" })
-      .eq("id", mediaItemId)
-      .eq("user_id", userId);
-
-    reportServerError(error, {
-      area: "ai",
-      operation: "create_performance_analysis",
-      userId,
-    });
-
-    const message =
-      error instanceof Error ? error.message : "Erro ao processar análise.";
-    throw new Error(message);
-  }
+    },
+  });
 }
 
 export async function listPerformanceAnalysesWithMedia(

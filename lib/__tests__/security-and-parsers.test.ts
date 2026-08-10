@@ -18,6 +18,20 @@ describe("validateMediaFile", () => {
     expect(result.error).toContain("10 MB");
   });
 
+  it("rejeita vídeo acima de 50 MB na seleção", () => {
+    const file = new File(["x"], "session.mp4", { type: "video/mp4" });
+    Object.defineProperty(file, "size", { value: 51 * 1024 * 1024 });
+    const result = validateMediaFile(file, "video");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("50 MB");
+  });
+
+  it("aceita vídeo de 50 MB", () => {
+    const file = new File(["x"], "session.mp4", { type: "video/mp4" });
+    Object.defineProperty(file, "size", { value: 50 * 1024 * 1024 });
+    expect(validateMediaFile(file, "video").valid).toBe(true);
+  });
+
   it("rejeita formato de imagem não suportado", () => {
     const file = new File(["x"], "doc.pdf", { type: "application/pdf" });
     Object.defineProperty(file, "size", { value: 1024 });

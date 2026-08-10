@@ -2,6 +2,8 @@
 
 Registro de bugs de produção (ou achados em revisão) já corrigidos e validados. Cada arquivo documenta: sintoma, causa raiz, correção aplicada e validação — para consulta rápida caso o problema volte a aparecer.
 
+Para incidentes que misturam infra/config/produto (ex.: Storage, limites de plano), use também [`../incidentes-resolvidos/`](../incidentes-resolvidos/README.md).
+
 | Data | Documento | Resumo |
 |------|-----------|--------|
 | 2026-07-14 | [2026-07-14-csp-bloqueia-extracao-video-navegador.md](./2026-07-14-csp-bloqueia-extracao-video-navegador.md) | CSP sem `media-src` bloqueava extração de frames de vídeo no navegador (blob:) em produção na Vercel |

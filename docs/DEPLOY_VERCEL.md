@@ -139,11 +139,29 @@ Isso cria a tabela `rate_limit_buckets` e a RPC `check_rate_limit`.
 7. Teste local (dev): adicione as mesmas vars em `.env.local` → `npm run dev` → abra `http://localhost:3000/api/dev/sentry-test`
 8. Teste produção: force um erro real (ex.: upload corrompido) ou aguarde o primeiro issue natural
 
-**Alertas sugeridos** (Sentry → Alerts → Create Alert):
-- Novo issue com tag `area:ai` ou `area:upload`
-- Spike de erros (ex.: >5 em 1h)
+**Alertas obrigatórios para go-live comercial** (Sentry → Alerts → Create Alert):
 
-E-mails são scrubbed antes do envio (`lib/observability/report-server-error.ts`).
+| Alerta | Condição | Ação |
+|--------|----------|------|
+| IA / upload | Novo issue com tag `area` = `ai` **ou** `upload` | E-mail do owner |
+| Spike | \> **5** eventos de erro em **1 hora** | E-mail do owner |
+
+Confirme no painel Sentry (prod) que os dois alertas existem e apontam para o projeto correto.  
+E-mails de usuário são scrubbed antes do envio (`lib/observability/report-server-error.ts`).
+
+Breadcrumbs de custo: cada completion loga `ai.usage` (tokens + `estimatedCostUsd`) — ver [Trilha G](./implementation/2026-08-10-custo-ia-operacao.md).
+
+### Rotina semanal — custo OpenAI (Trilha G)
+
+Toda **segunda-feira** (≤ 5 min):
+
+1. OpenAI → **Usage**: gasto USD da última semana  
+2. Contar débitos em `usage_ledger` (`credits_delta < 0`) no mesmo período  
+3. `custo_por_crédito ≈ gasto / nº_débitos`  
+4. Comparar com baseline **US$ 0,001972** — **flag** se **\> 2×**  
+5. Revisar issues Sentry abertos com `area:ai` / `area:upload`
+
+Detalhes e protocolo de amostra: [docs/implementation/2026-08-10-custo-ia-operacao.md](./implementation/2026-08-10-custo-ia-operacao.md).
 
 ---
 

@@ -1,5 +1,13 @@
-export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+/**
+ * Limite efetivo de vídeo alinhado ao Global file size do Supabase Free (50 MB).
+ * Em plano Pro+, dá para subir no Dashboard (Storage → Settings) e aqui em conjunto.
+ * @see https://supabase.com/docs/guides/storage/uploads/file-limits
+ */
+export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+export const MAX_VIDEO_MB = MAX_VIDEO_BYTES / (1024 * 1024);
+export const MAX_IMAGE_MB = MAX_IMAGE_BYTES / (1024 * 1024);
 
 export const ALLOWED_VIDEO_MIMES = new Set([
   "video/mp4",
@@ -18,6 +26,14 @@ export interface MediaFileValidationResult {
   error?: string;
 }
 
+export function videoOversizeMessage(): string {
+  return `Vídeo acima de ${MAX_VIDEO_MB} MB. Comprima o arquivo ou envie um link.`;
+}
+
+export function imageOversizeMessage(): string {
+  return `Imagem acima de ${MAX_IMAGE_MB} MB. Reduza o tamanho e tente novamente.`;
+}
+
 export function validateMediaFile(
   file: File,
   type: "video" | "image",
@@ -32,10 +48,7 @@ export function validateMediaFile(
   if (file.size > maxSize) {
     return {
       valid: false,
-      error:
-        type === "video"
-          ? "Vídeo acima de 100 MB. Comprima o arquivo ou envie um link."
-          : "Imagem acima de 10 MB. Reduza o tamanho e tente novamente.",
+      error: type === "video" ? videoOversizeMessage() : imageOversizeMessage(),
     };
   }
 

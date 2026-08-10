@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ReanalysisConfirmButton } from "@/components/credits/reanalysis-confirm-button";
 import { AnalysisMediaHeader } from "@/components/performance-analysis/analysis-media-header";
 import { PerformanceResultView } from "@/components/performance-analysis/performance-result-view";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -74,12 +75,19 @@ export default async function AnalysisDetailPage({
       )}
 
       {analysis.status === "error" && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            Falha no processamento. Verifique sua chave de IA ou tente uma nova
-            análise.
-          </AlertDescription>
-        </Alert>
+        <div className="space-y-4">
+          <Alert variant="destructive">
+            <AlertDescription>
+              Falha no processamento após as tentativas automáticas. Você pode
+              confirmar uma reanálise — se for bem-sucedida, consumirá 1 crédito.
+            </AlertDescription>
+          </Alert>
+          <ReanalysisConfirmButton
+            mode="performance"
+            targetId={analysis.id}
+            label="Confirmar reanálise"
+          />
+        </div>
       )}
 
       {analysis.status === "done" && result && (

@@ -15,6 +15,8 @@ import {
   ALLOWED_VIDEO_MIMES,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
+  imageOversizeMessage,
+  videoOversizeMessage,
 } from "@/lib/media/upload-limits";
 import {
   buildMediaStoragePath,
@@ -93,9 +95,7 @@ function assertAllowedMediaUpload(
   const maxSize = type === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
   if (fileSize > maxSize) {
     throw new Error(
-      type === "video"
-        ? "Vídeo acima de 100 MB. Comprima ou envie um link."
-        : "Imagem acima de 10 MB. Reduza o tamanho.",
+      type === "video" ? videoOversizeMessage() : imageOversizeMessage(),
     );
   }
 
@@ -201,9 +201,7 @@ export async function uploadMediaFile(
   const maxSize = type === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
   if (file.size > maxSize) {
     throw new Error(
-      type === "video"
-        ? "Vídeo acima de 100 MB. Comprima ou envie um link."
-        : "Imagem acima de 10 MB. Reduza o tamanho.",
+      type === "video" ? videoOversizeMessage() : imageOversizeMessage(),
     );
   }
 

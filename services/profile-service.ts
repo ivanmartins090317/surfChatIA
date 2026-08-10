@@ -27,7 +27,20 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     throw new Error("Não foi possível carregar o perfil.");
   }
 
-  return data as Profile | null;
+  if (!data) return null;
+  return normalizeProfile(data as Profile);
+}
+
+function normalizeProfile(profile: Profile): Profile {
+  return {
+    ...profile,
+    plan: profile.plan ?? "free",
+    credits_balance: profile.credits_balance ?? 0,
+    credits_period_used: profile.credits_period_used ?? 0,
+    credits_reserved: profile.credits_reserved ?? 0,
+    billing_period_start: profile.billing_period_start ?? null,
+    free_quota_granted: profile.free_quota_granted ?? false,
+  };
 }
 
 export async function updateProfile(
@@ -48,7 +61,7 @@ export async function updateProfile(
     throw new Error("Não foi possível salvar o perfil. Tente novamente.");
   }
 
-  return data as Profile;
+  return normalizeProfile(data as Profile);
 }
 
 export function isProfileComplete(profile: Profile | null): boolean {

@@ -90,6 +90,43 @@ export function SignUpForm() {
         />
         <p className="text-sm text-muted-foreground">Mínimo 8 caracteres.</p>
       </div>
+      <div className="flex items-start gap-3">
+        <input
+          id="accepted_legal"
+          name="accepted_legal"
+          type="checkbox"
+          value="1"
+          required
+          className="mt-1 size-5 shrink-0 rounded-xs border border-input bg-background accent-primary"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-error" : "accepted_legal_hint"}
+        />
+        <Label
+          htmlFor="accepted_legal"
+          id="accepted_legal_hint"
+          className="text-sm font-normal leading-relaxed text-muted-foreground"
+        >
+          Li e aceito os{" "}
+          <Link
+            href="/termos"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Termos de Uso
+          </Link>{" "}
+          e a{" "}
+          <Link
+            href="/privacidade"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Política de Privacidade
+          </Link>
+          .
+        </Label>
+      </div>
       <Button type="submit" size="lg" className="w-full" disabled={isPending}>
         {isPending ? (
           <>

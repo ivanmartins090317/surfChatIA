@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { CreditsSummary } from "@/components/credits/credits-summary";
 import { NewAnalysisForm } from "@/components/performance-analysis/new-analysis-form";
 import { Button } from "@/components/ui/button";
+import { requireAuthUser } from "@/lib/supabase/server";
+import { getCreditsSnapshot } from "@/services/usage-service";
 
 export const metadata = { title: "Nova análise" };
 
-export default function NewAnalysisPage() {
+export default async function NewAnalysisPage() {
+  const user = await requireAuthUser();
+  const credits = await getCreditsSnapshot(user.id);
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
@@ -18,7 +24,8 @@ export default function NewAnalysisPage() {
           Envie vídeo, imagem ou link da sua session.
         </p>
       </div>
-      <NewAnalysisForm />
+      <CreditsSummary credits={credits} compact />
+      {credits.remaining >= 1 ? <NewAnalysisForm /> : null}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { Space_Grotesk, Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { Metadata, Viewport } from "next";
+import { CookieConsentBanner } from "@/components/legal/cookie-consent-banner";
 import { AppToaster } from "@/components/layout/app-toaster";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
@@ -69,6 +70,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <NuqsAdapter>{children}</NuqsAdapter>
+        <CookieConsentBanner />
         <AppToaster />
       </body>
     </html>

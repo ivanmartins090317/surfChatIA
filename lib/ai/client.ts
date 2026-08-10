@@ -1,5 +1,10 @@
 import OpenAI from "openai";
 import { hasOpenAiKey } from "@/lib/env";
+import {
+  AI_USAGE_KIND,
+  buildAiUsageLogPayload,
+  logAiUsage,
+} from "@/lib/ai/usage-log";
 
 const AI_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 90_000;
 /**
@@ -46,6 +51,14 @@ export async function chatJsonCompletion(
     temperature: 0.4,
   });
 
+  logAiUsage(
+    buildAiUsageLogPayload({
+      model: TEXT_MODEL,
+      kind: AI_USAGE_KIND.text,
+      usage: response.usage,
+    }),
+  );
+
   const content = response.choices[0]?.message?.content;
   if (!content) {
     throw new Error("Resposta vazia da IA.");
@@ -89,6 +102,15 @@ export async function chatJsonCompletionWithVision(
     ],
     temperature: 0.45,
   });
+
+  logAiUsage(
+    buildAiUsageLogPayload({
+      model: VISION_MODEL,
+      kind: AI_USAGE_KIND.vision,
+      imageCount: images.length,
+      usage: response.usage,
+    }),
+  );
 
   const content = response.choices[0]?.message?.content;
   if (!content) {

@@ -8,6 +8,7 @@ import { requireAuthUser } from "@/lib/supabase/server";
 import {
   createMagicBoard,
   createSignedBoardPhotoUrl,
+  getBoard,
   processMagicBoardSpec,
   updateMagicBoard,
   uploadBoardPhoto,
@@ -117,12 +118,29 @@ export async function updateBoardAction(
 
 export async function generateBoardSpecAction(
   boardId: string,
+  options?: { confirmedReanalysis?: boolean },
 ): Promise<ActionResult<Board>> {
   try {
     const user = await requireAuthUser();
+    const existing = await getBoard(user.id, boardId);
+    if (!existing) {
+      return { success: false, error: "Prancha não encontrada." };
+    }
+
+    const isVoluntaryReanalysis =
+      existing.status === "ready" || existing.status === "error";
+    if (isVoluntaryReanalysis && !options?.confirmedReanalysis) {
+      return {
+        success: false,
+        error:
+          "Confirme a reanálise para continuar. Isso consumirá 1 crédito se for bem-sucedida.",
+      };
+    }
+
     const board = await processMagicBoardSpec(user.id, boardId);
     revalidatePath(`/boards/${boardId}`);
     revalidatePath("/boards");
+    revalidatePath("/dashboard");
     return { success: true, data: board };
   } catch (error) {
     return {

@@ -9,12 +9,16 @@ import {
   buildBoardMatchUserPrompt,
 } from "@/lib/ai/board-spec-prompt";
 import { parseBoardMatchResult } from "@/lib/ai/board-spec-parser";
-import type { Analysis, BoardMatchResult } from "@/lib/domain/types";
+import type { Analysis } from "@/lib/domain/types";
 import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { getBoard } from "@/services/board-service";
 import { getProfile } from "@/services/profile-service";
+import {
+  runWithAnalysisCreditGate,
+  withSystemAutoRetries,
+} from "@/services/usage-service";
 
 const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -107,79 +111,87 @@ export async function createBoardMatchAnalysis(input: {
   referenceBoardId?: string | null;
   advertisedMeasurements?: Record<string, number | null> | null;
 }): Promise<Analysis> {
-  const rate = await rateLimitAiAction(input.userId);
-  if (!rate.allowed) {
-    throw new Error("Limite diário de análises atingido.");
-  }
+  return runWithAnalysisCreditGate({
+    userId: input.userId,
+    analysisType: "board_match",
+    getAnalysisId: (analysis) => analysis.id,
+    operation: async () => {
+      const rate = await rateLimitAiAction(input.userId);
+      if (!rate.allowed) {
+        throw new Error("Limite diário de análises atingido.");
+      }
 
-  const profile = await getProfile(input.userId);
-  const magicBoard = input.referenceBoardId
-    ? await getBoard(input.userId, input.referenceBoardId)
-    : null;
+      const profile = await getProfile(input.userId);
+      const magicBoard = input.referenceBoardId
+        ? await getBoard(input.userId, input.referenceBoardId)
+        : null;
 
-  const supabase = await createClient();
-  const { data: row, error: insertError } = await supabase
-    .from("analyses")
-    .insert({
-      user_id: input.userId,
-      type: "board_match",
-      status: "processing",
-      board_candidate_photos: input.photoPaths,
-      reference_board_id: input.referenceBoardId ?? null,
-      advertised_measurements: input.advertisedMeasurements ?? null,
-    })
-    .select("*")
-    .single();
+      const supabase = await createClient();
+      const { data: row, error: insertError } = await supabase
+        .from("analyses")
+        .insert({
+          user_id: input.userId,
+          type: "board_match",
+          status: "processing",
+          board_candidate_photos: input.photoPaths,
+          reference_board_id: input.referenceBoardId ?? null,
+          advertised_measurements: input.advertisedMeasurements ?? null,
+        })
+        .select("*")
+        .single();
 
-  if (insertError || !row) {
-    throw new Error("Não foi possível iniciar a análise.");
-  }
+      if (insertError || !row) {
+        throw new Error("Não foi possível iniciar a análise.");
+      }
 
-  try {
-    const images = await downloadBoardPhotoBuffers(input.photoPaths);
-    const raw = await chatJsonCompletionWithVision(
-      buildBoardMatchSystemPrompt(),
-      buildBoardMatchUserPrompt({
-        profile,
-        magicBoard,
-        photoCount: input.photoPaths.length,
-        advertisedMeasurements: input.advertisedMeasurements,
-      }),
-      images,
-    );
+      try {
+        const images = await downloadBoardPhotoBuffers(input.photoPaths);
+        const result = await withSystemAutoRetries(async () => {
+          const raw = await chatJsonCompletionWithVision(
+            buildBoardMatchSystemPrompt(),
+            buildBoardMatchUserPrompt({
+              profile,
+              magicBoard,
+              photoCount: input.photoPaths.length,
+              advertisedMeasurements: input.advertisedMeasurements,
+            }),
+            images,
+          );
+          return parseBoardMatchResult(raw);
+        });
 
-    const result: BoardMatchResult = parseBoardMatchResult(raw);
+        const { data: updated, error: updateError } = await supabase
+          .from("analyses")
+          .update({ status: "done", result_json: result })
+          .eq("id", row.id)
+          .eq("user_id", input.userId)
+          .select("*")
+          .single();
 
-    const { data: updated, error: updateError } = await supabase
-      .from("analyses")
-      .update({ status: "done", result_json: result })
-      .eq("id", row.id)
-      .eq("user_id", input.userId)
-      .select("*")
-      .single();
+        if (updateError || !updated) {
+          throw new Error("Falha ao salvar resultado.");
+        }
 
-    if (updateError || !updated) {
-      throw new Error("Falha ao salvar resultado.");
-    }
+        return updated as Analysis;
+      } catch (error) {
+        await supabase
+          .from("analyses")
+          .update({ status: "error" })
+          .eq("id", row.id)
+          .eq("user_id", input.userId);
 
-    return updated as Analysis;
-  } catch (error) {
-    await supabase
-      .from("analyses")
-      .update({ status: "error" })
-      .eq("id", row.id)
-      .eq("user_id", input.userId);
+        reportServerError(error, {
+          area: "ai",
+          operation: "create_board_match_analysis",
+          userId: input.userId,
+        });
 
-    reportServerError(error, {
-      area: "ai",
-      operation: "create_board_match_analysis",
-      userId: input.userId,
-    });
-
-    const message =
-      error instanceof Error ? error.message : "Erro na análise.";
-    throw new Error(message);
-  }
+        const message =
+          error instanceof Error ? error.message : "Erro na análise.";
+        throw new Error(message);
+      }
+    },
+  });
 }
 
 export async function getBoardMatchAnalysis(

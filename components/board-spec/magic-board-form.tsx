@@ -13,10 +13,19 @@ import { BoardMeasurementsFields } from "@/components/board-spec/board-measureme
 import { BoardPhotosDropzone } from "@/components/board-spec/board-photos-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { boardMeasurementsToInitialValues } from "@/lib/board/measurements";
+import { isNoCreditsMessage } from "@/lib/domain/credits";
 import type { Board, BoardSensation } from "@/lib/domain/types";
 
 const MIN_BOARD_PHOTOS = 3;
@@ -39,6 +48,7 @@ export function MagicBoardForm({ board }: MagicBoardFormProps) {
   const [photos, setPhotos] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"form" | "processing">("form");
+  const [confirmRegenOpen, setConfirmRegenOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const totalPhotos = existingPhotoCount + photos.length;
@@ -103,7 +113,14 @@ export function MagicBoardForm({ board }: MagicBoardFormProps) {
       return;
     }
 
+    setConfirmRegenOpen(true);
+  }
+
+  function confirmRegenerateSpec() {
+    if (!board || !formRef.current) return;
+
     setError(null);
+    setConfirmRegenOpen(false);
     const formData = new FormData(formRef.current);
     for (const photo of photos) {
       formData.append("photos", photo);
@@ -118,15 +135,21 @@ export function MagicBoardForm({ board }: MagicBoardFormProps) {
       }
 
       setStep("processing");
-      const spec = await generateBoardSpecAction(board.id);
+      const spec = await generateBoardSpecAction(board.id, {
+        confirmedReanalysis: true,
+      });
       if (!spec.success) {
         setError(spec.error ?? "Erro ao gerar ficha.");
         setStep("form");
         toast.error(spec.error);
+        if (isNoCreditsMessage(spec.error)) {
+          router.push("/planos");
+        }
         return;
       }
       toast.success("Ficha técnica regenerada.");
       router.push(`/boards/${board.id}`);
+      router.refresh();
     });
   }
 
@@ -144,6 +167,30 @@ export function MagicBoardForm({ board }: MagicBoardFormProps) {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+      <Dialog open={confirmRegenOpen} onOpenChange={setConfirmRegenOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar reanálise</DialogTitle>
+            <DialogDescription>
+              Regenerar a ficha técnica consumirá 1 crédito se for
+              bem-sucedida. Deseja continuar?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmRegenOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="button" onClick={confirmRegenerateSpec}>
+              Confirmar e regenerar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>

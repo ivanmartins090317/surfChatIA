@@ -3,6 +3,8 @@
 import { CheckCircle2, ImageIcon, UploadCloud, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
+  MAX_IMAGE_MB,
+  MAX_VIDEO_MB,
   formatFileSize,
   validateMediaFile,
 } from "@/lib/media/upload-limits";
@@ -18,12 +20,12 @@ interface MediaFileDropzoneProps {
 const DROPZONE_COPY = {
   video: {
     hint: "Arraste um vídeo ou toque para enviar",
-    formats: "MP4, MOV, WebM — máx. 100 MB",
+    formats: `MP4, MOV, WebM — máx. ${MAX_VIDEO_MB} MB`,
     accept: "video/mp4,video/quicktime,video/webm",
   },
   image: {
     hint: "Arraste uma imagem ou toque para enviar",
-    formats: "JPEG, PNG ou WebP — máx. 10 MB",
+    formats: `JPEG, PNG ou WebP — máx. ${MAX_IMAGE_MB} MB`,
     accept: "image/jpeg,image/png,image/webp",
   },
 } as const;
