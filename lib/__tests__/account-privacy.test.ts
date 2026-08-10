@@ -5,7 +5,7 @@ import {
   hasAcceptedLegalTerms,
   isValidDeleteConfirmation,
   DELETE_ACCOUNT_CONFIRMATION,
-} from "@/services/account-privacy-service";
+} from "@/services/account-privacy-shared";
 
 describe("rotas legais públicas", () => {
   it("libera termos, privacidade e reembolso", () => {

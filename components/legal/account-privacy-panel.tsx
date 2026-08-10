@@ -7,7 +7,7 @@ import {
   deleteMyAccountAction,
   exportMyDataAction,
 } from "@/actions/account-privacy-actions";
-import { DELETE_ACCOUNT_CONFIRMATION } from "@/services/account-privacy-service";
+import { DELETE_ACCOUNT_CONFIRMATION } from "@/services/account-privacy-shared";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
