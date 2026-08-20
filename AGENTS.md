@@ -63,6 +63,9 @@ lib/domain/                   # Tipos/regras de domínio (crítico)
 specs/<feature>.md            # Spec aprovada da feature
 supabase/migrations/          # Schema SQL + RLS
 docs/                         # PRD, Design System, Security, architecture
+docs/implementation/          # O que foi entregue (doc vivo)
+docs/manual-dev/              # Como funciona e homologar (doc vivo)
+docs/state/                   # PENDENCIAS, go-live, incidentes (doc vivo)
 .cursor/rules/                # Regras Cursor (.mdc)
 ```
 
@@ -138,8 +141,9 @@ No início de cada feature, declarar um nível:
 2. **Plano curto** (sem código) — escopo, arquivos prováveis, riscos
 3. **Spec** em `specs/<feature>.md` → **esperar aprovação humana**
 4. **Implementar** só o que a Spec pede
-5. **Verificar Done** (comandos abaixo)
-6. **Parar** e reportar evidências no formato da seção final
+5. **Fechar docs vivos** — `docs/implementation/`, `docs/manual-dev/`, `docs/state/PENDENCIAS.md` (skill `.cursor/skills/close-phase/SKILL.md`)
+6. **Verificar Done** (comandos abaixo)
+7. **Parar** e reportar evidências no formato da seção final
 
 Tarefas triviais (≤10 linhas, sem impacto sistêmico): Spec pode ser omitida se o usuário dispensar; autonomia permanece `medium` ou `tight` conforme paths.
 
@@ -161,6 +165,23 @@ E também:
 - Nenhuma mudança fora do escopo sem aprovação
 - Resumo do que mudou + arquivos tocados
 - Checklist de `docs/SECURITY.md` cumprido quando a feature tocar auth, upload, links, IA ou dados
+- **Docs vivos** atualizados (implementation + manual-dev + PENDENCIAS / scoreboard go-live)
+
+---
+
+## DoD de documentação (obrigatório ao fechar fase)
+
+Após implementação técnica e evidências (`typecheck`, `lint`, `test`), atualizar:
+
+| Documento | Conteúdo |
+| --- | --- |
+| `docs/implementation/YYYY-MM-DD-*.md` | O que foi entregue (arquivos, migrations, testes) |
+| `docs/manual-dev/{NN}-fase-*.md` | Como funciona, fluxos, contas de teste, homologação |
+| `docs/state/PENDENCIAS.md` | Marcar implementado; listar homologação pendente |
+| `docs/state/PLANO_GO_LIVE_COBRANCA.md` | Scoreboard da trilha, quando aplicável |
+| Índices `docs/implementation/README.md` e `docs/manual-dev/README.md` | Status da fase |
+
+Checklist detalhado: `.cursor/skills/close-phase/SKILL.md`
 
 ---
 
@@ -172,6 +193,7 @@ E também:
 - Spec:
 - Comandos Done:
 - Arquivos alterados:
+- Docs vivos: implementation · manual-dev · PENDENCIAS
 - Riscos / dúvidas:
 - Diff crítico para review humano: sim/não
 ```
@@ -258,7 +280,11 @@ Detalhes em `docs/SECURITY.md`. Pontos críticos:
 | `docs/SECURITY.md` | Antes do merge — RLS, SSRF, LLM, uploads |
 | `docs/PLANOS_E_LIMITES.md` | Planos SaaS, créditos, limites |
 | `docs/architecture/` | ADRs e mapa de módulos |
+| `docs/implementation/` | Registro do que foi entregue por fase |
+| `docs/manual-dev/` | Como funciona e homologar manualmente |
+| `docs/state/PENDENCIAS.md` | O que ainda falta (doc vivo) |
 | `specs/<feature>.md` | Contrato da feature em andamento |
+| `.cursor/skills/close-phase/SKILL.md` | Fechamento de fase (docs vivos) |
 | `.cursor/rules/project-general.mdc` | Regras detalhadas sempre ativas |
 
 **Não copie** conteúdo desses docs nas respostas ou no código — leia o arquivo e aplique. Referencie paths em vez de duplicar.

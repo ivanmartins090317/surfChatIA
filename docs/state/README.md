@@ -6,13 +6,18 @@ Documento vivo com **pendências abertas**, prioridades e próximos passos. Atua
 |-----------|----------|
 | [**PLANO_GO_LIVE_COBRANCA.md**](./PLANO_GO_LIVE_COBRANCA.md) | **Plano operacional go-live + cobrança** — trilhas paralelas A–I, scoreboard e Done |
 | [PENDENCIAS.md](./PENDENCIAS.md) | Plano de lançamento SaaS — checklist histórico por etapa (MVP → prod → monetização) |
+| [**Manual do dev**](../manual-dev/README.md) | Como funciona, homologação manual e contas de teste por fase |
 | [Relatório de testes manuais](../relatorio-testes-manuais.html) | Homologação E2E (POP-QA-SURF-001) — 26 TCs, evidências em `docs/evidencias/` |
 | [Implementação](../implementation/README.md) | Registro do que já foi entregue |
 | [Bugs corrigidos](./fixed_tasks/README.md) | Bugs de produção já corrigidos — sintoma, causa raiz e validação |
 | [Incidentes resolvidos](./incidentes-resolvidos/README.md) | Incidentes (infra + config + produto) resolvidos — post-mortem curto |
 | [Planos e limites](../PLANOS_E_LIMITES.md) | Estratégia SaaS — créditos, planos e monetização |
 
-**Última atualização:** 10/08/2026 — pasta [incidentes-resolvidos](./incidentes-resolvidos/README.md) + incidente de upload Storage/limite 50 MB.
+**Última revisão:** 20/08/2026 — workflow docs vivos (`manual-dev/` + skill `close-phase`).
+
+## Workflow docs vivos
+
+Ao fechar fase: `.cursor/skills/close-phase/SKILL.md` → atualizar **implementation** + **manual-dev** + **PENDENCIAS** (e scoreboard go-live quando aplicável).
 
 ## Convenção
 

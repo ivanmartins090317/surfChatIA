@@ -10,8 +10,16 @@ function isDevOnlyRoute(pathname: string): boolean {
   return pathname === "/api/dev/sentry-test";
 }
 
+function isWebhookRoute(pathname: string): boolean {
+  return pathname.startsWith("/api/webhooks/");
+}
+
 function isPublicRoute(pathname: string): boolean {
   if (isDevOnlyRoute(pathname)) {
+    return true;
+  }
+
+  if (isWebhookRoute(pathname)) {
     return true;
   }
 

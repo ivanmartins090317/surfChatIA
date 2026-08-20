@@ -44,6 +44,7 @@ Linguagem de produto — sem endpoint, tabela, classe ou detalhe de framework.
 - [ ]
 - [ ]
 - [ ] `npm run typecheck` · `npm run lint` · `npm test` verdes
+- [ ] Docs vivos: `docs/implementation/` + `docs/manual-dev/` + `docs/state/PENDENCIAS.md` (skill `close-phase`)
 
 ## Escopo de arquivos permitido
 

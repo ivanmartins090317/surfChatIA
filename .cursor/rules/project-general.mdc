@@ -49,6 +49,16 @@ Idioma: **sempre responda em português (pt-BR)**.
 10. **Sem duplicação**: reutilize antes de recriar. Sem mocks em dev/prod (só em testes).
 11. **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, `test:`, `docs:`); branch descritiva (`feature/...`).
 
+## Fechamento de implementação (obrigatório)
+
+Ao concluir fase ou spec aprovada, **antes** de considerar entrega fechada:
+
+1. **`docs/implementation/`** — registrar entregáveis + índice README
+2. **`docs/manual-dev/`** — capítulo explicativo + índice README
+3. **`docs/state/PENDENCIAS.md`** — implementado vs homologação manual (+ scoreboard go-live se aplicável)
+
+Skill: `.cursor/skills/close-phase/SKILL.md`
+
 ## Depois de alterar
 
 Reflita em 1–2 parágrafos sobre escalabilidade/manutenibilidade e cubra com testes (≥ 80% quando aplicável).
