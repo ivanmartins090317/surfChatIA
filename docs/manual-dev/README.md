@@ -15,6 +15,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | [03-fase-producao-deploy.md](./03-fase-producao-deploy.md) | Deploy Vercel, rate limit Postgres, Sentry |
 | [04-fase-creditos-paywall.md](./04-fase-creditos-paywall.md) | Créditos, ledger, paywall, planos de exemplo |
 | [05-fase-legal-lgpd.md](./05-fase-legal-lgpd.md) | Termos, privacidade, aceite, export/exclusão |
+| [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) | AbacatePay: checkout, webhooks, cobrança |
 
 ## Documentos relacionados
 
@@ -36,8 +37,9 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | Produção (deploy + observabilidade) | concluída | [03-fase-producao-deploy.md](./03-fase-producao-deploy.md) |
 | A · Créditos + paywall | concluída (código) | [04-fase-creditos-paywall.md](./04-fase-creditos-paywall.md) |
 | C · Legal / LGPD | concluída (código) | [05-fase-legal-lgpd.md](./05-fase-legal-lgpd.md) |
+| H · Billing AbacatePay | implementado (código) · homologação pendente | [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) |
 | B · Landing | pendente | — |
-| D–H · AbacatePay / billing | pendente | — |
+| D · Gateway (conta/painel) | pendente (owner) | — |
 
 ## Comandos do dia a dia
 

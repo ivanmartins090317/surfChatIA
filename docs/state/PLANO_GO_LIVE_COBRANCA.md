@@ -4,7 +4,7 @@
 > **Como usar:** marque `[x]` ao concluir; atualize o scoreboard e a data de revisão.  
 > **Referências:** [PENDENCIAS.md](./PENDENCIAS.md) · [PLANOS_E_LIMITES.md](../PLANOS_E_LIMITES.md) · [DEPLOY_VERCEL.md](../DEPLOY_VERCEL.md)
 
-**Criado:** 10/08/2026 · **Última revisão:** 10/08/2026 (Trilha G) · **Owner:** time Surf AI Coach
+**Criado:** 10/08/2026 · **Última revisão:** 20/08/2026 (Trilha H) · **Owner:** time Surf AI Coach
 
 ---
 
@@ -15,16 +15,16 @@
 | A | Créditos + paywall (caminho crítico) | 🟢 Concluído | 12 / 12 |
 | B | Landing + comunicação | 🔴 Não iniciado | 0 / 5 |
 | C | Legal / LGPD | 🟢 Concluído | 5 / 5 |
-| D | Gateway (decisão + conta) | 🔴 Não iniciado | 0 / 4 |
+| D | Gateway (decisão + conta) | 🟡 Em andamento | 1 / 4 |
 | E | Domínio + SMTP | ⏸️ Aguardando domínio | 0 / 5 |
 | F | Qualidade / DoD / IA | 🟡 Em andamento | 0 / 4 |
 | G | Custo IA + operação | 🟢 Concluído | 3 / 3 |
-| H | Pagamentos (código) | ⏸️ Depende de A + D | 0 / 10 |
+| H | Pagamentos (código) | 🟢 Concluído (código) | 9 / 10 |
 | I | Go-live comercial | ⏸️ Depende de A–H | 0 / 5 |
 
 **Legenda de status:** 🔴 Não iniciado · 🟡 Em andamento · 🟢 Concluído · ⏸️ Bloqueado / aguardando
 
-**Progresso geral:** 20 / 53 tarefas
+**Progresso geral:** 30 / 53 tarefas
 
 ---
 
@@ -135,7 +135,7 @@ flowchart TB
 
 > Decisão de negócio. Não precisa esperar código da A para abrir conta.
 
-- [ ] Decidir provedor: **Stripe** ou **Mercado Pago**
+- [x] Decidir provedor: **AbacatePay** (documentado na Spec e manual-dev)
 - [ ] Conta criada e verificada (dados fiscais / KYC)
 - [ ] Produtos/preços rascunhados: Surfista R$ 39 (8) · Pro R$ 89 (30) · Pack S R$ 19 (5) · Pack M R$ 49 (15)
 - [ ] Webhooks de teste documentados (URL staging / secrets no `.env` — sem commitar)
@@ -188,19 +188,20 @@ flowchart TB
 
 ### H.1 Integração
 
-- [ ] Migration: tabela `subscriptions` (user_id, provider, external_id, status, plan, current_period_end) + RLS
-- [ ] Checkout assinatura Surfista e Pro
-- [ ] Checkout packs avulsos (S e M) → crédito em `usage_ledger`
-- [ ] Webhooks: `active`, `past_due`, `canceled`, compra avulsa
-- [ ] Sincronizar `profiles.plan` / créditos a partir do webhook
-- [ ] Página `/planos` com CTAs de checkout reais
-- [ ] Página `/billing` (ou seção no perfil): plano, renovação, cancelamento
-- [ ] Testes de webhook (upgrade, falha, cancelamento) em ambiente de teste
+- [x] Migration: tabela `subscriptions` (user_id, provider, external_id, status, plan, current_period_end) + RLS
+- [x] Checkout assinatura Surfista e Pro
+- [x] Checkout packs avulsos (S e M) → crédito em `usage_ledger`
+- [x] Webhooks: checkout concluído, assinatura ativada, renovada, cancelada
+- [x] Sincronizar `profiles.plan` / créditos a partir do webhook
+- [x] Página `/planos` com CTAs de checkout reais
+- [x] Página `/billing` (ou seção no perfil): plano, renovação, cancelamento
+- [x] Testes de webhook (upgrade, falha, cancelamento) em ambiente de teste (unitários + memory backend)
+- [ ] Homologação E2E Dev mode com gateway real (owner)
 
 ### H.2 Operação
 
-- [ ] Job mensal: reset `credits_period_used` no início do ciclo
-- [ ] Checklist segurança: secrets só server-side · webhook assinado · Zod na entrada
+- [x] Reset de ciclo na renovação webhook (sem cron dedicado nesta entrega)
+- [x] Checklist segurança: secrets só server-side · webhook assinado · validação mínima payload
 
 **Done da trilha H:** pagamento teste → plano ativo → créditos creditados · cancelamento respeitado.
 
@@ -258,6 +259,7 @@ Marque só quando for verdade:
 | 10/08/2026 | Trilha A implementada no código (Spec `2026-08-10-creditos-paywall`) — aguarda db:push prod |
 | 10/08/2026 | Trilha C implementada (Spec `2026-08-10-legal-lgpd`) — docs legais, footer, aceite, cookies, direitos LGPD |
 | 10/08/2026 | Trilha G — custo IA: logs `ai.usage`, baseline/margem Go, rotina semanal (Spec `2026-08-10-custo-ia-operacao`) |
+| 20/08/2026 | Trilha H — billing AbacatePay no código (Spec `2026-08-20-billing-abacatepay`) — aguarda db:push + homologação Dev mode |
 
 ---
 

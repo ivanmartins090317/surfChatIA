@@ -48,8 +48,8 @@ export function CreditsPaywall() {
       <AlertTitle>Sem créditos</AlertTitle>
       <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span>
-          Você usou todos os créditos do plano grátis. Veja os planos de exemplo
-          para continuar analisando.
+          Você usou todos os créditos do plano grátis. Assine um plano ou compre um
+          pack avulso para continuar analisando.
         </span>
         <Button asChild size="sm" className="shrink-0">
           <Link href="/planos">Ver planos</Link>

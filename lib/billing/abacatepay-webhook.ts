@@ -99,13 +99,10 @@ export function parseAbacatePayWebhookPayload(
 export async function handleAbacatePayWebhookEvent(
   payload: AbacatePayWebhookPayload,
 ): Promise<void> {
-  console.info("[abacatepay.webhook] evento recebido", {
-    eventId: payload.id,
-    event: payload.event,
-    devMode: payload.devMode ?? null,
-  });
-
-  // Trilha H: sincronizar plano/créditos conforme payload.data (subscriptions + usage_ledger).
+  const { handleAbacatePayWebhookEvent: processEvent } = await import(
+    "@/services/billing-service"
+  );
+  await processEvent(payload);
 }
 
 export function getAbacatePaySignatureHeaderName(): string {

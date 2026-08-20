@@ -2,7 +2,7 @@
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
 > **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · monetização **não implementada**.  
-> **Última revisão:** 17/07/2026 — Fase A da especialização da IA de performance implementada, validação com mídia real em andamento.
+> **Última revisão:** 20/08/2026 — Trilha H billing AbacatePay implementada (código); homologação Dev mode pendente.
 
 ---
 
@@ -17,8 +17,8 @@
 | Segurança RLS | ✅ Validado | FL-06 (2/2) |
 | Shell / mobile | ✅ Validado | FL-07 (2/2) |
 | Especialização IA performance | 🟡 Fase A implementada, validação pendente | — |
-| Monetização | ❌ Não existe | — |
-| Pagamentos | ❌ Não existe | — |
+| Monetização | 🟡 Créditos + paywall (Trilha A) | — |
+| Pagamentos | 🟡 Código AbacatePay (Trilha H) · homologação pendente | — |
 | Deploy produção | 🟡 Live (2.1–2.2 ✅ · 2.3 pendente) | smoke test prod OK |
 | Legal (LGPD / Termos) | ❌ Não existe | — |
 
@@ -183,27 +183,30 @@ flowchart LR
 
 ---
 
-## Etapa 4 — Pagamentos (Fase B) 🟢
+## Etapa 4 — Pagamentos (AbacatePay) 🟡
 
-> Referência: [PLANOS_E_LIMITES.md](../PLANOS_E_LIMITES.md) — Fase B.
+> Spec: [`specs/2026-08-20-billing-abacatepay.md`](../../specs/2026-08-20-billing-abacatepay.md) · Manual: [`docs/manual-dev/06-fase-billing-abacatepay.md`](../manual-dev/06-fase-billing-abacatepay.md)
 
-### 4.1 Gateway
+### 4.1 Gateway e código
 
-- [ ] Escolher provedor: **Stripe** ou **Mercado Pago** (decisão de negócio)
-- [ ] Migration: tabela `subscriptions` (user_id, provider, external_id, status, plan, current_period_end)
-- [ ] Checkout assinatura: planos Surfista (R$ 39 / 8 créditos) e Pro (R$ 89 / 30 créditos)
-- [ ] Pacotes avulsos: Pack S (R$ 19 / 5) e Pack M (R$ 49 / 15)
-- [ ] Webhooks: `active`, `past_due`, `canceled`, compra avulsa → créditos em `usage_ledger`
-- [ ] Página `/planos` completa com preços e CTAs de checkout
-- [ ] Página `/billing` ou seção em perfil: plano atual, renovação, cancelamento
+- [x] Provedor: **AbacatePay** (Spec + docs vivos)
+- [x] Migration `011_billing_abacatepay.sql`: `subscriptions`, idempotência webhook, RPCs
+- [x] Checkout assinatura Surfista/Pro + packs S/M
+- [x] Webhooks v2: checkout.completed, subscription.completed/renewed/cancelled
+- [x] Página `/planos` com CTAs · `/billing` com cancelamento
+- [x] Testes unitários (catalog, parser, service, segurança HMAC)
+- [ ] `npm run db:push` migration 011 em prod/staging
+- [ ] Conta AbacatePay + produtos no painel (Trilha D — owner)
+- [ ] Homologação E2E Dev mode (pagamento simulado → plano/créditos)
 
 ### 4.2 Operação
 
-- [ ] Job mensal: reset `credits_period_used` no início do ciclo de billing
-- [x] Medir custo médio por análise (baseline Trilha G 10/08/2026; revalidar billing + 30 dias pós-lançamento)
+- [x] Reset de ciclo na renovação webhook (cron mensal = follow-up)
+- [ ] Política de estorno automático em `checkout.refunded` (só log hoje)
+- [x] Medir custo médio por análise (baseline Trilha G)
 - [ ] Recalibrar preços se margem < alvo
 
-**Critério de saída Etapa 4:** upgrade real funciona · webhook sincroniza plano · cancelamento respeitado.
+**Critério de saída Etapa 4:** upgrade real funciona · webhook sincroniza plano · cancelamento respeitado · **homologação manual OK**.
 
 ---
 
@@ -278,7 +281,7 @@ Paralelo agora:  A créditos · B landing · C legal · D gateway · E domínio 
 Depois:          H pagamentos (código)  →  I go-live comercial
 ```
 
-**Sessão atual sugerida:** trilha **A** (créditos + paywall) em paralelo com **D** (decidir Stripe vs MP).
+**Sessão atual sugerida:** Trilha **D** (conta AbacatePay + product IDs) + homologação **H** (Dev mode E2E).
 
 ---
 

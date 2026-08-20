@@ -60,6 +60,9 @@ export function ProfileMenu({ displayName, email }: ProfileMenuProps) {
             Avaliar & sugerir
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
+            <Link href="/billing">Cobrança</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link href="/profile">
               <UserRound className="size-4" aria-hidden />
               Editar perfil
