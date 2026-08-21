@@ -11,6 +11,11 @@ export type SignupLoginBannerState =
 export const SIGNUP_DUPLICATE_EMAIL_MESSAGE = "Este e-mail já tem conta.";
 
 const SIGNUP_CONFIRM_CALLBACK_TYPE = "signup_confirm";
+const SIGNUP_EMAIL_OTP_TYPE = "signup";
+
+function isSignupEmailConfirmationType(type: string | null): boolean {
+  return type === SIGNUP_CONFIRM_CALLBACK_TYPE || type === SIGNUP_EMAIL_OTP_TYPE;
+}
 
 export function buildLoginAfterSignupUrl(email: string): string {
   const params = new URLSearchParams({
@@ -40,7 +45,7 @@ export function resolveAuthCallbackRedirect(
   next: string | null,
   type: string | null,
 ): string {
-  if (type === SIGNUP_CONFIRM_CALLBACK_TYPE) {
+  if (isSignupEmailConfirmationType(type)) {
     return `/login?${SIGNUP_LOGIN_PARAM}=${SignupLoginState.CONFIRMED}`;
   }
   return sanitizeInternalRedirectPath(next, "/reset-password");
@@ -50,7 +55,7 @@ export function shouldSignOutAfterEmailConfirmation(
   next: string | null,
   type: string | null,
 ): boolean {
-  if (type === SIGNUP_CONFIRM_CALLBACK_TYPE) {
+  if (isSignupEmailConfirmationType(type)) {
     return true;
   }
 

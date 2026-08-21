@@ -56,6 +56,12 @@ describe("resolveAuthCallbackRedirect", () => {
     );
   });
 
+  it("prioriza tipo signup do Supabase Auth", () => {
+    expect(resolveAuthCallbackRedirect("/dashboard", "signup")).toBe(
+      "/login?signup=confirmed",
+    );
+  });
+
   it("usa next sanitizado para demais fluxos", () => {
     expect(resolveAuthCallbackRedirect("/reset-password", null)).toBe(
       "/reset-password",
@@ -70,6 +76,7 @@ describe("shouldSignOutAfterEmailConfirmation", () => {
       shouldSignOutAfterEmailConfirmation("/login?signup=confirmed", null),
     ).toBe(true);
     expect(shouldSignOutAfterEmailConfirmation(null, "signup_confirm")).toBe(true);
+    expect(shouldSignOutAfterEmailConfirmation(null, "signup")).toBe(true);
   });
 
   it("não exige sign-out em reset de senha", () => {
