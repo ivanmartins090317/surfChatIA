@@ -16,6 +16,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | [04-fase-creditos-paywall.md](./04-fase-creditos-paywall.md) | Créditos, ledger, paywall, planos de exemplo |
 | [05-fase-legal-lgpd.md](./05-fase-legal-lgpd.md) | Termos, privacidade, aceite, export/exclusão |
 | [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) | AbacatePay: checkout, webhooks, cobrança |
+| [07-fase-signup-ux-fluxo-conta.md](./07-fase-signup-ux-fluxo-conta.md) | UX signup: redirect, banners, confirmação de e-mail |
 
 ## Documentos relacionados
 
@@ -38,6 +39,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | A · Créditos + paywall | concluída (código) | [04-fase-creditos-paywall.md](./04-fase-creditos-paywall.md) |
 | C · Legal / LGPD | concluída (código) | [05-fase-legal-lgpd.md](./05-fase-legal-lgpd.md) |
 | H · Billing AbacatePay | implementado (código) · homologação pendente | [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) |
+| Signup UX (Fase A) | implementado (código) · homologação manual pendente | [07-fase-signup-ux-fluxo-conta.md](./07-fase-signup-ux-fluxo-conta.md) |
 | B · Landing | pendente | — |
 | D · Gateway (conta/painel) | pendente (owner) | — |
 

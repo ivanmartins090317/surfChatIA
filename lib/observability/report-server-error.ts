@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 
 export interface ServerErrorContext {
-  area: "ai" | "upload" | "auth" | "rate-limit";
+  area: "ai" | "upload" | "auth" | "rate-limit" | "billing";
   operation: string;
   userId?: string;
 }

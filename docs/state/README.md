@@ -5,6 +5,7 @@ Documento vivo com **pendências abertas**, prioridades e próximos passos. Atua
 | Documento | Conteúdo |
 |-----------|----------|
 | [**PLANO_GO_LIVE_COBRANCA.md**](./PLANO_GO_LIVE_COBRANCA.md) | **Plano operacional go-live + cobrança** — trilhas paralelas A–I, scoreboard e Done |
+| [**Signup UX (fluxo conta)**](../plans/2026-08-21-signup-ux-fluxo-conta.md) | Melhoria pós-testes: redirect signup→login, banners, SMTP/Resend |
 | [PENDENCIAS.md](./PENDENCIAS.md) | Plano de lançamento SaaS — checklist histórico por etapa (MVP → prod → monetização) |
 | [**Manual do dev**](../manual-dev/README.md) | Como funciona, homologação manual e contas de teste por fase |
 | [Relatório de testes manuais](../relatorio-testes-manuais.html) | Homologação E2E (POP-QA-SURF-001) — 26 TCs, evidências em `docs/evidencias/` |

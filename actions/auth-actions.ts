@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import {
+  SIGNUP_DUPLICATE_EMAIL_MESSAGE,
+  buildEmailConfirmationCallbackUrl,
+  isSupabaseDuplicateEmailError,
+} from "@/lib/auth/signup-redirect";
 import type { ActionResult } from "@/lib/domain/types";
 import { toActionErrorMessage } from "@/lib/errors/action-error";
 import { rateLimitAuthAction } from "@/lib/security/rate-limit";
@@ -50,10 +55,18 @@ export async function signUpAction(
       password,
       options: {
         data: { display_name: displayName || email.split("@")[0] },
+        emailRedirectTo: buildEmailConfirmationCallbackUrl(getSiteUrl()),
       },
     });
 
     if (error) {
+      if (isSupabaseDuplicateEmailError(error)) {
+        return {
+          success: false,
+          error: SIGNUP_DUPLICATE_EMAIL_MESSAGE,
+        };
+      }
+
       return {
         success: false,
         error: "Não foi possível criar a conta. Verifique o e-mail ou tente outro.",

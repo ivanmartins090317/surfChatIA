@@ -2,6 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { signUpAction } from "@/actions/auth-actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,37 +10,48 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import {
+  buildLoginAfterSignupUrl,
+  isDuplicateEmailSignupError,
+} from "@/lib/auth/signup-redirect";
 
 export function SignUpForm() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    setSuccess(null);
     startTransition(async () => {
       const result = await signUpAction(formData);
       if (!result.success) {
         setError(result.error ?? "Erro ao criar conta.");
         return;
       }
-      setSuccess(
-        "Conta criada! Verifique seu e-mail (se confirmado no Supabase) e faça login.",
-      );
+
+      router.push(buildLoginAfterSignupUrl(result.data?.email ?? ""));
+      router.refresh();
     });
   }
 
   return (
     <form action={handleSubmit} className="space-y-6" aria-busy={isPending}>
-      {error && (
+      {error && isDuplicateEmailSignupError(error) && (
         <Alert id="signup-error" variant="destructive" role="alert">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            {error}{" "}
+            <Link
+              href="/login"
+              className="font-semibold underline underline-offset-4"
+            >
+              Entrar
+            </Link>
+          </AlertDescription>
         </Alert>
       )}
-      {success && (
-        <Alert variant="success">
-          <AlertDescription>{success}</AlertDescription>
+      {error && !isDuplicateEmailSignupError(error) && (
+        <Alert id="signup-error" variant="destructive" role="alert">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-3">
@@ -127,6 +139,11 @@ export function SignUpForm() {
           .
         </Label>
       </div>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        Após criar a conta, enviaremos um{" "}
+        <strong className="font-semibold text-foreground">e-mail de confirmação</strong>.
+        Você será direcionado para a tela de login.
+      </p>
       <Button type="submit" size="lg" className="w-full" disabled={isPending}>
         {isPending ? (
           <>

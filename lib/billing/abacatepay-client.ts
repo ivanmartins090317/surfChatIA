@@ -1,5 +1,9 @@
 import type { BillingOfferKey } from "@/lib/domain/billing";
 import {
+  resolveAbacatePayMethods,
+  translateAbacatePayError,
+} from "@/lib/billing/abacatepay-errors";
+import {
   getBillingOffer,
   getProductIdForOffer,
 } from "@/lib/billing/billing-catalog";
@@ -58,7 +62,7 @@ async function postAbacatePay<T>(
     const message =
       payload?.error?.trim() ||
       "Não foi possível iniciar o pagamento. Tente novamente em instantes.";
-    throw new Error(message);
+    throw new Error(translateAbacatePayError(message));
   }
 
   return payload.data;
@@ -87,7 +91,7 @@ export async function createAbacatePayCheckout(input: {
     externalId: input.externalRef,
     returnUrl: `${siteUrl}/planos?checkout=cancelled`,
     completionUrl: `${siteUrl}/planos?checkout=success`,
-    methods: offer.kind === "subscription" ? ["CARD", "PIX"] : ["PIX", "CARD"],
+    methods: resolveAbacatePayMethods(offer.kind),
     metadata: {
       userId: input.userId,
       offerKey: input.offerKey,

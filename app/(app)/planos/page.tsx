@@ -12,6 +12,7 @@ import {
 } from "@/lib/billing/billing-catalog";
 import { isAbacatePayConfigured } from "@/lib/billing/abacatepay-client";
 import { BILLING_OFFER_KINDS } from "@/lib/domain/billing";
+import { toCreditsSnapshot } from "@/lib/domain/credits";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { getBillingSummary } from "@/services/billing-service";
 import { getCreditsSnapshot } from "@/services/usage-service";
@@ -19,10 +20,17 @@ import { USER_PLANS } from "@/lib/domain/types";
 
 export const metadata = { title: "Planos" };
 
+const EMPTY_CREDITS = toCreditsSnapshot({
+  plan: "free",
+  freeQuotaGranted: false,
+  creditsPeriodUsed: 0,
+  creditsBalance: 0,
+});
+
 export default async function PlanosPage() {
   const user = await requireAuthUser();
   const [credits, billing] = await Promise.all([
-    getCreditsSnapshot(user.id),
+    getCreditsSnapshot(user.id).catch(() => EMPTY_CREDITS),
     getBillingSummary(user.id),
   ]);
 

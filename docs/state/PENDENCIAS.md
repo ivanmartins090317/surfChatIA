@@ -2,7 +2,7 @@
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
 > **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · monetização **não implementada**.  
-> **Última revisão:** 20/08/2026 — Trilha H billing AbacatePay implementada (código); homologação Dev mode pendente.
+> **Última revisão:** 21/08/2026 — Trilha H billing AbacatePay implementada (código); homologação Dev mode pendente · **Signup UX Fase A** implementada (código); homologação manual pendente.
 
 ---
 
@@ -244,6 +244,8 @@ flowchart LR
 ### Auth e perfil (FL-01 · FL-02)
 
 - [x] Signup, login, logout, recuperação de senha
+- [x] **Signup UX Fase A** — redirect pós-cadastro, banners login, callback confirmação ([implementation](../implementation/2026-08-21-signup-ux-fluxo-conta.md))
+- [ ] **Signup UX homologação manual** — criar conta → banner login → confirmar e-mail → login → dashboard
 - [x] Rotas protegidas e redirect pós-logout (TC-25, TC-26)
 - [x] Edição de perfil E2E (TC-06, TC-07, TC-08)
 

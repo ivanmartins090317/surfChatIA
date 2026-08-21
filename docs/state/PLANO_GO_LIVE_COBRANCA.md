@@ -146,7 +146,8 @@ flowchart TB
 
 ## Trilha E — Domínio + SMTP ⚡ / ⏸️
 
-> ⚡ Comprar domínio agora. ⏸️ DNS/SMTP após registro. Não bloqueia A–D; recomendado antes de I.
+> ⚡ Comprar domínio agora. ⏸️ DNS/SMTP após registro. Não bloqueia A–D; recomendado antes de I.  
+> **Fase A app (signup UX):** redirect/banners/callback implementados — ver [`docs/implementation/2026-08-21-signup-ux-fluxo-conta.md`](../implementation/2026-08-21-signup-ux-fluxo-conta.md).
 
 - [ ] Registrar domínio (ex.: `surfcoach.com.br` / `surfboardai.app`)
 - [ ] Vercel → Domains + DNS (CNAME/A)

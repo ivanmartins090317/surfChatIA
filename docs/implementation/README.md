@@ -13,6 +13,7 @@ Histórico do que foi construído no projeto, organizado por data e alinhado ao 
 | 2026-08-10 | [2026-08-10-legal-lgpd.md](./2026-08-10-legal-lgpd.md) | Trilha C: Termos, Privacidade, aceite, export/exclusão |
 | 2026-08-10 | [2026-08-10-custo-ia-operacao.md](./2026-08-10-custo-ia-operacao.md) | Trilha G: instrumentação `ai.usage`, baseline, margem |
 | 2026-08-20 | [2026-08-20-billing-abacatepay.md](./2026-08-20-billing-abacatepay.md) | Trilhas D+H: AbacatePay checkout, webhooks, billing UI |
+| 2026-08-21 | [2026-08-21-signup-ux-fluxo-conta.md](./2026-08-21-signup-ux-fluxo-conta.md) | UX signup: redirect login, banners confirmação, callback |
 
 ## Convenção dos checklists
 

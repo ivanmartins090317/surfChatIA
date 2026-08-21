@@ -690,6 +690,81 @@ function normalizeSubscription(row: Record<string, unknown>): SubscriptionRecord
   };
 }
 
+function createEmptyBillingSummary(plan: UserPlan = "free"): BillingSummary {
+  return {
+    plan,
+    subscription: null,
+    hasActivePaidAccess: false,
+    nextRenewalAt: null,
+    canCancelSubscription: false,
+  };
+}
+
+async function loadBillingSummaryFromSupabase(
+  userId: string,
+): Promise<BillingSummary> {
+  try {
+    await invokeBillingRpc("maybe_downgrade_expired_subscription", {
+      p_user_id: userId,
+    });
+  } catch (error) {
+    reportServerError(error, {
+      area: "billing",
+      operation: "maybe_downgrade_expired_subscription",
+    });
+  }
+
+  const supabase = createAdminClient();
+
+  const [{ data: profileRow, error: profileError }, subscriptionsResult] =
+    await Promise.all([
+      supabase.from("profiles").select("plan").eq("id", userId).maybeSingle(),
+      supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+        .limit(1),
+    ]);
+
+  const profile = profileRow as { plan: string } | null;
+
+  if (profileError) {
+    reportServerError(profileError, {
+      area: "billing",
+      operation: "load_billing_profile",
+    });
+  }
+
+  if (subscriptionsResult.error) {
+    reportServerError(subscriptionsResult.error, {
+      area: "billing",
+      operation: "load_subscriptions",
+    });
+    const planFromProfile = profile?.plan as UserPlan | undefined;
+    return createEmptyBillingSummary(planFromProfile ?? "free");
+  }
+
+  const subscriptionRow = subscriptionsResult.data?.[0] ?? null;
+  const subscription = subscriptionRow
+    ? normalizeSubscription(subscriptionRow as Record<string, unknown>)
+    : null;
+
+  const hasActivePaidAccess =
+    subscription?.status === "active" ||
+    (subscription?.status === "cancelled" &&
+      new Date(subscription.current_period_end).getTime() > Date.now());
+
+  return {
+    plan: (profile?.plan as UserPlan | undefined) ?? "free",
+    subscription,
+    hasActivePaidAccess,
+    nextRenewalAt:
+      subscription?.status === "active" ? subscription.current_period_end : null,
+    canCancelSubscription: subscription?.status === "active",
+  };
+}
+
 export async function getBillingSummary(userId: string): Promise<BillingSummary> {
   if (shouldUseMemoryBackend()) {
     maybeDowngradeMemory(userId);
@@ -719,54 +794,15 @@ export async function getBillingSummary(userId: string): Promise<BillingSummary>
     };
   }
 
-  await invokeBillingRpc("maybe_downgrade_expired_subscription", {
-    p_user_id: userId,
-  });
-
-  const supabase = createAdminClient() as unknown as {
-    from: (table: string) => {
-      select: (cols: string) => {
-        eq: (col: string, val: string) => {
-          maybeSingle: () => Promise<{ data: { plan: string } | null }>;
-          order: (
-            col: string,
-            opts: { ascending: boolean },
-          ) => {
-            limit: (n: number) => Promise<{ data: Record<string, unknown>[] | null }>;
-          };
-        };
-      };
-    };
-  };
-
-  const [{ data: profile }, { data: subscriptions }] = await Promise.all([
-    supabase.from("profiles").select("plan").eq("id", userId).maybeSingle(),
-    supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", userId)
-      .order("updated_at", { ascending: false })
-      .limit(1),
-  ]);
-
-  const subscriptionRow = subscriptions?.[0] ?? null;
-  const subscription = subscriptionRow
-    ? normalizeSubscription(subscriptionRow as Record<string, unknown>)
-    : null;
-
-  const hasActivePaidAccess =
-    subscription?.status === "active" ||
-    (subscription?.status === "cancelled" &&
-      new Date(subscription.current_period_end).getTime() > Date.now());
-
-  return {
-    plan: (profile?.plan as UserPlan) ?? "free",
-    subscription,
-    hasActivePaidAccess,
-    nextRenewalAt:
-      subscription?.status === "active" ? subscription.current_period_end : null,
-    canCancelSubscription: subscription?.status === "active",
-  };
+  try {
+    return await loadBillingSummaryFromSupabase(userId);
+  } catch (error) {
+    reportServerError(error, {
+      area: "billing",
+      operation: "getBillingSummary",
+    });
+    return createEmptyBillingSummary();
+  }
 }
 
 export async function handleAbacatePayWebhookEvent(

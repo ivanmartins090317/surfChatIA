@@ -21,7 +21,9 @@ Registro objetivo: [`docs/implementation/2026-08-20-billing-abacatepay.md`](../i
 ## Pré-requisitos (Trilha D — owner)
 
 1. Conta AbacatePay com Dev mode
-2. Quatro produtos no painel (assinatura mensal Surfista/Pro + packs avulsos S/M)
+2. Quatro produtos no painel **ou via API** (`POST /products/create`):
+   - **Surfista e Pro:** produtos de **assinatura** com `"cycle": "MONTHLY"` — o formulário web do painel **não exibe** esse campo hoje; use a API ou o script abaixo
+   - **Pack S e Pack M:** produtos **avulsos** (sem `cycle` / pagamento único) — podem ser criados no painel normalmente
 3. Webhook HTTPS: `https://SEU_DOMINIO/api/webhooks/abacatepay?webhookSecret=SEU_SECRET`
 4. Eventos v2: checkout.completed, subscription.completed, subscription.renewed, subscription.cancelled
 
@@ -40,10 +42,16 @@ Registrar IDs dos produtos neste capítulo quando a Trilha D fechar.
 
 | Oferta | Preço | Product ID (AbacatePay Dev) |
 |--------|-------|-----------------------------|
-| Surfista | R$ 39/mês · 8 créditos | `prod_kgZEYjU5cXtfQXCgGp1cN6TZ` |
-| Pro | R$ 89/mês · 30 créditos | `prod_2uMjLTdNsHKwPpfXbepmcb0j` |
+| Surfista | R$ 39/mês · 8 créditos | `prod_5NyxtBZmpJFLqZBDEYjC1B66` (cycle MONTHLY) |
+| Pro | R$ 89/mês · 30 créditos | `prod_sGTTcmqMcFCM33RCX230wRXG` (cycle MONTHLY) |
 | Pack S | R$ 19 · 5 créditos | `prod_gsFmquFPEBqfkrRJBuc6FStj` |
 | Pack M | R$ 49 · 15 créditos | `prod_fbEUA6NX21kBJmqu3aP4JT4q` |
+
+> **Assinaturas:** se aparecer *"No subscription product with cycle"*, o produto Surfista/Pro foi criado como avulso. Recrie no painel AbacatePay com **recorrência mensual** (`cycle: MONTHLY`).
+>
+> **Dev mode:** cartão costuma estar desabilitado — o app envia só **PIX** quando a API key começa com `abc_dev_`.
+>
+> **Produção (Vercel):** todas as vars `ABACATEPAY_PRODUCT_*` precisam estar nas Environment Variables do deploy, não só no `.env.local`.
 
 > **Nota:** a AbacatePay costuma devolver `checkout.externalId: null` nos webhooks v2 mesmo quando enviamos na criação. O app resolve o surfista via `metadata` (quando presente) ou via `billing_checkout_sessions.gateway_checkout_id` (= `checkout.id` do webhook).
 
