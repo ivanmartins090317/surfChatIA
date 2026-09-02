@@ -17,6 +17,30 @@ function getConfiguredWebhookSecret(): string | undefined {
   return process.env.ABACATEPAY_WEBHOOK_SECRET?.trim() || undefined;
 }
 
+export function extractAbacatePayWebhookSecret(
+  requestUrl: string,
+): string | null {
+  const query = new URL(requestUrl).search;
+  const match = query.match(/[?&]webhookSecret=([^&]*)/);
+  if (!match?.[1]) {
+    return null;
+  }
+
+  try {
+    return decodeURIComponent(match[1].replace(/\+/g, "%2B"));
+  } catch {
+    return match[1];
+  }
+}
+
+export function buildAbacatePayWebhookEndpoint(
+  siteUrl: string,
+  secret: string,
+): string {
+  const base = siteUrl.replace(/\/$/, "");
+  return `${base}/api/webhooks/abacatepay?webhookSecret=${encodeURIComponent(secret)}`;
+}
+
 export function isValidWebhookSecret(provided: string | null): boolean {
   const configured = getConfiguredWebhookSecret();
   if (!configured || !provided) {

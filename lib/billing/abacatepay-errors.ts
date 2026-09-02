@@ -7,12 +7,12 @@ export function isAbacatePayDevMode(): boolean {
 export function resolveAbacatePayMethods(
   offerKind: BillingOfferKind,
 ): Array<"PIX" | "CARD"> {
-  if (isAbacatePayDevMode()) {
-    return ["PIX"];
+  if (offerKind === "subscription") {
+    return ["CARD"];
   }
 
-  if (offerKind === "subscription") {
-    return ["CARD", "PIX"];
+  if (isAbacatePayDevMode()) {
+    return ["PIX"];
   }
 
   return ["PIX", "CARD"];
@@ -26,8 +26,12 @@ export function translateAbacatePayError(message: string): string {
     return "O produto deste plano no AbacatePay precisa ser de assinatura com ciclo mensual (cycle: MONTHLY). Produtos avulsos não funcionam em /subscriptions/create — recrie no painel.";
   }
 
+  if (lower.includes("pix automático") || lower.includes("pix automatico")) {
+    return "Assinatura via PIX exige PIX Automático habilitado na loja AbacatePay. Planos mensais usam cartão. Peça a habilitação ao suporte se quiser PIX recorrente.";
+  }
+
   if (lower.includes("card is not available")) {
-    return "Cartão não está habilitado nesta loja (comum em Dev mode). O checkout foi configurado para PIX — tente novamente.";
+    return "Cartão ainda não está habilitado nesta loja AbacatePay. No Dev mode o cartão de teste é 4242 4242 4242 4242. Se o erro continuar, fale com o suporte (ajuda@abacatepay.com).";
   }
 
   if (lower.includes("product") && lower.includes("not found")) {

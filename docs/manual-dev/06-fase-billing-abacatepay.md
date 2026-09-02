@@ -24,7 +24,7 @@ Registro objetivo: [`docs/implementation/2026-08-20-billing-abacatepay.md`](../i
 2. Quatro produtos no painel **ou via API** (`POST /products/create`):
    - **Surfista e Pro:** produtos de **assinatura** com `"cycle": "MONTHLY"` — o formulário web do painel **não exibe** esse campo hoje; use a API ou o script abaixo
    - **Pack S e Pack M:** produtos **avulsos** (sem `cycle` / pagamento único) — podem ser criados no painel normalmente
-3. Webhook HTTPS: `https://SEU_DOMINIO/api/webhooks/abacatepay?webhookSecret=SEU_SECRET`
+3. Webhook HTTPS: `https://surfiacoach.modernxlab.com.br/api/webhooks/abacatepay?webhookSecret=<encodeURIComponent do secret>`
 4. Eventos v2: checkout.completed, subscription.completed, subscription.renewed, subscription.cancelled
 
 ### Variáveis de ambiente (server-only)
@@ -47,11 +47,13 @@ Registrar IDs dos produtos neste capítulo quando a Trilha D fechar.
 | Pack S | R$ 19 · 5 créditos | `prod_gsFmquFPEBqfkrRJBuc6FStj` |
 | Pack M | R$ 49 · 15 créditos | `prod_fbEUA6NX21kBJmqu3aP4JT4q` |
 
-> **Assinaturas:** se aparecer *"No subscription product with cycle"*, o produto Surfista/Pro foi criado como avulso. Recrie no painel AbacatePay com **recorrência mensual** (`cycle: MONTHLY`).
+> **Assinaturas:** exigem produto com `cycle: MONTHLY` e método **CARD**. PIX avulso não renova mensalidade. PIX Automático (assinatura via PIX) precisa ser habilitado pelo suporte da AbacatePay.
 >
-> **Dev mode:** cartão costuma estar desabilitado — o app envia só **PIX** quando a API key começa com `abc_dev_`.
+> **Packs no Dev mode:** o app envia só **PIX** (cartão costuma estar desabilitado na loja sandbox).
 >
-> **Produção (Vercel):** todas as vars `ABACATEPAY_PRODUCT_*` precisam estar nas Environment Variables do deploy, não só no `.env.local`.
+> **Webhook:** o `webhookSecret` na query precisa ir com `encodeURIComponent`. Secret com `+` sem encode vira espaço e o endpoint responde 401. URL canônica: `https://surfiacoach.modernxlab.com.br` (não usar o redirect `.vercel.app`, POST de webhook não segue 307).
+>
+> **Produção (Vercel):** todas as vars `ABACATEPAY_*` e `NEXT_PUBLIC_SITE_URL=https://surfiacoach.modernxlab.com.br` precisam estar nas Environment Variables do deploy, não só no `.env.local`.
 
 > **Nota:** a AbacatePay costuma devolver `checkout.externalId: null` nos webhooks v2 mesmo quando enviamos na criação. O app resolve o surfista via `metadata` (quando presente) ou via `billing_checkout_sessions.gateway_checkout_id` (= `checkout.id` do webhook).
 

@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  buildAbacatePayWebhookEndpoint,
+  extractAbacatePayWebhookSecret,
   isValidWebhookSecret,
   parseAbacatePayWebhookPayload,
   signAbacatePayWebhookBody,
@@ -15,9 +17,27 @@ describe("abacatepay webhook security", () => {
     delete process.env.ABACATEPAY_WEBHOOK_SECRET;
   });
 
-  it("aceita secret correto na query string", () => {
-    process.env.ABACATEPAY_WEBHOOK_SECRET = WEBHOOK_SECRET;
-    expect(isValidWebhookSecret(WEBHOOK_SECRET)).toBe(true);
+  it("preserva + no secret da query string", () => {
+    const secret = "h3UQrV8GKU7y5eG0aqqrK+SP9U2Azu5xo9xGTM3cJ7A=";
+    process.env.ABACATEPAY_WEBHOOK_SECRET = secret;
+
+    const rawUrl =
+      "https://surfiacoach.modernxlab.com.br/api/webhooks/abacatepay?webhookSecret=" +
+      secret;
+    const encodedUrl = buildAbacatePayWebhookEndpoint(
+      "https://surfiacoach.modernxlab.com.br",
+      secret,
+    );
+
+    expect(extractAbacatePayWebhookSecret(rawUrl)).toBe(secret);
+    expect(extractAbacatePayWebhookSecret(encodedUrl)).toBe(secret);
+    expect(isValidWebhookSecret(extractAbacatePayWebhookSecret(rawUrl))).toBe(
+      true,
+    );
+    expect(
+      encodedUrl.includes("webhookSecret=") &&
+        !encodedUrl.includes("webhookSecret=" + secret),
+    ).toBe(true);
   });
 
   it("rejeita secret incorreto", () => {

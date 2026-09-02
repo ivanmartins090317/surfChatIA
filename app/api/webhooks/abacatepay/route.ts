@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  extractAbacatePayWebhookSecret,
   getAbacatePaySignatureHeaderName,
   handleAbacatePayWebhookEvent,
   isValidWebhookSecret,
@@ -11,8 +12,7 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const url = new URL(request.url);
-  const webhookSecret = url.searchParams.get("webhookSecret");
+  const webhookSecret = extractAbacatePayWebhookSecret(request.url);
 
   if (!isValidWebhookSecret(webhookSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

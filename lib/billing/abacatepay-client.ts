@@ -7,6 +7,7 @@ import {
   getBillingOffer,
   getProductIdForOffer,
 } from "@/lib/billing/billing-catalog";
+import { getSiteUrl } from "@/lib/site-url";
 
 const ABACATEPAY_API_BASE = "https://api.abacatepay.com/v2";
 
@@ -29,12 +30,6 @@ function getApiKey(): string {
     );
   }
   return apiKey;
-}
-
-function getSiteUrl(): string {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
-  return siteUrl.replace(/\/$/, "");
 }
 
 async function postAbacatePay<T>(
@@ -86,7 +81,7 @@ export async function createAbacatePayCheckout(input: {
 
   const offer = getBillingOffer(input.offerKey);
   const siteUrl = getSiteUrl();
-  const payload = {
+  const payload: Record<string, unknown> = {
     items: [{ id: productId, quantity: 1 }],
     externalId: input.externalRef,
     returnUrl: `${siteUrl}/planos?checkout=cancelled`,
@@ -98,6 +93,10 @@ export async function createAbacatePayCheckout(input: {
       app: "surf-ai-coach",
     },
   };
+
+  if (offer.kind === "subscription") {
+    payload.retryPolicy = { maxRetry: 3, retryEvery: 1 };
+  }
 
   const path =
     offer.kind === "subscription"
