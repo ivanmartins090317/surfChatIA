@@ -36,9 +36,18 @@ export function buildMediaStoragePath(
   userId: string,
   mediaId: string,
   extension: string,
-  objectId = randomUUID(),
+  objectId: string = randomUUID(),
 ): string {
   return `${userId}/${mediaId}/${objectId}.${extension}`;
+}
+
+/** Path das fotos da session (frames JPEG) no bucket media. */
+export function buildMediaFrameStoragePath(
+  userId: string,
+  mediaId: string,
+  objectId: string = randomUUID(),
+): string {
+  return `${userId}/${mediaId}/frames/${objectId}.jpg`;
 }
 
 export function isMediaStoragePathOwned(

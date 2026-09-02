@@ -13,6 +13,7 @@ import { createPerformanceAnalysis } from "@/services/analysis-service";
 import {
   createMediaItem,
   finalizeMediaFileUpload,
+  persistMediaVideoFrames,
   prepareMediaFileUpload,
   uploadMediaFile,
 } from "@/services/media-service";
@@ -73,7 +74,7 @@ export async function initAnalysisFileUploadAction(input: {
   file_name: string;
   wave_type?: string;
   focus?: string;
-}): Promise<ActionResult<{ mediaId: string; storagePath: string }>> {
+}): Promise<ActionResult<{ mediaId: string; storagePath: string | null }>> {
   try {
     const user = await requireAuthUser();
     await assertHasCredits(user.id);
@@ -111,7 +112,7 @@ const videoFrameSchema = z.object({
 
 export async function completeAnalysisFileUploadAction(input: {
   media_id: string;
-  storage_path: string;
+  storage_path: string | null;
   media_type: "video" | "image";
   video_frames?: z.infer<typeof videoFrameSchema>[];
 }): Promise<ActionResult<{ analysisId: string }>> {
@@ -124,16 +125,27 @@ export async function completeAnalysisFileUploadAction(input: {
         .min(MIN_VIDEO_FRAMES)
         .max(VIDEO_FRAME_COUNT)
         .parse(input.video_frames);
-      await finalizeMediaFileUpload(user.id, input.media_id, input.storage_path);
+
+      const mappedFrames = frames.map((frame) => ({
+        base64: frame.base64,
+        mimeType: frame.mime_type,
+        timestampLabel: frame.timestamp_label,
+      }));
+
+      await persistMediaVideoFrames(user.id, input.media_id, mappedFrames);
+
       const analysis = await createPerformanceAnalysis(user.id, input.media_id, {
-        videoFrames: frames.map((frame) => ({
-          base64: frame.base64,
-          mimeType: frame.mime_type,
-          timestampLabel: frame.timestamp_label,
-        })),
+        videoFrames: mappedFrames,
       });
       revalidatePath("/analyses");
       return { success: true, data: { analysisId: analysis.id } };
+    }
+
+    if (!input.storage_path) {
+      return {
+        success: false,
+        error: "Caminho do arquivo ausente. Envie a imagem novamente.",
+      };
     }
 
     await finalizeMediaFileUpload(user.id, input.media_id, input.storage_path);
@@ -164,6 +176,16 @@ export async function createAnalysisFromFileAction(
     if (!(file instanceof File) || file.size === 0) {
       return { success: false, error: "Selecione um arquivo válido." };
     }
+
+    if (mediaType === "video") {
+      return {
+        success: false,
+        error:
+          "Vídeo não pode ser enviado por este atalho. Use a aba Arquivo para analisar pelas fotos da session.",
+      };
+    }
+
+    await assertHasCredits(user.id);
 
     const context = contextSchema.parse({
       wave_type: formData.get("wave_type") || undefined,

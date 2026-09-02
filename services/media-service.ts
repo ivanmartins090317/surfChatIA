@@ -19,14 +19,22 @@ import {
   videoOversizeMessage,
 } from "@/lib/media/upload-limits";
 import {
+  buildMediaFrameStoragePath,
   buildMediaStoragePath,
   inferMediaExtension,
   isMediaStoragePathOwned,
 } from "@/lib/media/storage-path";
+import {
+  MIN_VIDEO_FRAMES,
+  VIDEO_FRAME_COUNT,
+} from "@/lib/media/video-frame-sampling";
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_VIDEO_MIMES_SET = ALLOWED_VIDEO_MIMES;
 const ALLOWED_IMAGE_MIMES_SET = ALLOWED_IMAGE_MIMES;
+
+/** Teto binário por frame JPEG (~2 MB de base64 na action ≈ 1,5 MB). */
+const MAX_FRAME_BYTES = 2 * 1024 * 1024;
 
 const createMediaSchema = z.object({
   type: z.enum(["video", "image", "link"]),
@@ -70,7 +78,7 @@ export async function createMediaItem(
     throw new Error("Não foi possível registrar a mídia.");
   }
 
-  return data as MediaItem;
+  return normalizeMediaItem(data);
 }
 
 const prepareMediaUploadSchema = z.object({
@@ -84,26 +92,29 @@ const prepareMediaUploadSchema = z.object({
 
 export interface PreparedMediaUpload {
   mediaId: string;
-  storagePath: string;
+  /** Path do arquivo original no Storage — só para foto; vídeo novo usa frames. */
+  storagePath: string | null;
 }
 
-function assertAllowedMediaUpload(
-  type: MediaType,
-  fileSize: number,
-  mimeType: string,
-): void {
-  const maxSize = type === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-  if (fileSize > maxSize) {
-    throw new Error(
-      type === "video" ? videoOversizeMessage() : imageOversizeMessage(),
-    );
+function assertAllowedImageUpload(fileSize: number, mimeType: string): void {
+  if (fileSize > MAX_IMAGE_BYTES) {
+    throw new Error(imageOversizeMessage());
   }
-
-  const allowed =
-    type === "video" ? ALLOWED_VIDEO_MIMES_SET : ALLOWED_IMAGE_MIMES_SET;
-  const mime = mimeType.toLowerCase();
-  if (!allowed.has(mime)) {
+  if (!ALLOWED_IMAGE_MIMES_SET.has(mimeType.toLowerCase())) {
     throw new Error("Formato de arquivo não suportado.");
+  }
+}
+
+function assertAllowedVideoMime(mimeType: string): void {
+  if (!ALLOWED_VIDEO_MIMES_SET.has(mimeType.toLowerCase())) {
+    throw new Error("Formato de arquivo não suportado.");
+  }
+}
+
+/** Sanity check no aparelho: o MP4 não sobe, mas tamanho absurdo ainda é recusado. */
+function assertVideoDeviceSize(fileSize: number): void {
+  if (fileSize > MAX_VIDEO_BYTES) {
+    throw new Error(videoOversizeMessage());
   }
 }
 
@@ -112,13 +123,23 @@ export async function prepareMediaFileUpload(
   input: z.infer<typeof prepareMediaUploadSchema>,
 ): Promise<PreparedMediaUpload> {
   const parsed = prepareMediaUploadSchema.parse(input);
-  assertAllowedMediaUpload(parsed.type, parsed.file_size, parsed.mime_type);
+
+  if (parsed.type === "image") {
+    assertAllowedImageUpload(parsed.file_size, parsed.mime_type);
+  } else {
+    assertAllowedVideoMime(parsed.mime_type);
+    assertVideoDeviceSize(parsed.file_size);
+  }
 
   const media = await createMediaItem(userId, {
     type: parsed.type,
     wave_type: parsed.wave_type ?? null,
     focus: parsed.focus ?? null,
   });
+
+  if (parsed.type === "video") {
+    return { mediaId: media.id, storagePath: null };
+  }
 
   const extension = inferMediaExtension(parsed.mime_type, parsed.file_name);
   const storagePath = buildMediaStoragePath(userId, media.id, extension);
@@ -148,26 +169,16 @@ export async function finalizeMediaFileUpload(
 
   const uploaded = objects[0];
   const media = await getMediaItem(userId, mediaId);
-  if (!media || media.status !== "uploading") {
+  if (!media || media.type !== "image" || media.status !== "uploading") {
     throw new Error("Upload inválido ou já finalizado.");
   }
 
-  const detectedMime =
-    uploaded.metadata?.mimetype ??
-    (media.type === "video" ? "video/mp4" : "image/jpeg");
+  const detectedMime = uploaded.metadata?.mimetype ?? "image/jpeg";
 
   if (uploaded.metadata?.size) {
-    assertAllowedMediaUpload(
-      media.type as MediaType,
-      uploaded.metadata.size,
-      detectedMime,
-    );
-  } else {
-    const allowed =
-      media.type === "video" ? ALLOWED_VIDEO_MIMES_SET : ALLOWED_IMAGE_MIMES_SET;
-    if (!allowed.has(detectedMime.toLowerCase())) {
-      throw new Error("Formato de arquivo não suportado.");
-    }
+    assertAllowedImageUpload(uploaded.metadata.size, detectedMime);
+  } else if (!ALLOWED_IMAGE_MIMES_SET.has(detectedMime.toLowerCase())) {
+    throw new Error("Formato de arquivo não suportado.");
   }
 
   const { error: updateError } = await supabase
@@ -188,30 +199,114 @@ export async function finalizeMediaFileUpload(
   return storagePath;
 }
 
+export interface PersistableVideoFrame {
+  base64: string;
+  mimeType: "image/jpeg";
+  timestampLabel: string;
+}
+
+export async function persistMediaVideoFrames(
+  userId: string,
+  mediaId: string,
+  frames: PersistableVideoFrame[],
+): Promise<string[]> {
+  if (
+    frames.length < MIN_VIDEO_FRAMES ||
+    frames.length > VIDEO_FRAME_COUNT
+  ) {
+    throw new Error(
+      "Quantidade de fotos da session inválida. Extraia o vídeo novamente.",
+    );
+  }
+
+  const media = await getMediaItem(userId, mediaId);
+  if (!media || media.type !== "video" || media.status !== "uploading") {
+    throw new Error("Upload inválido ou já finalizado.");
+  }
+
+  const supabase = await createClient();
+  const framePaths: string[] = [];
+
+  for (const frame of frames) {
+    if (frame.mimeType !== "image/jpeg") {
+      throw new Error("As fotos da session devem ser JPEG.");
+    }
+
+    const buffer = Buffer.from(frame.base64, "base64");
+    if (buffer.length === 0 || buffer.length > MAX_FRAME_BYTES) {
+      throw new Error(
+        "Foto da session inválida ou grande demais. Tente extrair o vídeo novamente.",
+      );
+    }
+
+    const path = buildMediaFrameStoragePath(userId, mediaId);
+    const { error: uploadError } = await supabase.storage
+      .from("media")
+      .upload(path, buffer, { contentType: "image/jpeg", upsert: false });
+
+    if (uploadError) {
+      reportServerError(uploadError, {
+        area: "upload",
+        operation: "persist_media_video_frames",
+        userId,
+      });
+      throw new Error(
+        "Não foi possível gravar as fotos da session. Tente novamente.",
+      );
+    }
+
+    framePaths.push(path);
+  }
+
+  const { error: updateError } = await supabase
+    .from("media_items")
+    .update({
+      frame_paths: framePaths,
+      storage_path: null,
+      status: "ready",
+    })
+    .eq("id", mediaId)
+    .eq("user_id", userId);
+
+  if (updateError) {
+    reportServerError(updateError, {
+      area: "upload",
+      operation: "finalize_media_frames",
+      userId,
+    });
+    throw new Error(
+      "Não foi possível gravar as fotos da session. Tente novamente.",
+    );
+  }
+
+  return framePaths;
+}
+
 export async function uploadMediaFile(
   userId: string,
   mediaId: string,
   file: File,
   type: MediaType,
 ): Promise<string> {
+  if (type === "video") {
+    throw new Error(
+      "Vídeo deve ser analisado pelas fotos da session no aparelho. Use o fluxo de análise por arquivo.",
+    );
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const detected = await fileTypeFromBuffer(buffer);
   const mime = detected?.mime ?? file.type;
 
-  const maxSize = type === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-  if (file.size > maxSize) {
-    throw new Error(
-      type === "video" ? videoOversizeMessage() : imageOversizeMessage(),
-    );
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error(imageOversizeMessage());
   }
 
-  const allowed =
-    type === "video" ? ALLOWED_VIDEO_MIMES_SET : ALLOWED_IMAGE_MIMES_SET;
-  if (!allowed.has(mime)) {
+  if (!ALLOWED_IMAGE_MIMES_SET.has(mime)) {
     throw new Error("Formato de arquivo não suportado.");
   }
 
-  const ext = detected?.ext ?? (type === "video" ? "mp4" : "jpg");
+  const ext = detected?.ext ?? "jpg";
   const path = `${userId}/${mediaId}/${randomUUID()}.${ext}`;
 
   const supabase = await createClient();
@@ -258,7 +353,7 @@ export async function listMediaItems(userId: string): Promise<MediaItem[]> {
     throw new Error("Não foi possível listar mídias.");
   }
 
-  return (data ?? []) as MediaItem[];
+  return (data ?? []).map(normalizeMediaItem);
 }
 
 export async function getMediaItem(
@@ -277,7 +372,15 @@ export async function getMediaItem(
     throw new Error("Mídia não encontrada.");
   }
 
-  return data as MediaItem | null;
+  return data ? normalizeMediaItem(data) : null;
+}
+
+function normalizeMediaItem(row: unknown): MediaItem {
+  const item = row as MediaItem & { frame_paths?: string[] | null };
+  return {
+    ...item,
+    frame_paths: Array.isArray(item.frame_paths) ? item.frame_paths : [],
+  };
 }
 
 export async function downloadMediaFileBuffer(

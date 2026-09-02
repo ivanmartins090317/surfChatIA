@@ -15,6 +15,7 @@ Histórico do que foi construído no projeto, organizado por data e alinhado ao 
 | 2026-08-20 | [2026-08-20-billing-abacatepay.md](./2026-08-20-billing-abacatepay.md) | Trilhas D+H: AbacatePay checkout, webhooks, billing UI |
 | 2026-08-21 | [2026-08-21-signup-ux-fluxo-conta.md](./2026-08-21-signup-ux-fluxo-conta.md) | UX signup: redirect login, banners confirmação, callback |
 | 2026-09-02 | [2026-09-02-billing-mercadopago.md](./2026-09-02-billing-mercadopago.md) | Trilhas D+H: Mercado Pago substitui AbacatePay |
+| 2026-09-02 | [2026-09-02-analise-video-frames-sem-armazenar-original.md](./2026-09-02-analise-video-frames-sem-armazenar-original.md) | Vídeo: só frames no Storage; teto 500 MB / 90 s |
 
 ## Convenção dos checklists
 

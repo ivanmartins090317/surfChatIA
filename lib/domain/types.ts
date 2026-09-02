@@ -192,6 +192,8 @@ export interface MediaItem {
   user_id: string;
   type: MediaType;
   storage_path: string | null;
+  /** Paths das fotos da session (frames JPEG) no bucket media — vídeos novos. */
+  frame_paths: string[];
   external_url: string | null;
   wave_type: WaveType | null;
   focus: AnalysisFocus | null;

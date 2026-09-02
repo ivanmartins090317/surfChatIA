@@ -3,7 +3,8 @@ import { parsePerformanceResult } from "@/lib/ai/performance-parser";
 import type { Analysis, MediaItem } from "@/lib/domain/types";
 import type { PerformanceAnalysisListItem } from "@/lib/domain/analysis-display";
 import type { ExtractedVideoFrame } from "@/lib/media/extract-video-frames";
-import { extractVideoFrames } from "@/lib/media/extract-video-frames";
+import { LEGACY_VIDEO_REANALYSIS_MESSAGE } from "@/lib/media/upload-limits";
+import { MIN_VIDEO_FRAMES } from "@/lib/media/video-frame-sampling";
 import { reportServerError } from "@/lib/observability/report-server-error";
 import { rateLimitAiAction } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
@@ -23,6 +24,15 @@ interface AnalysisRowWithMedia extends Analysis {
 }
 
 function mapAnalysisRow(row: AnalysisRowWithMedia): PerformanceAnalysisListItem {
+  const media = row.media_items
+    ? {
+        ...row.media_items,
+        frame_paths: Array.isArray(row.media_items.frame_paths)
+          ? row.media_items.frame_paths
+          : [],
+      }
+    : null;
+
   return {
     analysis: {
       id: row.id,
@@ -37,7 +47,7 @@ function mapAnalysisRow(row: AnalysisRowWithMedia): PerformanceAnalysisListItem 
       advertised_measurements: row.advertised_measurements,
       created_at: row.created_at,
     },
-    media: row.media_items,
+    media,
     previewUrl: null,
   };
 }
@@ -54,6 +64,60 @@ async function attachPreviewUrls(
       return item;
     }),
   );
+}
+
+async function loadFramesFromStorage(
+  framePaths: string[],
+): Promise<ExtractedVideoFrame[]> {
+  const frames: ExtractedVideoFrame[] = [];
+
+  for (const [index, path] of framePaths.entries()) {
+    const { buffer, mimeType } = await downloadMediaFileBuffer(path);
+    if (!mimeType.startsWith("image/")) {
+      throw new Error("Foto da session inválida no armazenamento.");
+    }
+    frames.push({
+      base64: buffer.toString("base64"),
+      mimeType: "image/jpeg",
+      timestampLabel: `f${index + 1}`,
+    });
+  }
+
+  return frames;
+}
+
+async function resolveVideoFramesForAnalysis(
+  media: MediaItem,
+  options?: CreatePerformanceAnalysisOptions,
+): Promise<{
+  images: { base64: string; mimeType: string }[];
+  videoFrameTimestamps: string[];
+}> {
+  if (options?.videoFrames && options.videoFrames.length >= MIN_VIDEO_FRAMES) {
+    return {
+      images: options.videoFrames.map((frame) => ({
+        base64: frame.base64,
+        mimeType: frame.mimeType,
+      })),
+      videoFrameTimestamps: options.videoFrames.map(
+        (frame) => frame.timestampLabel,
+      ),
+    };
+  }
+
+  const framePaths = media.frame_paths ?? [];
+  if (framePaths.length >= MIN_VIDEO_FRAMES) {
+    const frames = await loadFramesFromStorage(framePaths);
+    return {
+      images: frames.map((frame) => ({
+        base64: frame.base64,
+        mimeType: frame.mimeType,
+      })),
+      videoFrameTimestamps: frames.map((frame) => frame.timestampLabel),
+    };
+  }
+
+  throw new Error(LEGACY_VIDEO_REANALYSIS_MESSAGE);
 }
 
 export interface CreatePerformanceAnalysisOptions {
@@ -120,33 +184,10 @@ export async function createPerformanceAnalysis(
           images = [{ base64: buffer.toString("base64"), mimeType }];
         }
 
-        if (media.type === "video" && media.storage_path) {
-          if (options?.videoFrames?.length) {
-            images = options.videoFrames.map((frame) => ({
-              base64: frame.base64,
-              mimeType: frame.mimeType,
-            }));
-            videoFrameTimestamps = options.videoFrames.map(
-              (frame) => frame.timestampLabel,
-            );
-          } else if (process.env.NODE_ENV === "development") {
-            const { buffer, mimeType } = await downloadMediaFileBuffer(
-              media.storage_path,
-            );
-            if (!mimeType.startsWith("video/")) {
-              throw new Error("Arquivo não é um vídeo válido para análise.");
-            }
-            const frames = await extractVideoFrames(buffer, mimeType);
-            images = frames.map((frame) => ({
-              base64: frame.base64,
-              mimeType: frame.mimeType,
-            }));
-            videoFrameTimestamps = frames.map((frame) => frame.timestampLabel);
-          } else {
-            throw new Error(
-              "Frames do vídeo não foram enviados. Atualize a página e tente novamente.",
-            );
-          }
+        if (media.type === "video") {
+          const resolved = await resolveVideoFramesForAnalysis(media, options);
+          images = resolved.images;
+          videoFrameTimestamps = resolved.videoFrameTimestamps;
         }
 
         const result = await withSystemAutoRetries(async () => {

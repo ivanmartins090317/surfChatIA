@@ -18,7 +18,7 @@ describe("toUploadErrorMessage", () => {
         statusCode: "413",
         message: "The object exceeded the maximum allowed size",
       }),
-    ).toMatch(/acima de 50 MB/);
+    ).toMatch(/acima de 500 MB/);
   });
 
   it("traduz falha de autorização/RLS", () => {

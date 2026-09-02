@@ -82,7 +82,7 @@ export async function deleteUserAccount(
   const supabase = await createClient();
   const { data: mediaItems } = await supabase
     .from("media_items")
-    .select("storage_path")
+    .select("storage_path, frame_paths")
     .eq("user_id", userId);
   const { data: boards } = await supabase
     .from("boards")
@@ -90,13 +90,21 @@ export async function deleteUserAccount(
     .eq("user_id", userId);
 
   const admin = createAdminClient();
-  await removeStoragePaths(
-    admin,
-    "media",
-    (mediaItems ?? [])
-      .map((item) => item.storage_path as string | null)
-      .filter((path): path is string => Boolean(path)),
-  );
+  const mediaPaths = (mediaItems ?? []).flatMap((item) => {
+    const paths: string[] = [];
+    if (typeof item.storage_path === "string" && item.storage_path) {
+      paths.push(item.storage_path);
+    }
+    if (Array.isArray(item.frame_paths)) {
+      for (const path of item.frame_paths) {
+        if (typeof path === "string" && path) {
+          paths.push(path);
+        }
+      }
+    }
+    return paths;
+  });
+  await removeStoragePaths(admin, "media", mediaPaths);
   await removeStoragePaths(
     admin,
     "boards",

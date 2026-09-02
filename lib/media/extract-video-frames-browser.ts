@@ -1,4 +1,8 @@
 import {
+  validateVideoDurationSeconds,
+  videoDurationOversizeMessage,
+} from "@/lib/media/upload-limits";
+import {
   computeFrameTimestamps,
   MIN_VIDEO_FRAMES,
 } from "@/lib/media/video-frame-sampling";
@@ -214,6 +218,13 @@ export async function extractVideoFramesInBrowser(
 
     if (!Number.isFinite(video.duration) || video.duration <= 0) {
       throw new Error("Não foi possível ler a duração do vídeo.");
+    }
+
+    const durationCheck = validateVideoDurationSeconds(video.duration);
+    if (!durationCheck.valid) {
+      throw new Error(
+        durationCheck.error ?? videoDurationOversizeMessage(),
+      );
     }
 
     await waitForEvent(

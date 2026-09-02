@@ -11,7 +11,8 @@ import {
   getAnalysisMediaLabel,
 } from "@/lib/domain/analysis-display";
 import type { MediaItem } from "@/lib/domain/types";
-import { MEDIA_TYPES } from "@/lib/domain/types";
+import { VIDEO_STAYS_ON_DEVICE_MICROCOPY } from "@/lib/media/upload-limits";
+import { createSignedMediaUrl } from "@/services/media-service";
 
 interface AnalysisMediaHeaderProps {
   media: MediaItem | null;
@@ -33,12 +34,24 @@ function getMediaContextHint(media: MediaItem): string | null {
     return "Orientação por contexto — o vídeo não é assistido pela IA.";
   }
   if (media.type === "video") {
-    return `${MEDIA_TYPES.video} analisado em múltiplos frames com IA de visão.`;
+    return VIDEO_STAYS_ON_DEVICE_MICROCOPY;
   }
   return null;
 }
 
-export function AnalysisMediaHeader({
+async function resolveFramePreviewUrls(media: MediaItem): Promise<string[]> {
+  const paths = media.frame_paths ?? [];
+  if (media.type !== "video" || paths.length === 0) {
+    return [];
+  }
+
+  const urls = await Promise.all(
+    paths.map((path) => createSignedMediaUrl(path)),
+  );
+  return urls.filter((url): url is string => Boolean(url));
+}
+
+export async function AnalysisMediaHeader({
   media,
   previewUrl,
 }: AnalysisMediaHeaderProps) {
@@ -46,6 +59,7 @@ export function AnalysisMediaHeader({
 
   const subtitle = getAnalysisListSubtitle(media);
   const contextHint = getMediaContextHint(media);
+  const framePreviewUrls = await resolveFramePreviewUrls(media);
 
   return (
     <Card className="overflow-hidden">
@@ -72,7 +86,7 @@ export function AnalysisMediaHeader({
             href={media.external_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex max-w-full items-center gap-1.5 text-sm text-primary hover:underline"
+            className="inline-flex min-h-11 max-w-full items-center gap-1.5 text-sm text-primary hover:underline"
           >
             <ExternalLink className="size-3.5 shrink-0" aria-hidden />
             <span className="truncate">{media.external_url}</span>
@@ -92,6 +106,28 @@ export function AnalysisMediaHeader({
               />
             </div>
           </div>
+        </CardContent>
+      )}
+
+      {framePreviewUrls.length > 0 && (
+        <CardContent className="pt-0">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Fotos da session usadas na análise
+          </p>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {framePreviewUrls.map((url, index) => (
+              <li key={`${url}-${index}`}>
+                <div className="overflow-hidden rounded-xl border border-white/08 bg-muted/20">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt={`Foto ${index + 1} da session analisada`}
+                    className="aspect-video min-h-11 w-full object-cover"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
         </CardContent>
       )}
     </Card>

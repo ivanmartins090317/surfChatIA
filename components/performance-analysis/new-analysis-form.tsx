@@ -9,8 +9,8 @@ import {
   createAnalysisFromLinkAction,
   initAnalysisFileUploadAction,
 } from "@/actions/analysis-actions";
-import { uploadMediaFileToStorage } from "@/lib/media/upload-client";
 import { extractVideoFramesInBrowser } from "@/lib/media/extract-video-frames-browser";
+import { uploadMediaFileToStorage } from "@/lib/media/upload-client";
 import { MediaFileDropzone } from "@/components/performance-analysis/media-file-dropzone";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -42,15 +42,15 @@ export function NewAnalysisForm() {
   }
 
   async function extractFramesWithProgress(file: File) {
-    setProgressLabel("Lendo o vídeo no dispositivo…");
+    setProgressLabel("Lendo o vídeo…");
     return extractVideoFramesInBrowser(file, {
       onProgress: ({ current, total }) =>
-        setProgressLabel(`Extraindo frame ${current} de ${total}…`),
+        setProgressLabel(`Extraindo fotos ${current} de ${total}…`),
     });
   }
 
-  function submitFile(type: "video" | "image") {
-    const file = type === "video" ? videoFile : imageFile;
+  function submitVideo() {
+    const file = videoFile;
     if (!file) {
       const message = "Selecione um arquivo antes de analisar.";
       setError(message);
@@ -62,15 +62,11 @@ export function NewAnalysisForm() {
 
     startTransition(async () => {
       try {
-        // Extrai os frames antes de subir o arquivo: se o dispositivo não
-        // conseguir decodificar o vídeo, evitamos gastar tempo e dados do
-        // usuário com um upload que seria descartado depois.
-        const videoFrames =
-          type === "video" ? await extractFramesWithProgress(file) : undefined;
+        const videoFrames = await extractFramesWithProgress(file);
 
-        setProgressLabel("Enviando arquivo…");
+        setProgressLabel("Analisando…");
         const initResult = await initAnalysisFileUploadAction({
-          media_type: type,
+          media_type: "video",
           file_size: file.size,
           mime_type: file.type,
           file_name: file.name,
@@ -79,6 +75,69 @@ export function NewAnalysisForm() {
         });
 
         if (!initResult.success || !initResult.data) {
+          const message = initResult.error ?? "Erro ao iniciar a análise.";
+          setError(message);
+          toast.error(message);
+          return;
+        }
+
+        const completeResult = await completeAnalysisFileUploadAction({
+          media_id: initResult.data.mediaId,
+          storage_path: null,
+          media_type: "video",
+          video_frames: videoFrames.map((frame) => ({
+            base64: frame.base64,
+            mime_type: frame.mimeType,
+            timestamp_label: frame.timestampLabel,
+          })),
+        });
+
+        if (!completeResult.success || !completeResult.data) {
+          const message =
+            completeResult.error ?? "Erro ao finalizar a análise.";
+          setError(message);
+          toast.error(message);
+          return;
+        }
+
+        router.push(`/analyses/${completeResult.data.analysisId}`);
+      } catch (cause) {
+        const message =
+          cause instanceof Error
+            ? cause.message
+            : "Erro na análise. Tente novamente ou envie um link.";
+        setError(message);
+        toast.error(message);
+      } finally {
+        setProgressLabel(null);
+      }
+    });
+  }
+
+  function submitImage() {
+    const file = imageFile;
+    if (!file) {
+      const message = "Selecione um arquivo antes de analisar.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
+
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        setProgressLabel("Enviando foto…");
+        const initResult = await initAnalysisFileUploadAction({
+          media_type: "image",
+          file_size: file.size,
+          mime_type: file.type,
+          file_name: file.name,
+          wave_type: waveType || undefined,
+          focus: focus || undefined,
+        });
+
+        if (!initResult.success || !initResult.data?.storagePath) {
           const message = initResult.error ?? "Erro ao iniciar upload.";
           setError(message);
           toast.error(message);
@@ -91,16 +150,11 @@ export function NewAnalysisForm() {
           mimeType: file.type,
         });
 
-        setProgressLabel("Processando análise…");
+        setProgressLabel("Analisando…");
         const completeResult = await completeAnalysisFileUploadAction({
           media_id: initResult.data.mediaId,
           storage_path: initResult.data.storagePath,
-          media_type: type,
-          video_frames: videoFrames?.map((frame) => ({
-            base64: frame.base64,
-            mime_type: frame.mimeType,
-            timestamp_label: frame.timestampLabel,
-          })),
+          media_type: "image",
         });
 
         if (!completeResult.success || !completeResult.data) {
@@ -203,7 +257,7 @@ export function NewAnalysisForm() {
             type="button"
             className="w-full"
             disabled={isPending || !videoFile}
-            onClick={() => submitFile("video")}
+            onClick={submitVideo}
           >
             {isPending ? (
               <>
@@ -227,7 +281,7 @@ export function NewAnalysisForm() {
             type="button"
             className="w-full"
             disabled={isPending || !imageFile}
-            onClick={() => submitFile("image")}
+            onClick={submitImage}
           >
             {isPending ? (
               <>

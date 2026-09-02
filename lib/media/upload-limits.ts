@@ -1,10 +1,10 @@
 /**
- * Limite efetivo de vídeo alinhado ao Global file size do Supabase Free (50 MB).
- * Em plano Pro+, dá para subir no Dashboard (Storage → Settings) e aqui em conjunto.
- * @see https://supabase.com/docs/guides/storage/uploads/file-limits
+ * Limites de arquivo no aparelho (vídeo de análise não sobe o original ao Storage).
+ * Teto de tamanho protege o dispositivo na decodificação; duração limita o trecho.
  */
-export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+export const MAX_VIDEO_DURATION_SECONDS = 90;
 
 export const MAX_VIDEO_MB = MAX_VIDEO_BYTES / (1024 * 1024);
 export const MAX_IMAGE_MB = MAX_IMAGE_BYTES / (1024 * 1024);
@@ -21,13 +21,26 @@ export const ALLOWED_IMAGE_MIMES = new Set([
   "image/webp",
 ]);
 
+export const VIDEO_DROPZONE_FORMATS_HINT =
+  `MP4, MOV, WebM — até ${MAX_VIDEO_DURATION_SECONDS} s e ${MAX_VIDEO_MB} MB.`;
+
+export const VIDEO_STAYS_ON_DEVICE_MICROCOPY =
+  "O vídeo fica no seu aparelho. Enviamos só algumas fotos da session para a análise.";
+
+export const LEGACY_VIDEO_REANALYSIS_MESSAGE =
+  "Esta análise antiga não tem as fotos da session guardadas. Envie o vídeo de novo para analisar.";
+
 export interface MediaFileValidationResult {
   valid: boolean;
   error?: string;
 }
 
 export function videoOversizeMessage(): string {
-  return `Vídeo acima de ${MAX_VIDEO_MB} MB. Comprima o arquivo ou envie um link.`;
+  return `Vídeo acima de ${MAX_VIDEO_MB} MB. Este aparelho pode não conseguir ler um arquivo tão grande. Use um trecho mais curto ou envie um link.`;
+}
+
+export function videoDurationOversizeMessage(): string {
+  return `Vídeo acima de ${MAX_VIDEO_DURATION_SECONDS} segundos. Envie um trecho mais curto ou use um link.`;
 }
 
 export function imageOversizeMessage(): string {
@@ -61,6 +74,23 @@ export function validateMediaFile(
           ? "Formato não suportado. Use MP4, MOV ou WebM."
           : "Formato não suportado. Use JPEG, PNG ou WebP.",
     };
+  }
+
+  return { valid: true };
+}
+
+export function validateVideoDurationSeconds(
+  durationSeconds: number,
+): MediaFileValidationResult {
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return {
+      valid: false,
+      error: "Não foi possível ler a duração do vídeo.",
+    };
+  }
+
+  if (durationSeconds > MAX_VIDEO_DURATION_SECONDS) {
+    return { valid: false, error: videoDurationOversizeMessage() };
   }
 
   return { valid: true };

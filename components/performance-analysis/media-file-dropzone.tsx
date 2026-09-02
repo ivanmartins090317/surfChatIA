@@ -4,7 +4,8 @@ import { CheckCircle2, ImageIcon, UploadCloud, X } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import {
   MAX_IMAGE_MB,
-  MAX_VIDEO_MB,
+  VIDEO_DROPZONE_FORMATS_HINT,
+  VIDEO_STAYS_ON_DEVICE_MICROCOPY,
   formatFileSize,
   validateMediaFile,
 } from "@/lib/media/upload-limits";
@@ -19,13 +20,15 @@ interface MediaFileDropzoneProps {
 
 const DROPZONE_COPY = {
   video: {
-    hint: "Arraste um vídeo ou toque para enviar",
-    formats: `MP4, MOV, WebM — máx. ${MAX_VIDEO_MB} MB`,
+    hint: "Arraste um vídeo ou toque para escolher",
+    formats: VIDEO_DROPZONE_FORMATS_HINT,
+    microcopy: VIDEO_STAYS_ON_DEVICE_MICROCOPY,
     accept: "video/mp4,video/quicktime,video/webm",
   },
   image: {
     hint: "Arraste uma imagem ou toque para enviar",
     formats: `JPEG, PNG ou WebP — máx. ${MAX_IMAGE_MB} MB`,
+    microcopy: null,
     accept: "image/jpeg,image/png,image/webp",
   },
 } as const;
@@ -194,7 +197,7 @@ export function MediaFileDropzone({
           <button
             type="button"
             aria-label="Remover arquivo selecionado"
-            className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full border border-white/14 bg-background/80 text-muted-foreground transition-colors hover:text-foreground"
+            className="absolute right-3 top-3 flex size-11 min-h-11 min-w-11 items-center justify-center rounded-full border border-white/14 bg-background/80 text-muted-foreground transition-colors hover:text-foreground"
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -205,6 +208,12 @@ export function MediaFileDropzone({
           </button>
         )}
       </label>
+
+      {copy.microcopy && !localError && (
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {copy.microcopy}
+        </p>
+      )}
 
       {localError && (
         <p className="text-sm text-destructive" role="alert">

@@ -2,7 +2,7 @@
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
 > **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · billing Mercado Pago no código · homologação sandbox pendente.  
-> **Última revisão:** 02/09/2026 — Billing **Mercado Pago** implementado (código); `db:push` 012 + homologação sandbox pendentes · Signup UX Fase A implementada (código); homologação manual pendente.
+> **Última revisão:** 02/09/2026 — Análise de vídeo por **frames** (sem MP4) implementada (código); `db:push` **013** + homologação manual pendentes · Billing **Mercado Pago** implementado (código); `db:push` 012 + homologação sandbox pendentes · Signup UX Fase A implementada (código); homologação manual pendente.
 
 ---
 
@@ -11,7 +11,7 @@
 | Marco | Situação | Homologação |
 |-------|----------|-------------|
 | Auth + perfil | ✅ Código + E2E | FL-01 (7/7) · FL-02 (3/3) |
-| Análise performance | ✅ Código + E2E | FL-03 (6/6) |
+| Análise performance | ✅ Código + E2E · frames-only (código 02/09) | FL-03 (6/6) · revalidar upload grande |
 | Prancha mágica | ✅ Código + E2E | FL-04 (4/4) |
 | Compatibilidade | ✅ Código + E2E | FL-05 (2/2) |
 | Segurança RLS | ✅ Validado | FL-06 (2/2) |
@@ -23,6 +23,27 @@
 | Legal (LGPD / Termos) | ❌ Não existe | — |
 
 **Total homologação:** 26/26 TCs aprovados (100%).
+
+---
+
+## Iniciativa — Análise de vídeo por frames (sem MP4) 🟡
+
+> Spec: [`specs/2026-09-02-analise-video-frames-sem-armazenar-original.md`](../../specs/2026-09-02-analise-video-frames-sem-armazenar-original.md) · Manual: [`docs/manual-dev/09-fase-analise-video-frames.md`](../manual-dev/09-fase-analise-video-frames.md)
+
+**Código implementado (02/09/2026):**
+
+- [x] Migration `013_media_frame_paths.sql` (`frame_paths`)
+- [x] Fluxo de vídeo sem upload do original; só JPEGs no bucket `media`
+- [x] Limites no aparelho: 500 MB · 90 s + copy do dropzone
+- [x] Miniaturas na tela da análise
+- [x] Reanálise via `frame_paths`; legado com mensagem clara
+- [x] Exclusão de conta remove `frame_paths`
+- [x] Testes de limites / paths / legado · typecheck · lint · test verdes
+
+**Pendente:**
+
+- [ ] `db:push` migration **013** (confirmação do owner)
+- [ ] Homologação manual: vídeo > 50 MB; conferir bucket sem MP4; reanálise nova/legado; exclusão
 
 ---
 

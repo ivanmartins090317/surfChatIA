@@ -51,7 +51,7 @@ Valores em BRL são **referência inicial** — validar com custo real de IA + C
 
 | Plano | Público | Preço/mês | Créditos/mês | Limites adicionais |
 |-------|---------|-----------|--------------|-------------------|
-| **Grátis** | Trial / primeiro contato | R$ 0 | **2** (total ou/mês¹) | Vídeo até 60 s · 100 MB · 1 prancha mágica |
+| **Grátis** | Trial / primeiro contato | R$ 0 | **2** (total ou/mês¹) | Vídeo até 60 s (comercial) · teto técnico atual 90 s / 500 MB no aparelho · 1 prancha mágica |
 | **Surfista** | Casual (1–2 sessions/mês) | R$ 39 | **8** | Vídeo até 90 s · histórico 90 dias |
 | **Pro** | Filma toda semana | R$ 89 | **30** | Vídeo até 3 min · histórico ilimitado |
 | **Coach** | Shaper/coach (futuro) | R$ 199 | **100** | Múltiplos perfis/alunos² · prioridade na fila |
@@ -97,8 +97,9 @@ Estado do repositório em 07/2026 — **anti-abuso**, ainda **sem planos comerci
 | Limite | Valor | Onde |
 |--------|-------|------|
 | Análises IA / usuário / dia | 20 | `lib/security/rate-limit.ts` → `rateLimitAiAction` |
-| Vídeo (upload) | 100 MB | `services/media-service.ts` |
-| Imagem (upload) | 10 MB | `services/media-service.ts` |
+| Vídeo (aparelho; original **não** sobe ao Storage) | 500 MB · 90 s | `lib/media/upload-limits.ts` |
+| Frames da session (persistidos) | 2–6 JPEG | `actions/analysis-actions.ts` · `media_items.frame_paths` |
+| Imagem (upload) | 10 MB | `lib/media/upload-limits.ts` · `services/media-service.ts` |
 | Foto de prancha | 10 MB | `services/board-service.ts` |
 | Timeout IA | 90 s | `lib/ai/client.ts` |
 
