@@ -4,10 +4,7 @@ import {
   BILLING_OFFER_KINDS,
 } from "@/lib/domain/billing";
 
-const OFFER_DEFINITIONS: Record<
-  BillingOfferKey,
-  Omit<BillingOffer, "key"> & { productEnvKey: string }
-> = {
+const OFFER_DEFINITIONS: Record<BillingOfferKey, Omit<BillingOffer, "key">> = {
   surfista: {
     kind: BILLING_OFFER_KINDS.subscription,
     label: "Surfista",
@@ -15,7 +12,6 @@ const OFFER_DEFINITIONS: Record<
     priceCents: 3900,
     credits: 8,
     plan: "surfista",
-    productEnvKey: "ABACATEPAY_PRODUCT_SURFISTA",
   },
   pro: {
     kind: BILLING_OFFER_KINDS.subscription,
@@ -24,7 +20,6 @@ const OFFER_DEFINITIONS: Record<
     priceCents: 8900,
     credits: 30,
     plan: "pro",
-    productEnvKey: "ABACATEPAY_PRODUCT_PRO",
   },
   pack_s: {
     kind: BILLING_OFFER_KINDS.pack,
@@ -33,7 +28,6 @@ const OFFER_DEFINITIONS: Record<
     priceCents: 1900,
     credits: 5,
     plan: null,
-    productEnvKey: "ABACATEPAY_PRODUCT_PACK_S",
   },
   pack_m: {
     kind: BILLING_OFFER_KINDS.pack,
@@ -42,7 +36,6 @@ const OFFER_DEFINITIONS: Record<
     priceCents: 4900,
     credits: 15,
     plan: null,
-    productEnvKey: "ABACATEPAY_PRODUCT_PACK_M",
   },
 };
 
@@ -65,41 +58,17 @@ export function listBillingOffers(): BillingOffer[] {
   );
 }
 
-export function getProductIdForOffer(offerKey: BillingOfferKey): string | null {
-  const envKey = OFFER_DEFINITIONS[offerKey].productEnvKey;
-  return process.env[envKey]?.trim() || null;
+export function isPaymentsConfigured(): boolean {
+  return Boolean(process.env.MP_ACCESS_TOKEN?.trim());
 }
 
-export function isOfferCheckoutReady(offerKey: BillingOfferKey): boolean {
-  return Boolean(getProductIdForOffer(offerKey));
+export function isOfferCheckoutReady(): boolean {
+  return isPaymentsConfigured();
 }
 
-export function getOfferCheckoutDisabledHint(
-  offerKey: BillingOfferKey,
-): string | null {
-  if (!process.env.ABACATEPAY_API_KEY?.trim()) {
-    return "Pagamentos em preparação — configure ABACATEPAY_API_KEY no servidor.";
-  }
-
-  if (!isOfferCheckoutReady(offerKey)) {
-    const envKey = OFFER_DEFINITIONS[offerKey].productEnvKey;
-    return `Produto não configurado — defina ${envKey} no servidor.`;
-  }
-
-  return null;
-}
-
-export function resolveOfferByProductId(
-  productId: string,
-): { offerKey: BillingOfferKey; offer: BillingOffer } | null {
-  const normalized = productId.trim();
-  for (const offerKey of Object.keys(OFFER_DEFINITIONS) as BillingOfferKey[]) {
-    const configured = getProductIdForOffer(offerKey);
-    if (configured && configured === normalized) {
-      return { offerKey, offer: getBillingOffer(offerKey) };
-    }
-  }
-  return null;
+export function getOfferCheckoutDisabledHint(): string | null {
+  if (isPaymentsConfigured()) return null;
+  return "Pagamentos em preparação — configure MP_ACCESS_TOKEN no servidor.";
 }
 
 export function validatePaidAmount(

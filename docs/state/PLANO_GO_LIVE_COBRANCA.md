@@ -4,7 +4,7 @@
 > **Como usar:** marque `[x]` ao concluir; atualize o scoreboard e a data de revisão.  
 > **Referências:** [PENDENCIAS.md](./PENDENCIAS.md) · [PLANOS_E_LIMITES.md](../PLANOS_E_LIMITES.md) · [DEPLOY_VERCEL.md](../DEPLOY_VERCEL.md)
 
-**Criado:** 10/08/2026 · **Última revisão:** 20/08/2026 (Trilha H) · **Owner:** time Surf AI Coach
+**Criado:** 10/08/2026 · **Última revisão:** 02/09/2026 (Mercado Pago) · **Owner:** time Surf AI Coach
 
 ---
 
@@ -15,16 +15,16 @@
 | A | Créditos + paywall (caminho crítico) | 🟢 Concluído | 12 / 12 |
 | B | Landing + comunicação | 🔴 Não iniciado | 0 / 5 |
 | C | Legal / LGPD | 🟢 Concluído | 5 / 5 |
-| D | Gateway (decisão + conta) | 🟡 Em andamento | 1 / 4 |
+| D | Gateway (decisão + conta) | 🟡 Em andamento | 3 / 4 |
 | E | Domínio + SMTP | ⏸️ Aguardando domínio | 0 / 5 |
 | F | Qualidade / DoD / IA | 🟡 Em andamento | 0 / 4 |
 | G | Custo IA + operação | 🟢 Concluído | 3 / 3 |
-| H | Pagamentos (código) | 🟢 Concluído (código) | 9 / 10 |
+| H | Pagamentos (código) | 🟢 Concluído (código MP) | 9 / 10 |
 | I | Go-live comercial | ⏸️ Depende de A–H | 0 / 5 |
 
 **Legenda de status:** 🔴 Não iniciado · 🟡 Em andamento · 🟢 Concluído · ⏸️ Bloqueado / aguardando
 
-**Progresso geral:** 30 / 53 tarefas
+**Progresso geral:** 32 / 53 tarefas
 
 ---
 
@@ -135,12 +135,12 @@ flowchart TB
 
 > Decisão de negócio. Não precisa esperar código da A para abrir conta.
 
-- [x] Decidir provedor: **AbacatePay** (documentado na Spec e manual-dev)
-- [ ] Conta criada e verificada (dados fiscais / KYC)
-- [ ] Produtos/preços rascunhados: Surfista R$ 39 (8) · Pro R$ 89 (30) · Pack S R$ 19 (5) · Pack M R$ 49 (15)
-- [ ] Webhooks de teste documentados (URL staging / secrets no `.env` — sem commitar)
+- [x] Decidir provedor: **Mercado Pago** (substitui AbacatePay — cartão indisponível para contas novas)
+- [x] Conta/app **Surf AI Coach** no painel MP (webhooks teste + produção)
+- [x] Preços no catálogo interno: Surfista R$ 39 (8) · Pro R$ 89 (30) · Pack S R$ 19 (5) · Pack M R$ 49 (15)
+- [ ] Token de produção (`APP_USR-`) + KYC apto a receber — depois do smoke sandbox
 
-**Done da trilha D:** provedor escolhido, conta ativa, preços criados no painel, secrets prontos para a H.
+**Done da trilha D:** provedor escolhido, app MP ativa, preços no catálogo, secrets de teste prontos para a H. Live (`APP_USR-`) depois do smoke.
 
 ---
 
@@ -197,7 +197,7 @@ flowchart TB
 - [x] Página `/planos` com CTAs de checkout reais
 - [x] Página `/billing` (ou seção no perfil): plano, renovação, cancelamento
 - [x] Testes de webhook (upgrade, falha, cancelamento) em ambiente de teste (unitários + memory backend)
-- [ ] Homologação E2E Dev mode com gateway real (owner)
+- [ ] Homologação E2E sandbox com comprador/cartão de teste do Mercado Pago (owner)
 
 ### H.2 Operação
 
@@ -260,7 +260,8 @@ Marque só quando for verdade:
 | 10/08/2026 | Trilha A implementada no código (Spec `2026-08-10-creditos-paywall`) — aguarda db:push prod |
 | 10/08/2026 | Trilha C implementada (Spec `2026-08-10-legal-lgpd`) — docs legais, footer, aceite, cookies, direitos LGPD |
 | 10/08/2026 | Trilha G — custo IA: logs `ai.usage`, baseline/margem Go, rotina semanal (Spec `2026-08-10-custo-ia-operacao`) |
-| 20/08/2026 | Trilha H — billing AbacatePay no código (Spec `2026-08-20-billing-abacatepay`) — aguarda db:push + homologação Dev mode |
+| 20/08/2026 | Trilha H — billing AbacatePay no código (Spec `2026-08-20-billing-abacatepay`) — superado em 02/09/2026 |
+| 02/09/2026 | Gateway trocado para Mercado Pago (Spec `2026-09-02-billing-mercadopago`) — aguarda db:push 012 + homologação sandbox |
 
 ---
 

@@ -9,12 +9,8 @@ const serverEnvSchema = z.object({
   SENTRY_ORG: z.string().min(1).optional(),
   SENTRY_PROJECT: z.string().min(1).optional(),
   SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
-  ABACATEPAY_API_KEY: z.string().min(1).optional(),
-  ABACATEPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
-  ABACATEPAY_PRODUCT_SURFISTA: z.string().min(1).optional(),
-  ABACATEPAY_PRODUCT_PRO: z.string().min(1).optional(),
-  ABACATEPAY_PRODUCT_PACK_S: z.string().min(1).optional(),
-  ABACATEPAY_PRODUCT_PACK_M: z.string().min(1).optional(),
+  MP_ACCESS_TOKEN: z.string().min(1).optional(),
+  MP_WEBHOOK_SECRET: z.string().min(1).optional(),
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

@@ -44,7 +44,19 @@ export async function startCheckoutAction(
     }
 
     const user = await requireAuthUser();
-    const session = await createCheckoutSession(user.id, parsed.data);
+    if (!user.email) {
+      return {
+        success: false,
+        error:
+          "E-mail da conta é obrigatório para o checkout. Confirme o e-mail e tente de novo.",
+      };
+    }
+
+    const session = await createCheckoutSession(
+      user.id,
+      parsed.data,
+      user.email,
+    );
 
     return { success: true, data: session };
   } catch (error) {

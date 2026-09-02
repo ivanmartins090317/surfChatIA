@@ -1,44 +1,39 @@
-import crypto from "node:crypto";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { signAbacatePayWebhookBody } from "@/lib/billing/abacatepay-webhook";
-import { buildBillingExternalRef } from "@/lib/domain/billing";
+import { BILLING_GATEWAY_EVENT_KINDS } from "@/lib/billing/billing-gateway-event";
+import type { BillingGatewayEvent } from "@/lib/billing/billing-gateway-event";
+import { BILLING_PROVIDERS, buildBillingExternalRef } from "@/lib/domain/billing";
 import {
+  cancelUserSubscription,
   getBillingMemoryLedger,
   getBillingSummary,
-  processAbacatePayWebhook,
+  processBillingGatewayEvent,
   resetBillingMemoryStore,
   seedBillingMemoryProfile,
 } from "@/services/billing-service";
 
 const USER_ID = "33333333-3333-4333-8333-333333333333";
 
-function signedPayload(input: {
-  id: string;
-  event: string;
-  data: Record<string, unknown>;
-}) {
-  const body = JSON.stringify({
-    id: input.id,
-    event: input.event,
-    apiVersion: 2,
-    devMode: true,
-    data: input.data,
-  });
-  return JSON.parse(body) as {
-    id: string;
-    event: string;
-    apiVersion: number;
-    devMode: boolean;
-    data: Record<string, unknown>;
+function gatewayEvent(
+  overrides: Partial<BillingGatewayEvent> &
+    Pick<BillingGatewayEvent, "eventId" | "kind">,
+): BillingGatewayEvent {
+  return {
+    userId: USER_ID,
+    offerKey: "pack_s",
+    amountCents: 1900,
+    subscriptionExternalId: null,
+    checkoutExternalId: buildBillingExternalRef(USER_ID, "pack_s"),
+    periodStart: null,
+    periodEnd: null,
+    cancelledAt: null,
+    ...overrides,
   };
 }
 
 describe("billing-service webhook processing", () => {
   beforeEach(() => {
     resetBillingMemoryStore();
-    process.env.ABACATEPAY_PRODUCT_PACK_S = "prod_pack_s_mem";
-    process.env.ABACATEPAY_PRODUCT_SURFISTA = "prod_surfista_mem";
     seedBillingMemoryProfile(USER_ID, {
       plan: "free",
       creditsBalance: 0,
@@ -46,25 +41,11 @@ describe("billing-service webhook processing", () => {
     });
   });
 
-  afterEach(() => {
-    delete process.env.ABACATEPAY_PRODUCT_PACK_S;
-    delete process.env.ABACATEPAY_PRODUCT_SURFISTA;
-  });
-
-  it("credita pack avulso em checkout.completed", async () => {
-    const externalRef = buildBillingExternalRef(USER_ID, "pack_s");
-    await processAbacatePayWebhook(
-      signedPayload({
-        id: "log_pack_1",
-        event: "checkout.completed",
-        data: {
-          checkout: {
-            externalId: externalRef,
-            paidAmount: 1900,
-            items: [{ id: "prod_pack_s_mem", quantity: 1 }],
-            metadata: { userId: USER_ID, offerKey: "pack_s" },
-          },
-        },
+  it("credita pack avulso em pagamento aprovado", async () => {
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "payment:pack_1",
+        kind: BILLING_GATEWAY_EVENT_KINDS.packPaid,
       }),
     );
 
@@ -76,98 +57,84 @@ describe("billing-service webhook processing", () => {
   });
 
   it("não duplica crédito em evento repetido", async () => {
-    const externalRef = buildBillingExternalRef(USER_ID, "pack_s");
-    const eventData = {
-      checkout: {
-        externalId: externalRef,
-        paidAmount: 1900,
-        items: [{ id: "prod_pack_s_mem", quantity: 1 }],
-        metadata: { userId: USER_ID, offerKey: "pack_s" },
-      },
-    };
+    const event = gatewayEvent({
+      eventId: "payment:dup",
+      kind: BILLING_GATEWAY_EVENT_KINDS.packPaid,
+    });
 
-    await processAbacatePayWebhook(
-      signedPayload({ id: "log_dup", event: "checkout.completed", data: eventData }),
-    );
-    await processAbacatePayWebhook(
-      signedPayload({ id: "log_dup", event: "checkout.completed", data: eventData }),
-    );
+    await processBillingGatewayEvent(event);
+    await processBillingGatewayEvent(event);
 
     expect(getBillingMemoryLedger(USER_ID)).toHaveLength(1);
   });
 
   it("ativa assinatura surfista", async () => {
-    const externalRef = buildBillingExternalRef(USER_ID, "surfista");
-    await processAbacatePayWebhook(
-      signedPayload({
-        id: "log_sub_active",
-        event: "subscription.completed",
-        data: {
-          subscription: {
-            id: "subs_mem_1",
-            amount: 3900,
-            status: "ACTIVE",
-            createdAt: "2026-08-20T12:00:00.000Z",
-          },
-          payment: {
-            paidAmount: 3900,
-            createdAt: "2026-08-20T12:00:00.000Z",
-          },
-          checkout: {
-            externalId: externalRef,
-            items: [{ id: "prod_surfista_mem", quantity: 1 }],
-            metadata: { userId: USER_ID, offerKey: "surfista" },
-          },
-        },
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "subscription_preapproval:sub_1",
+        kind: BILLING_GATEWAY_EVENT_KINDS.subscriptionActivated,
+        offerKey: "surfista",
+        amountCents: 3900,
+        subscriptionExternalId: "preapproval_mem_1",
+        checkoutExternalId: buildBillingExternalRef(USER_ID, "surfista"),
+        periodStart: "2026-09-02T12:00:00.000Z",
+        periodEnd: "2026-10-02T12:00:00.000Z",
       }),
     );
 
     const summary = await getBillingSummary(USER_ID);
     expect(summary.plan).toBe("surfista");
     expect(summary.subscription?.status).toBe("active");
+    expect(summary.subscription?.provider).toBe(BILLING_PROVIDERS.mercadopago);
   });
 
-  it("marca cancelamento mantendo acesso até fim do período", async () => {
-    const externalRef = buildBillingExternalRef(USER_ID, "surfista");
-    await processAbacatePayWebhook(
-      signedPayload({
-        id: "log_sub_active2",
-        event: "subscription.completed",
-        data: {
-          subscription: {
-            id: "subs_mem_2",
-            amount: 3900,
-            status: "ACTIVE",
-            createdAt: "2026-08-20T12:00:00.000Z",
-          },
-          payment: {
-            paidAmount: 3900,
-            createdAt: "2026-08-20T12:00:00.000Z",
-          },
-          checkout: {
-            externalId: externalRef,
-            items: [{ id: "prod_surfista_mem", quantity: 1 }],
-            metadata: { userId: USER_ID, offerKey: "surfista" },
-          },
-        },
+  it("ativa assinatura se a primeira cobrança chegar antes do preapproval", async () => {
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "subscription_authorized_payment:inv_first",
+        kind: BILLING_GATEWAY_EVENT_KINDS.subscriptionRenewed,
+        offerKey: "surfista",
+        amountCents: 3900,
+        subscriptionExternalId: "preapproval_mem_first",
+        checkoutExternalId: buildBillingExternalRef(USER_ID, "surfista"),
+        periodStart: "2026-09-02T12:00:00.000Z",
+        periodEnd: "2026-10-02T12:00:00.000Z",
       }),
     );
 
-    await processAbacatePayWebhook(
-      signedPayload({
-        id: "log_sub_cancel",
-        event: "subscription.cancelled",
-        data: {
-          subscription: {
-            id: "subs_mem_2",
-            amount: 3900,
-            status: "CANCELLED",
-            canceledAt: "2026-08-21T12:00:00.000Z",
-          },
-          checkout: {
-            metadata: { userId: USER_ID, offerKey: "surfista" },
-          },
-        },
+    const summary = await getBillingSummary(USER_ID);
+    expect(summary.plan).toBe("surfista");
+    expect(summary.subscription?.status).toBe("active");
+    expect(getBillingMemoryLedger(USER_ID)).toEqual([
+      { userId: USER_ID, reason: "subscription_activated", delta: 0 },
+    ]);
+  });
+
+  it("marca cancelamento mantendo acesso até fim do período", async () => {
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "subscription_preapproval:sub_2",
+        kind: BILLING_GATEWAY_EVENT_KINDS.subscriptionActivated,
+        offerKey: "surfista",
+        amountCents: 3900,
+        subscriptionExternalId: "preapproval_mem_2",
+        checkoutExternalId: buildBillingExternalRef(USER_ID, "surfista"),
+        periodStart: "2026-09-02T12:00:00.000Z",
+        periodEnd: "2026-10-02T12:00:00.000Z",
+      }),
+    );
+
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "subscription_preapproval:sub_2_cancel",
+        kind: BILLING_GATEWAY_EVENT_KINDS.subscriptionCancelled,
+        offerKey: "surfista",
+        amountCents: 3900,
+        subscriptionExternalId: "preapproval_mem_2",
+        checkoutExternalId: buildBillingExternalRef(USER_ID, "surfista"),
+        periodStart: "2026-09-02T12:00:00.000Z",
+        periodEnd: "2026-10-02T12:00:00.000Z",
+        cancelledAt: "2026-09-03T12:00:00.000Z",
       }),
     );
 
@@ -178,47 +145,50 @@ describe("billing-service webhook processing", () => {
   });
 
   it("rejeita pack quando valor não bate com catálogo", async () => {
-    const externalRef = buildBillingExternalRef(USER_ID, "pack_s");
-    await processAbacatePayWebhook(
-      signedPayload({
-        id: "log_bad_amount",
-        event: "checkout.completed",
-        data: {
-          checkout: {
-            externalId: externalRef,
-            paidAmount: 999,
-            items: [{ id: "prod_pack_s_mem", quantity: 1 }],
-            metadata: { userId: USER_ID, offerKey: "pack_s" },
-          },
-        },
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "payment:bad_amount",
+        kind: BILLING_GATEWAY_EVENT_KINDS.packPaid,
+        amountCents: 999,
       }),
     );
 
     expect(getBillingMemoryLedger(USER_ID)).toHaveLength(0);
   });
-});
 
-describe("abacatepay webhook security", () => {
-  afterEach(() => {
-    delete process.env.ABACATEPAY_WEBHOOK_SECRET;
+  it("ignora pagamento aprovado de assinatura no tópico pack", async () => {
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "payment:sub_card",
+        kind: BILLING_GATEWAY_EVENT_KINDS.packPaid,
+        offerKey: "surfista",
+        amountCents: 3900,
+        checkoutExternalId: buildBillingExternalRef(USER_ID, "surfista"),
+      }),
+    );
+
+    expect(getBillingMemoryLedger(USER_ID)).toHaveLength(0);
+    const summary = await getBillingSummary(USER_ID);
+    expect(summary.plan).toBe("free");
   });
 
-  it("signAbacatePayWebhookBody bate com crypto nativo", async () => {
-    const { isValidWebhookSecret, verifyAbacatePaySignature } = await import(
-      "@/lib/billing/abacatepay-webhook"
+  it("recusa cancelamento in-app sem MP_ACCESS_TOKEN", async () => {
+    await processBillingGatewayEvent(
+      gatewayEvent({
+        eventId: "subscription_preapproval:sub_cancel_cfg",
+        kind: BILLING_GATEWAY_EVENT_KINDS.subscriptionActivated,
+        offerKey: "surfista",
+        amountCents: 3900,
+        subscriptionExternalId: "preapproval_cancel_cfg",
+        checkoutExternalId: buildBillingExternalRef(USER_ID, "surfista"),
+        periodStart: "2026-09-02T12:00:00.000Z",
+        periodEnd: "2026-10-02T12:00:00.000Z",
+      }),
     );
-    const rawBody = '{"id":"log_x","event":"checkout.completed"}';
-    const expected = crypto
-      .createHmac(
-        "sha256",
-        "t9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9",
-      )
-      .update(Buffer.from(rawBody, "utf8"))
-      .digest("base64");
 
-    expect(signAbacatePayWebhookBody(rawBody)).toBe(expected);
-    process.env.ABACATEPAY_WEBHOOK_SECRET = "secret-test";
-    expect(isValidWebhookSecret("secret-test")).toBe(true);
-    expect(verifyAbacatePaySignature(rawBody, expected)).toBe(true);
+    delete process.env.MP_ACCESS_TOKEN;
+    await expect(cancelUserSubscription(USER_ID)).rejects.toThrow(
+      /Cancelamento indisponível/,
+    );
   });
 });

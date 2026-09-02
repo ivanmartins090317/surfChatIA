@@ -15,8 +15,9 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | [03-fase-producao-deploy.md](./03-fase-producao-deploy.md) | Deploy Vercel, rate limit Postgres, Sentry |
 | [04-fase-creditos-paywall.md](./04-fase-creditos-paywall.md) | Créditos, ledger, paywall, planos de exemplo |
 | [05-fase-legal-lgpd.md](./05-fase-legal-lgpd.md) | Termos, privacidade, aceite, export/exclusão |
-| [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) | AbacatePay: checkout, webhooks, cobrança |
+| [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) | Histórico AbacatePay (substituído) |
 | [07-fase-signup-ux-fluxo-conta.md](./07-fase-signup-ux-fluxo-conta.md) | UX signup: redirect, banners, confirmação de e-mail |
+| [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) | Mercado Pago: checkout, webhooks, cobrança |
 
 ## Documentos relacionados
 
@@ -38,10 +39,11 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | Produção (deploy + observabilidade) | concluída | [03-fase-producao-deploy.md](./03-fase-producao-deploy.md) |
 | A · Créditos + paywall | concluída (código) | [04-fase-creditos-paywall.md](./04-fase-creditos-paywall.md) |
 | C · Legal / LGPD | concluída (código) | [05-fase-legal-lgpd.md](./05-fase-legal-lgpd.md) |
-| H · Billing AbacatePay | implementado (código) · homologação pendente | [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) |
+| H · Billing AbacatePay | histórico (substituído pelo MP) | [06-fase-billing-abacatepay.md](./06-fase-billing-abacatepay.md) |
 | Signup UX (Fase A) | implementado (código) · homologação manual pendente | [07-fase-signup-ux-fluxo-conta.md](./07-fase-signup-ux-fluxo-conta.md) |
+| H · Billing Mercado Pago | implementado (código) · homologação sandbox pendente | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) |
 | B · Landing | pendente | — |
-| D · Gateway (conta/painel) | pendente (owner) | — |
+| D · Gateway (conta/painel) | app MP criada · `db:push` 012 + E2E pendentes | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) |
 
 ## Comandos do dia a dia
 

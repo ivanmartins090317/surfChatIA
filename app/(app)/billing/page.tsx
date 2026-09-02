@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CancelSubscriptionButton } from "@/components/billing/cancel-subscription-button";
+import { billingProviderLabel } from "@/lib/domain/billing";
 import { formatCreditsLabel } from "@/lib/domain/credits";
 import { USER_PLANS } from "@/lib/domain/types";
 import { requireAuthUser } from "@/lib/supabase/server";
@@ -85,6 +86,9 @@ export default async function BillingPage() {
               <>
                 <p className="text-muted-foreground">
                   Plano da assinatura: {USER_PLANS[subscription.plan]}
+                </p>
+                <p className="text-muted-foreground">
+                  Pagamento via {billingProviderLabel(subscription.provider)}
                 </p>
                 {billing.nextRenewalAt ? (
                   <p className="text-muted-foreground">

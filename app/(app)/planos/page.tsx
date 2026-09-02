@@ -10,7 +10,10 @@ import {
   isOfferCheckoutReady,
   listBillingOffers,
 } from "@/lib/billing/billing-catalog";
-import { isAbacatePayConfigured } from "@/lib/billing/abacatepay-client";
+import {
+  isMercadoPagoConfigured,
+  isMercadoPagoTestMode,
+} from "@/lib/billing/mercadopago-config";
 import { BILLING_OFFER_KINDS } from "@/lib/domain/billing";
 import { toCreditsSnapshot } from "@/lib/domain/credits";
 import { requireAuthUser } from "@/lib/supabase/server";
@@ -39,7 +42,7 @@ export default async function PlanosPage() {
     (offer) => offer.kind === BILLING_OFFER_KINDS.subscription,
   );
   const packs = offers.filter((offer) => offer.kind === BILLING_OFFER_KINDS.pack);
-  const paymentsEnabled = isAbacatePayConfigured();
+  const paymentsEnabled = isMercadoPagoConfigured();
 
   return (
     <div className="space-y-10">
@@ -61,13 +64,20 @@ export default async function PlanosPage() {
           {credits.remaining}{" "}
           {credits.remaining === 1 ? "crédito restante" : "créditos restantes"}
         </p>
+        {paymentsEnabled && isMercadoPagoTestMode() ? (
+          <p className="text-sm text-muted-foreground">
+            Sandbox Mercado Pago — use o comprador e os cartões de teste do
+            painel. Assinaturas cobram no cartão; packs podem usar PIX, cartão
+            ou boleto.
+          </p>
+        ) : null}
         {!paymentsEnabled ? (
           <p className="text-sm text-amber-200/90">
             Checkout em preparação — adicione{" "}
             <code className="rounded bg-muted px-1 py-0.5 text-xs">
-              ABACATEPAY_API_KEY
+              MP_ACCESS_TOKEN
             </code>{" "}
-            e os IDs de produto no servidor para habilitar pagamentos de teste.
+            no servidor para habilitar pagamentos.
           </p>
         ) : null}
       </div>
@@ -118,10 +128,8 @@ export default async function PlanosPage() {
                   <CheckoutButton
                     offerKey={offer.key}
                     label={`Assinar ${offer.label}`}
-                    disabled={
-                      !paymentsEnabled || !isOfferCheckoutReady(offer.key)
-                    }
-                    disabledHint={getOfferCheckoutDisabledHint(offer.key)}
+                    disabled={!paymentsEnabled || !isOfferCheckoutReady()}
+                    disabledHint={getOfferCheckoutDisabledHint()}
                   />
                 )}
               </CardContent>
@@ -133,7 +141,8 @@ export default async function PlanosPage() {
       <section className="space-y-4">
         <h2 className="font-display text-xl font-medium">Pacotes avulsos</h2>
         <p className="text-sm text-muted-foreground">
-          Não alteram seu plano — somam créditos ao saldo avulsos.
+          Não alteram seu plano — somam créditos ao saldo avulsos. Na página do
+          Mercado Pago você pode pagar com PIX, cartão ou boleto.
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           {packs.map((pack) => (
@@ -150,10 +159,8 @@ export default async function PlanosPage() {
                   label="Comprar"
                   variant="secondary"
                   className="w-full sm:w-auto"
-                  disabled={
-                    !paymentsEnabled || !isOfferCheckoutReady(pack.key)
-                  }
-                  disabledHint={getOfferCheckoutDisabledHint(pack.key)}
+                  disabled={!paymentsEnabled || !isOfferCheckoutReady()}
+                  disabledHint={getOfferCheckoutDisabledHint()}
                 />
               </CardContent>
             </Card>

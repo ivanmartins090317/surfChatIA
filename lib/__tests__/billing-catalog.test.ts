@@ -4,9 +4,9 @@ import {
   getBillingOffer,
   getOfferCheckoutDisabledHint,
   isOfferCheckoutReady,
-  resolveOfferByProductId,
   validatePaidAmount,
 } from "@/lib/billing/billing-catalog";
+import { reaisToCents } from "@/lib/billing/billing-gateway-event";
 import {
   buildBillingExternalRef,
   parseBillingExternalRef,
@@ -16,34 +16,30 @@ const USER_ID = "11111111-1111-4111-8111-111111111111";
 
 describe("billing catalog", () => {
   afterEach(() => {
-    delete process.env.ABACATEPAY_API_KEY;
-    delete process.env.ABACATEPAY_PRODUCT_PACK_S;
-    delete process.env.ABACATEPAY_PRODUCT_SURFISTA;
+    delete process.env.MP_ACCESS_TOKEN;
   });
 
-  it("detecta oferta pronta para checkout quando product id existe", () => {
-    process.env.ABACATEPAY_PRODUCT_SURFISTA = "prod_surfista_test";
-    expect(isOfferCheckoutReady("surfista")).toBe(true);
+  it("marca ofertas prontas quando MP_ACCESS_TOKEN existe", () => {
+    process.env.MP_ACCESS_TOKEN = "TEST-token";
+    expect(isOfferCheckoutReady()).toBe(true);
+    expect(getOfferCheckoutDisabledHint()).toBeNull();
   });
 
-  it("retorna hint quando falta product id da oferta", () => {
-    process.env.ABACATEPAY_API_KEY = "abc_dev_test";
-    expect(getOfferCheckoutDisabledHint("surfista")).toContain(
-      "ABACATEPAY_PRODUCT_SURFISTA",
-    );
-  });
-
-  it("mapeia oferta pack_s pelo product id configurado", () => {
-    process.env.ABACATEPAY_PRODUCT_PACK_S = "prod_pack_s_test";
-    const resolved = resolveOfferByProductId("prod_pack_s_test");
-    expect(resolved?.offerKey).toBe("pack_s");
-    expect(resolved?.offer.credits).toBe(5);
+  it("retorna hint quando falta MP_ACCESS_TOKEN", () => {
+    expect(isOfferCheckoutReady()).toBe(false);
+    expect(getOfferCheckoutDisabledHint()).toContain("MP_ACCESS_TOKEN");
   });
 
   it("valida valor pago contra catálogo", () => {
     const offer = getBillingOffer("pack_m");
     expect(validatePaidAmount(offer, 4900)).toBe(true);
     expect(validatePaidAmount(offer, 1900)).toBe(false);
+  });
+
+  it("converte reais do Mercado Pago para centavos com arredondamento", () => {
+    expect(reaisToCents(39)).toBe(3900);
+    expect(reaisToCents(19.0)).toBe(1900);
+    expect(reaisToCents(89.99)).toBe(8999);
   });
 });
 

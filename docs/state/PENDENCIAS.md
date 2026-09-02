@@ -1,8 +1,8 @@
 # Pendências — Surf Performance & Board AI
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
-> **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · monetização **não implementada**.  
-> **Última revisão:** 21/08/2026 — Trilha H billing AbacatePay implementada (código); homologação Dev mode pendente · **Signup UX Fase A** implementada (código); homologação manual pendente.
+> **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · billing Mercado Pago no código · homologação sandbox pendente.  
+> **Última revisão:** 02/09/2026 — Billing **Mercado Pago** implementado (código); `db:push` 012 + homologação sandbox pendentes · Signup UX Fase A implementada (código); homologação manual pendente.
 
 ---
 
@@ -18,7 +18,7 @@
 | Shell / mobile | ✅ Validado | FL-07 (2/2) |
 | Especialização IA performance | 🟡 Fase A implementada, validação pendente | — |
 | Monetização | 🟡 Créditos + paywall (Trilha A) | — |
-| Pagamentos | 🟡 Código AbacatePay (Trilha H) · homologação pendente | — |
+| Pagamentos | 🟡 Código Mercado Pago (Trilha H) · homologação sandbox pendente | — |
 | Deploy produção | 🟡 Live (2.1–2.2 ✅ · 2.3 pendente) | smoke test prod OK |
 | Legal (LGPD / Termos) | ❌ Não existe | — |
 
@@ -183,26 +183,29 @@ flowchart LR
 
 ---
 
-## Etapa 4 — Pagamentos (AbacatePay) 🟡
+## Etapa 4 — Pagamentos (Mercado Pago) 🟡
 
-> Spec: [`specs/2026-08-20-billing-abacatepay.md`](../../specs/2026-08-20-billing-abacatepay.md) · Manual: [`docs/manual-dev/06-fase-billing-abacatepay.md`](../manual-dev/06-fase-billing-abacatepay.md)
+> Spec: [`specs/2026-09-02-billing-mercadopago.md`](../../specs/2026-09-02-billing-mercadopago.md) · Manual: [`docs/manual-dev/08-fase-billing-mercadopago.md`](../manual-dev/08-fase-billing-mercadopago.md)  
+> Histórico AbacatePay: [`specs/2026-08-20-billing-abacatepay.md`](../../specs/2026-08-20-billing-abacatepay.md)
 
 ### 4.1 Gateway e código
 
-- [x] Provedor: **AbacatePay** (Spec + docs vivos)
-- [x] Migration `011_billing_abacatepay.sql`: `subscriptions`, idempotência webhook, RPCs
-- [x] Checkout assinatura Surfista/Pro + packs S/M
-- [x] Webhooks v2: checkout.completed, subscription.completed/renewed/cancelled
+- [x] Provedor: **Mercado Pago** (substitui AbacatePay — cartão descontinuado para contas novas)
+- [x] Migration `011_billing_abacatepay.sql`: tabelas/RPCs de billing
+- [x] Migration `012_billing_mercadopago.sql`: provider `mercadopago` + default
+- [x] Checkout assinatura Surfista/Pro (PreApproval) + packs S/M (Checkout Pro)
+- [x] Webhooks MP: `payment`, `subscription_preapproval`, `subscription_authorized_payment` + HMAC
 - [x] Página `/planos` com CTAs · `/billing` com cancelamento
-- [x] Testes unitários (catalog, parser, service, segurança HMAC)
-- [ ] `npm run db:push` migration 011 em prod/staging
-- [ ] Conta AbacatePay + produtos no painel (Trilha D — owner)
-- [ ] Homologação E2E Dev mode (pagamento simulado → plano/créditos)
+- [x] Testes unitários (catalog, HMAC, service, idempotência, valor)
+- [x] `/api/webhooks/abacatepay` → 410
+- [ ] `npm run db:push` migration **012** em prod/staging
+- [ ] Vercel: `MP_ACCESS_TOKEN` (`TEST-` primeiro) + `MP_WEBHOOK_SECRET`
+- [ ] Homologação E2E sandbox (comprador de teste + cartão de teste)
 
 ### 4.2 Operação
 
 - [x] Reset de ciclo na renovação webhook (cron mensal = follow-up)
-- [ ] Política de estorno automático em `checkout.refunded` (só log hoje)
+- [ ] Política de estorno automático (não implementada)
 - [x] Medir custo médio por análise (baseline Trilha G)
 - [ ] Recalibrar preços se margem < alvo
 
@@ -283,7 +286,7 @@ Paralelo agora:  A créditos · B landing · C legal · D gateway · E domínio 
 Depois:          H pagamentos (código)  →  I go-live comercial
 ```
 
-**Sessão atual sugerida:** Trilha **D** (conta AbacatePay + product IDs) + homologação **H** (Dev mode E2E).
+**Sessão atual sugerida:** `db:push` migration **012** + env MP na Vercel + homologação sandbox (comprador/cartão de teste).
 
 ---
 

@@ -1,5 +1,20 @@
 import {
-  ABACATEPAY_WEBHOOK_EVENTS,
+  BILLING_GATEWAY_EVENT_KINDS,
+  type BillingGatewayEvent,
+} from "@/lib/billing/billing-gateway-event";
+import {
+  getBillingOffer,
+  validatePaidAmount,
+} from "@/lib/billing/billing-catalog";
+import {
+  cancelMercadoPagoSubscription,
+  createMercadoPagoCheckout,
+  isMercadoPagoConfigured,
+} from "@/lib/billing/mercadopago-client";
+import {
+  BILLING_PROVIDERS,
+  buildBillingExternalRef,
+  type BillingOffer,
   type BillingOfferKey,
   type BillingSummary,
   type CheckoutSessionResult,
@@ -7,22 +22,6 @@ import {
   type SubscriptionStatus,
 } from "@/lib/domain/billing";
 import type { UserPlan } from "@/lib/domain/types";
-import {
-  cancelAbacatePaySubscription,
-  createAbacatePayCheckout,
-  isAbacatePayConfigured,
-} from "@/lib/billing/abacatepay-client";
-import type { AbacatePayWebhookPayload } from "@/lib/billing/abacatepay-webhook";
-import {
-  isSupportedBillingEvent,
-  parseWebhookContext,
-} from "@/lib/billing/abacatepay-webhook-parser";
-import {
-  getBillingOffer,
-  resolveOfferByProductId,
-  validatePaidAmount,
-} from "@/lib/billing/billing-catalog";
-import { buildBillingExternalRef } from "@/lib/domain/billing";
 import { reportServerError } from "@/lib/observability/report-server-error";
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 
@@ -47,6 +46,11 @@ interface MemoryProfileBilling {
   creditsBalance: number;
   creditsPeriodUsed: number;
   billingPeriodStart: string | null;
+}
+
+interface ResolvedOffer {
+  offerKey: BillingOfferKey;
+  offer: BillingOffer;
 }
 
 const processedEvents = new Set<string>();
@@ -116,24 +120,18 @@ async function invokeBillingRpc(
   return data ?? {};
 }
 
-function resolveOfferFromContext(input: {
-  offerKey: BillingOfferKey | null;
-  productId: string | null;
-}) {
-  if (input.offerKey) {
-    return { offerKey: input.offerKey, offer: getBillingOffer(input.offerKey) };
-  }
-  if (input.productId) {
-    return resolveOfferByProductId(input.productId);
-  }
-  return null;
-}
-
 function logBillingOperationalFailure(
   reason: string,
   details: Record<string, unknown>,
 ): void {
   console.error("[billing.operational]", { reason, ...details });
+}
+
+function resolveOffer(
+  offerKey: BillingOfferKey | null,
+): ResolvedOffer | null {
+  if (!offerKey) return null;
+  return { offerKey, offer: getBillingOffer(offerKey) };
 }
 
 async function markCheckoutSessionCompleted(input: {
@@ -212,7 +210,7 @@ async function applySubscriptionActivationMemory(input: {
   memorySubscriptions.set(input.externalId, {
     id: input.externalId,
     user_id: input.userId,
-    provider: "abacatepay",
+    provider: BILLING_PROVIDERS.mercadopago,
     external_id: input.externalId,
     status: "active",
     plan: input.plan,
@@ -412,193 +410,266 @@ async function resolveUserIdForWebhook(context: {
   return null;
 }
 
-export async function processAbacatePayWebhook(
-  payload: AbacatePayWebhookPayload,
+async function hasActiveSubscription(userId: string): Promise<boolean> {
+  if (shouldUseMemoryBackend()) {
+    return [...memorySubscriptions.values()].some(
+      (sub) => sub.user_id === userId && sub.status === "active",
+    );
+  }
+
+  const supabase = createAdminClient() as unknown as {
+    from: (table: string) => {
+      select: (cols: string) => {
+        eq: (col: string, val: string) => {
+          eq: (col: string, val: string) => {
+            maybeSingle: () => Promise<{ data: { id: string } | null }>;
+          };
+        };
+      };
+    };
+  };
+
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return Boolean(data?.id);
+}
+
+function paidPlanFromOffer(
+  offer: BillingOffer | undefined,
+): "surfista" | "pro" | null {
+  if (offer?.plan === "surfista" || offer?.plan === "pro") return offer.plan;
+  return null;
+}
+
+async function processPackPaid(input: {
+  event: BillingGatewayEvent;
+  userId: string;
+  resolvedOffer: ResolvedOffer | null;
+}): Promise<void> {
+  const { event, userId, resolvedOffer } = input;
+  if (!resolvedOffer || resolvedOffer.offer.kind !== "pack") {
+    logBillingOperationalFailure("checkout_oferta_invalida", {
+      eventId: event.eventId,
+      offerKey: resolvedOffer?.offerKey ?? null,
+    });
+    return;
+  }
+
+  if (!validatePaidAmount(resolvedOffer.offer, event.amountCents)) {
+    logBillingOperationalFailure("checkout_valor_inconsistente", {
+      eventId: event.eventId,
+      amountCents: event.amountCents,
+      expected: resolvedOffer.offer.priceCents,
+    });
+    return;
+  }
+
+  const result = shouldUseMemoryBackend()
+    ? await applyPackPurchaseMemory({
+        userId,
+        credits: resolvedOffer.offer.credits,
+        eventId: event.eventId,
+      })
+    : await invokeBillingRpc("apply_pack_purchase", {
+        p_user_id: userId,
+        p_credits: resolvedOffer.offer.credits,
+        p_event_id: event.eventId,
+      });
+
+  if (!result.duplicate && event.checkoutExternalId) {
+    await markCheckoutSessionCompleted({
+      externalRef: event.checkoutExternalId,
+      gatewayCheckoutId: event.checkoutExternalId,
+    });
+  }
+}
+
+async function processSubscriptionActivation(input: {
+  event: BillingGatewayEvent;
+  userId: string;
+  resolvedOffer: ResolvedOffer | null;
+}): Promise<void> {
+  const { event, userId, resolvedOffer } = input;
+  if (!resolvedOffer || resolvedOffer.offer.kind !== "subscription") {
+    logBillingOperationalFailure("assinatura_oferta_invalida", {
+      eventId: event.eventId,
+      offerKey: resolvedOffer?.offerKey ?? null,
+    });
+    return;
+  }
+
+  if (!validatePaidAmount(resolvedOffer.offer, event.amountCents)) {
+    logBillingOperationalFailure("assinatura_valor_inconsistente", {
+      eventId: event.eventId,
+      amountCents: event.amountCents,
+      expected: resolvedOffer.offer.priceCents,
+    });
+    return;
+  }
+
+  if (!event.subscriptionExternalId || !event.periodStart || !event.periodEnd) {
+    logBillingOperationalFailure("assinatura_dados_incompletos", {
+      eventId: event.eventId,
+    });
+    return;
+  }
+
+  const plan = paidPlanFromOffer(resolvedOffer.offer);
+  if (!plan) return;
+
+  const result = shouldUseMemoryBackend()
+    ? await applySubscriptionActivationMemory({
+        userId,
+        plan,
+        externalId: event.subscriptionExternalId,
+        periodStart: event.periodStart,
+        periodEnd: event.periodEnd,
+        eventId: event.eventId,
+      })
+    : await invokeBillingRpc("apply_subscription_activation", {
+        p_user_id: userId,
+        p_plan: plan,
+        p_external_id: event.subscriptionExternalId,
+        p_period_start: event.periodStart,
+        p_period_end: event.periodEnd,
+        p_event_id: event.eventId,
+      });
+
+  if (!result.duplicate) {
+    await markCheckoutSessionCompleted({
+      externalRef: event.checkoutExternalId ?? "",
+      gatewaySubscriptionId: event.subscriptionExternalId,
+    });
+  }
+}
+
+async function processSubscriptionRenewal(input: {
+  event: BillingGatewayEvent;
+  userId: string;
+}): Promise<void> {
+  const { event, userId } = input;
+  if (!event.subscriptionExternalId || !event.periodStart || !event.periodEnd) {
+    logBillingOperationalFailure("renovacao_dados_incompletos", {
+      eventId: event.eventId,
+    });
+    return;
+  }
+
+  await (shouldUseMemoryBackend()
+    ? applySubscriptionRenewalMemory({
+        userId,
+        externalId: event.subscriptionExternalId,
+        periodStart: event.periodStart,
+        periodEnd: event.periodEnd,
+        eventId: event.eventId,
+      })
+    : invokeBillingRpc("apply_subscription_renewal", {
+        p_user_id: userId,
+        p_external_id: event.subscriptionExternalId,
+        p_period_start: event.periodStart,
+        p_period_end: event.periodEnd,
+        p_event_id: event.eventId,
+      }));
+}
+
+async function processSubscriptionCancellation(input: {
+  event: BillingGatewayEvent;
+  userId: string;
+}): Promise<void> {
+  const { event, userId } = input;
+  if (!event.subscriptionExternalId) {
+    logBillingOperationalFailure("cancelamento_sem_assinatura", {
+      eventId: event.eventId,
+    });
+    return;
+  }
+
+  await (shouldUseMemoryBackend()
+    ? applySubscriptionCancellationMemory({
+        userId,
+        externalId: event.subscriptionExternalId,
+        cancelledAt: event.cancelledAt ?? new Date().toISOString(),
+        eventId: event.eventId,
+      })
+    : invokeBillingRpc("apply_subscription_cancellation", {
+        p_user_id: userId,
+        p_external_id: event.subscriptionExternalId,
+        p_cancelled_at: event.cancelledAt ?? new Date().toISOString(),
+        p_event_id: event.eventId,
+      }));
+}
+
+export async function processBillingGatewayEvent(
+  event: BillingGatewayEvent,
 ): Promise<void> {
-  if (!isSupportedBillingEvent(payload.event)) {
-    console.info("[abacatepay.webhook] evento ignorado", {
-      eventId: payload.id,
-      event: payload.event,
-    });
-    return;
-  }
-
-  if (payload.event === ABACATEPAY_WEBHOOK_EVENTS.checkoutRefunded) {
-    console.info("[abacatepay.webhook] reembolso registrado (sem estorno automático)", {
-      eventId: payload.id,
-    });
-    return;
-  }
-
-  const context = parseWebhookContext(payload);
   const checkoutSession = await resolveCheckoutSession({
-    checkoutExternalId: context.checkoutExternalId,
-    checkoutGatewayId: context.checkoutGatewayId,
+    checkoutExternalId: event.checkoutExternalId,
+    checkoutGatewayId: event.checkoutExternalId,
   });
 
   const userId = await resolveUserIdForWebhook({
-    userId: context.userId ?? checkoutSession?.userId ?? null,
-    subscriptionExternalId: context.subscriptionExternalId,
-    checkoutExternalId: context.checkoutExternalId,
+    userId: event.userId ?? checkoutSession?.userId ?? null,
+    subscriptionExternalId: event.subscriptionExternalId,
+    checkoutExternalId: event.checkoutExternalId,
   });
 
-  const resolvedOffer = resolveOfferFromContext({
-    offerKey: context.offerKey ?? checkoutSession?.offerKey ?? null,
-    productId: context.productId,
-  });
+  const resolvedOffer = resolveOffer(
+    event.offerKey ?? checkoutSession?.offerKey ?? null,
+  );
 
   if (!userId) {
     logBillingOperationalFailure("webhook_sem_usuario", {
-      eventId: payload.id,
-      event: payload.event,
+      eventId: event.eventId,
+      kind: event.kind,
     });
     return;
   }
 
-  if (payload.event === ABACATEPAY_WEBHOOK_EVENTS.checkoutCompleted) {
-    if (!resolvedOffer || resolvedOffer.offer.kind !== "pack") {
-      logBillingOperationalFailure("checkout_oferta_invalida", {
-        eventId: payload.id,
-        productId: context.productId,
-      });
-      return;
-    }
-
-    if (!validatePaidAmount(resolvedOffer.offer, context.amountCents)) {
-      logBillingOperationalFailure("checkout_valor_inconsistente", {
-        eventId: payload.id,
-        amountCents: context.amountCents,
-        expected: resolvedOffer.offer.priceCents,
-      });
-      return;
-    }
-
-    const result = shouldUseMemoryBackend()
-      ? await applyPackPurchaseMemory({
-          userId,
-          credits: resolvedOffer.offer.credits,
-          eventId: payload.id,
-        })
-      : await invokeBillingRpc("apply_pack_purchase", {
-          p_user_id: userId,
-          p_credits: resolvedOffer.offer.credits,
-          p_event_id: payload.id,
-        });
-
-    if (!result.duplicate && context.checkoutExternalId) {
-      await markCheckoutSessionCompleted({
-        externalRef: context.checkoutExternalId,
-        gatewayCheckoutId: context.checkoutExternalId,
-      });
-    }
+  if (event.kind === BILLING_GATEWAY_EVENT_KINDS.packPaid) {
+    await processPackPaid({ event, userId, resolvedOffer });
     return;
   }
 
-  if (
-    payload.event === ABACATEPAY_WEBHOOK_EVENTS.subscriptionCompleted ||
-    payload.event === ABACATEPAY_WEBHOOK_EVENTS.subscriptionRenewed
-  ) {
-    if (!resolvedOffer || resolvedOffer.offer.kind !== "subscription") {
-      logBillingOperationalFailure("assinatura_oferta_invalida", {
-        eventId: payload.id,
-        productId: context.productId,
-      });
-      return;
-    }
-
-    if (!validatePaidAmount(resolvedOffer.offer, context.amountCents)) {
-      logBillingOperationalFailure("assinatura_valor_inconsistente", {
-        eventId: payload.id,
-        amountCents: context.amountCents,
-        expected: resolvedOffer.offer.priceCents,
-      });
-      return;
-    }
-
-    if (!context.subscriptionExternalId || !context.periodStart || !context.periodEnd) {
-      logBillingOperationalFailure("assinatura_dados_incompletos", {
-        eventId: payload.id,
-      });
-      return;
-    }
-
-    const plan = resolvedOffer.offer.plan;
-    if (!plan || (plan !== "surfista" && plan !== "pro")) {
-      return;
-    }
-
-    const rpcArgs = {
-      p_user_id: userId,
-      p_external_id: context.subscriptionExternalId,
-      p_period_start: context.periodStart,
-      p_period_end: context.periodEnd,
-      p_event_id: payload.id,
-    };
-
-    if (payload.event === ABACATEPAY_WEBHOOK_EVENTS.subscriptionCompleted) {
-      const result = shouldUseMemoryBackend()
-        ? await applySubscriptionActivationMemory({
-            userId,
-            plan,
-            externalId: context.subscriptionExternalId,
-            periodStart: context.periodStart,
-            periodEnd: context.periodEnd,
-            eventId: payload.id,
-          })
-        : await invokeBillingRpc("apply_subscription_activation", {
-            ...rpcArgs,
-            p_user_id: userId,
-            p_plan: plan,
-          });
-
-      if (!result.duplicate) {
-        await markCheckoutSessionCompleted({
-          externalRef: context.checkoutExternalId ?? "",
-          gatewaySubscriptionId: context.subscriptionExternalId,
-        });
-      }
-      return;
-    }
-
-    await (shouldUseMemoryBackend()
-      ? applySubscriptionRenewalMemory({
-          userId,
-          externalId: context.subscriptionExternalId,
-          periodStart: context.periodStart,
-          periodEnd: context.periodEnd,
-          eventId: payload.id,
-        })
-      : invokeBillingRpc("apply_subscription_renewal", rpcArgs));
+  if (event.kind === BILLING_GATEWAY_EVENT_KINDS.subscriptionActivated) {
+    await processSubscriptionActivation({ event, userId, resolvedOffer });
     return;
   }
 
-  if (payload.event === ABACATEPAY_WEBHOOK_EVENTS.subscriptionCancelled) {
-    if (!context.subscriptionExternalId) {
-      logBillingOperationalFailure("cancelamento_sem_assinatura", {
-        eventId: payload.id,
-      });
+  if (event.kind === BILLING_GATEWAY_EVENT_KINDS.subscriptionRenewed) {
+    const alreadyActive = await hasActiveSubscription(userId);
+    if (!alreadyActive) {
+      await processSubscriptionActivation({ event, userId, resolvedOffer });
       return;
     }
-
-    await (shouldUseMemoryBackend()
-      ? applySubscriptionCancellationMemory({
-          userId,
-          externalId: context.subscriptionExternalId,
-          cancelledAt: context.cancelledAt ?? new Date().toISOString(),
-          eventId: payload.id,
-        })
-      : invokeBillingRpc("apply_subscription_cancellation", {
-          p_user_id: userId,
-          p_external_id: context.subscriptionExternalId,
-          p_cancelled_at: context.cancelledAt ?? new Date().toISOString(),
-          p_event_id: payload.id,
-        }));
+    await processSubscriptionRenewal({ event, userId });
+    return;
   }
+
+  if (event.kind === BILLING_GATEWAY_EVENT_KINDS.subscriptionCancelled) {
+    await processSubscriptionCancellation({ event, userId });
+  }
+}
+
+export async function handleMercadoPagoWebhookEvent(
+  event: BillingGatewayEvent,
+): Promise<void> {
+  console.info("[mercadopago.webhook] evento recebido", {
+    eventId: event.eventId,
+    kind: event.kind,
+  });
+
+  await processBillingGatewayEvent(event);
 }
 
 export async function createCheckoutSession(
   userId: string,
   offerKey: BillingOfferKey,
+  payerEmail: string,
 ): Promise<CheckoutSessionResult> {
   const offer = getBillingOffer(offerKey);
 
@@ -619,16 +690,24 @@ export async function createCheckoutSession(
     }
   }
 
-  if (!isAbacatePayConfigured()) {
+  if (!isMercadoPagoConfigured()) {
     throw new Error(
       "Pagamentos indisponíveis no momento. Tente novamente mais tarde ou contate o suporte.",
     );
   }
 
+  const email = payerEmail.trim();
+  if (!email) {
+    throw new Error(
+      "E-mail da conta é obrigatório para o checkout. Confirme o e-mail e tente de novo.",
+    );
+  }
+
   const externalRef = buildBillingExternalRef(userId, offerKey);
-  const checkout = await createAbacatePayCheckout({
+  const checkout = await createMercadoPagoCheckout({
     offerKey,
     userId,
+    payerEmail: email,
     externalRef,
   });
 
@@ -665,20 +744,27 @@ export async function cancelUserSubscription(userId: string): Promise<void> {
     throw new Error("Não há assinatura ativa para cancelar.");
   }
 
-  if (!isAbacatePayConfigured()) {
+  if (!isMercadoPagoConfigured()) {
     throw new Error(
       "Cancelamento indisponível no momento. Tente novamente ou contate o suporte.",
     );
   }
 
-  await cancelAbacatePaySubscription(subscription.external_id);
+  await cancelMercadoPagoSubscription(subscription.external_id);
+}
+
+function normalizeProvider(value: unknown): SubscriptionRecord["provider"] {
+  if (value === BILLING_PROVIDERS.mercadopago) {
+    return BILLING_PROVIDERS.mercadopago;
+  }
+  return BILLING_PROVIDERS.abacatepay;
 }
 
 function normalizeSubscription(row: Record<string, unknown>): SubscriptionRecord {
   return {
     id: String(row.id),
     user_id: String(row.user_id),
-    provider: "abacatepay",
+    provider: normalizeProvider(row.provider),
     external_id: String(row.external_id),
     status: row.status as SubscriptionStatus,
     plan: row.plan as "surfista" | "pro",
@@ -803,16 +889,4 @@ export async function getBillingSummary(userId: string): Promise<BillingSummary>
     });
     return createEmptyBillingSummary();
   }
-}
-
-export async function handleAbacatePayWebhookEvent(
-  payload: AbacatePayWebhookPayload,
-): Promise<void> {
-  console.info("[abacatepay.webhook] evento recebido", {
-    eventId: payload.id,
-    event: payload.event,
-    devMode: payload.devMode ?? null,
-  });
-
-  await processAbacatePayWebhook(payload);
 }

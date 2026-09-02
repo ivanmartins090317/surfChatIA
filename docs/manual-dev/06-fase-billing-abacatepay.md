@@ -1,8 +1,12 @@
-# Fase H · Billing AbacatePay
+# Fase H · Billing AbacatePay (histórico)
+
+> **Substituído em 02/09/2026.** O gateway ativo é o Mercado Pago.  
+> Manual atual: [`08-fase-billing-mercadopago.md`](./08-fase-billing-mercadopago.md) · Spec: [`specs/2026-09-02-billing-mercadopago.md`](../../specs/2026-09-02-billing-mercadopago.md).  
+> Este capítulo permanece como registro da integração AbacatePay (cartão descontinuado para contas novas).
 
 | Status | Spec |
 | --- | --- |
-| implementado (código) · homologação manual pendente | [`specs/2026-08-20-billing-abacatepay.md`](../../specs/2026-08-20-billing-abacatepay.md) |
+| histórico (não é o caminho feliz) | [`specs/2026-08-20-billing-abacatepay.md`](../../specs/2026-08-20-billing-abacatepay.md) |
 
 Registro objetivo: [`docs/implementation/2026-08-20-billing-abacatepay.md`](../implementation/2026-08-20-billing-abacatepay.md)
 

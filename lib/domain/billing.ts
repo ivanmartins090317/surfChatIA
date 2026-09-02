@@ -17,6 +17,14 @@ export const BILLING_OFFER_KINDS = {
 export type BillingOfferKind =
   (typeof BILLING_OFFER_KINDS)[keyof typeof BILLING_OFFER_KINDS];
 
+export const BILLING_PROVIDERS = {
+  abacatepay: "abacatepay",
+  mercadopago: "mercadopago",
+} as const;
+
+export type BillingProvider =
+  (typeof BILLING_PROVIDERS)[keyof typeof BILLING_PROVIDERS];
+
 export const SUBSCRIPTION_STATUSES = {
   pending: "pending",
   active: "active",
@@ -39,7 +47,7 @@ export interface BillingOffer {
 export interface SubscriptionRecord {
   id: string;
   user_id: string;
-  provider: "abacatepay";
+  provider: BillingProvider;
   external_id: string;
   status: SubscriptionStatus;
   plan: "surfista" | "pro";
@@ -63,13 +71,14 @@ export interface CheckoutSessionResult {
   sessionId: string;
 }
 
-export const ABACATEPAY_WEBHOOK_EVENTS = {
-  checkoutCompleted: "checkout.completed",
-  checkoutRefunded: "checkout.refunded",
-  subscriptionCompleted: "subscription.completed",
-  subscriptionRenewed: "subscription.renewed",
-  subscriptionCancelled: "subscription.cancelled",
-} as const;
+export function isBillingOfferKey(value: string): value is BillingOfferKey {
+  return Object.prototype.hasOwnProperty.call(BILLING_OFFER_KEYS, value);
+}
+
+export function billingProviderLabel(provider: BillingProvider): string {
+  if (provider === BILLING_PROVIDERS.mercadopago) return "Mercado Pago";
+  return "AbacatePay";
+}
 
 export function buildBillingExternalRef(
   userId: string,

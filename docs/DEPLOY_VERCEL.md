@@ -44,6 +44,8 @@ Configure para **Production**, **Preview** e **Development**:
 | `NEXT_PUBLIC_SENTRY_DSN` | Recomendado | Mesmo DSN — erros no browser (`global-error`) |
 | `SENTRY_ORG` / `SENTRY_PROJECT` | Opcional | Upload de source maps no deploy |
 | `SENTRY_AUTH_TOKEN` | Opcional | Token para source maps via CI/Vercel |
+| `MP_ACCESS_TOKEN` | ✅ Cobrança | `TEST-...` no sandbox; `APP_USR-...` só após smoke |
+| `MP_WEBHOOK_SECRET` | ✅ Cobrança | Secret dos webhooks no painel da aplicação MP |
 
 **Não** adicione `SUPABASE_DB_PASSWORD` na Vercel (só para CLI local / migrations).
 
