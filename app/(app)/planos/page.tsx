@@ -65,11 +65,31 @@ export default async function PlanosPage() {
           {credits.remaining === 1 ? "crédito restante" : "créditos restantes"}
         </p>
         {paymentsEnabled && isMercadoPagoTestMode() ? (
-          <p className="text-sm text-muted-foreground">
-            Sandbox Mercado Pago — use o comprador e os cartões de teste do
-            painel. Assinaturas cobram no cartão; packs podem usar PIX, cartão
-            ou boleto.
-          </p>
+          <div className="max-w-2xl space-y-2 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">
+              Homologação sandbox (assinatura)
+            </p>
+            <ul className="list-disc space-y-1 pl-5">
+              <li>
+                Crie um <strong>comprador de teste</strong> no painel MP (não
+                use a conta vendedor).
+              </li>
+              <li>
+                O e-mail do comprador de teste deve ser o{" "}
+                <strong>mesmo da sua conta no app</strong> ({user.email}).
+              </li>
+              <li>
+                No checkout MP, clique em <strong>Alterar</strong> e cadastre um{" "}
+                <strong>cartão de crédito de teste</strong> (não o cartão
+                virtual Mercado Pago).
+              </li>
+              <li>
+                Cartão aprovado: Visa <code>4235 6492 8025 1234</code> · CVV{" "}
+                <code>123</code> · titular <code>APRO</code>.
+              </li>
+            </ul>
+            <p>Packs avulsos também aceitam PIX ou boleto na página do MP.</p>
+          </div>
         ) : null}
         {!paymentsEnabled ? (
           <p className="text-sm text-amber-200/90">

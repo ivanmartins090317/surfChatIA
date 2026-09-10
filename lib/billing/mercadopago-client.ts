@@ -54,10 +54,12 @@ export async function createMercadoPagoCheckout(input: {
           external_reference: input.externalRef,
           payer_email: input.payerEmail,
           back_url: `${siteUrl}/planos?checkout=success`,
+          notification_url: notificationUrl,
           status: "pending",
           auto_recurring: {
             frequency: 1,
             frequency_type: "months",
+            start_date: new Date(Date.now() + 60_000).toISOString(),
             transaction_amount: centsToReais(offer.priceCents),
             currency_id: "BRL",
           },
