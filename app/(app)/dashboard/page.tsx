@@ -78,7 +78,7 @@ export default async function DashboardPage() {
         <MetricCard
           label="Créditos"
           value={credits.remaining}
-          iconSrc="/icon_medal_01.svg"
+          iconSrc="/coins_icon_.png"
           valueClassName="text-primary"
         />
         <MetricCard
