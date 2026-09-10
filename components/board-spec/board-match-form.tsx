@@ -23,11 +23,23 @@ const MIN_MATCH_PHOTOS = 1;
 
 interface BoardMatchFormProps {
   magicBoards: Board[];
+  initialReferenceBoardId?: string;
 }
 
-export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
+export function BoardMatchForm({
+  magicBoards,
+  initialReferenceBoardId = "",
+}: BoardMatchFormProps) {
   const router = useRouter();
-  const [referenceId, setReferenceId] = useState("");
+  const [referenceId, setReferenceId] = useState(() => {
+    if (
+      initialReferenceBoardId &&
+      magicBoards.some((board) => board.id === initialReferenceBoardId)
+    ) {
+      return initialReferenceBoardId;
+    }
+    return "";
+  });
   const [photos, setPhotos] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -35,6 +47,13 @@ export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (!referenceId) {
+      const message = "Escolha a prancha mágica de referência para continuar.";
+      setError(message);
+      toast.error(message);
+      return;
+    }
 
     if (photos.length < MIN_MATCH_PHOTOS) {
       const message = "Envie pelo menos uma foto da prancha candidata.";
@@ -44,9 +63,7 @@ export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
     }
 
     const formData = new FormData(event.currentTarget);
-    if (referenceId) {
-      formData.set("reference_board_id", referenceId);
-    }
+    formData.set("reference_board_id", referenceId);
     for (const photo of photos) {
       formData.append("photos", photo);
     }
@@ -78,23 +95,30 @@ export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
         onValidationError={(message) => setError(message)}
       />
 
-      {magicBoards.length > 0 && (
-        <div className="space-y-2">
-          <Label>Prancha mágica de referência (opcional)</Label>
-          <Select value={referenceId} onValueChange={setReferenceId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Nenhuma — avaliar só com perfil" />
-            </SelectTrigger>
-            <SelectContent>
-              {magicBoards.map((board) => (
-                <SelectItem key={board.id} value={board.id}>
-                  {board.name ?? `Prancha ${board.id.slice(0, 8)}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="reference-board">
+          Prancha mágica de referência
+        </Label>
+        <Select
+          value={referenceId || undefined}
+          onValueChange={setReferenceId}
+          required
+        >
+          <SelectTrigger id="reference-board" className="min-h-[44px]">
+            <SelectValue placeholder="Selecione a prancha mágica" />
+          </SelectTrigger>
+          <SelectContent>
+            {magicBoards.map((board) => (
+              <SelectItem key={board.id} value={board.id}>
+                {board.name ?? `Prancha ${board.id.slice(0, 8)}`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Obrigatório — o Match compara a candidata com a sua mágica.
+        </p>
+      </div>
 
       <BoardMeasurementsFields
         disabled={isPending}
@@ -104,8 +128,10 @@ export function BoardMatchForm({ magicBoards }: BoardMatchFormProps) {
 
       <Button
         type="submit"
-        className="w-full"
-        disabled={isPending || photos.length < MIN_MATCH_PHOTOS}
+        className="w-full min-h-[44px]"
+        disabled={
+          isPending || photos.length < MIN_MATCH_PHOTOS || !referenceId
+        }
       >
         {isPending ? (
           <>

@@ -2,7 +2,7 @@
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
 > **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · billing Mercado Pago no código · homologação sandbox pendente.  
-> **Última revisão:** 02/09/2026 — Análise de vídeo por **frames** (sem MP4) implementada (código); `db:push` **013** + homologação manual pendentes · Billing **Mercado Pago** implementado (código); `db:push` 012 + homologação sandbox pendentes · Signup UX Fase A implementada (código); homologação manual pendente.
+> **Última revisão:** 10/09/2026 — Match integrado a Pranchas (gate UX exige mágica `ready`); homologação manual pendente · Análise de vídeo por **frames** (sem MP4) implementada (código); `db:push` **013** + homologação manual pendentes · Billing **Mercado Pago** implementado (código); `db:push` 012 + homologação sandbox pendentes · Signup UX Fase A implementada (código); homologação manual pendente.
 
 ---
 
@@ -13,7 +13,7 @@
 | Auth + perfil | ✅ Código + E2E | FL-01 (7/7) · FL-02 (3/3) |
 | Análise performance | ✅ Código + E2E · frames-only (código 02/09) | FL-03 (6/6) · revalidar upload grande |
 | Prancha mágica | ✅ Código + E2E | FL-04 (4/4) |
-| Compatibilidade | ✅ Código + E2E | FL-05 (2/2) |
+| Compatibilidade | ✅ Código + E2E · gate UX mágica (código 10/09) | FL-05 (2/2) · revalidar CTAs |
 | Segurança RLS | ✅ Validado | FL-06 (2/2) |
 | Shell / mobile | ✅ Validado | FL-07 (2/2) |
 | Especialização IA performance | 🟡 Fase A implementada, validação pendente | — |
@@ -293,7 +293,9 @@ flowchart LR
 
 - [x] Análise E2E com prancha mágica de referência (TC-19, 13/07/2026)
 - [x] Veredito, prós, contras e condições ideais na UI (TC-20, 13/07/2026)
-- [x] Histórico em `/compatibility` + nav Match ativo em `/compatibility/[id]` *(13/07/2026)*
+- [x] Histórico em `/compatibility` + rotas de detalhe *(13/07/2026)*
+- [x] **Match depende de prancha mágica (gate UX)** — nav sem Match irmão; hub/detalhe/dashboard; referência obrigatória no form novo; histórico legado preservado; backend sem bloqueio *(código 10/09/2026)* · Spec [`2026-09-10-match-depende-prancha-magica`](../../specs/2026-09-10-match-depende-prancha-magica.md)
+- [ ] Homologação manual do gate UX (sem mágica / só draft / ready / deep link / legado)
 
 ---
 

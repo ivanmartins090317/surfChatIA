@@ -1,10 +1,11 @@
-/** Placeholders do responsável pelo tratamento — trocar na Trilha E / dados fiscais. */
+/** Responsável pelo tratamento de dados (LGPD). */
 export const DATA_CONTROLLER = {
   tradeName: "Surf AI Coach",
-  legalName: "[Razão social a definir]",
-  documentId: "[CNPJ a definir]",
-  address: "[Endereço a definir]",
-  contactEmail: "privacidade@exemplo.surfcoach",
+  legalName: "54.595.080 IVAN ROBERTO MARTINS BARBOSA",
+  documentId: "54.595.080/0001-02",
+  address:
+    "Rua Ministro Xavier de Toledo, 86, Apto 32, Campo Grande, Santos/SP, CEP 11070-300",
+  contactEmail: "privacidade@modernxlab.com.br",
 } as const;
 
-export const LEGAL_LAST_UPDATED = "10 de agosto de 2026";
+export const LEGAL_LAST_UPDATED = "10 de setembro de 2026";

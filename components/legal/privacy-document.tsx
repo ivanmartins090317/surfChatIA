@@ -24,10 +24,6 @@ export function PrivacyDocument() {
           </a>
           .
         </p>
-        <p>
-          Os dados de identificação fiscal acima são placeholders e serão
-          atualizados quando a empresa/domínio estiverem definitivos.
-        </p>
       </LegalSection>
 
       <LegalSection title="2. Quais dados tratamos">

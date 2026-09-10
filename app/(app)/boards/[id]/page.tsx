@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { GitCompareArrows } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BoardPhotoGallery } from "@/components/board-spec/board-photo-gallery";
+import { buildNewMatchHref } from "@/components/board-spec/match-magic-gate";
 import { ReanalysisConfirmButton } from "@/components/credits/reanalysis-confirm-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -50,9 +52,26 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
         {board.name ?? "Prancha mágica"}
       </h1>
 
+      {board.status === "ready" ? (
+        <Button asChild className="min-h-[44px] w-full sm:w-auto">
+          <Link href={buildNewMatchHref(board.id)}>
+            <GitCompareArrows className="size-4" aria-hidden />
+            Comparar outra prancha (Match)
+          </Link>
+        </Button>
+      ) : board.status === "draft" ? (
+        <Alert variant="info">
+          <AlertDescription>
+            Aguarde a ficha ficar pronta para comparar outras pranchas.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {board.status === "processing" && (
         <Alert variant="info">
-          <AlertDescription>Gerando ficha técnica…</AlertDescription>
+          <AlertDescription>
+            Gerando ficha técnica… Aguarde ficar pronta para liberar o Match.
+          </AlertDescription>
         </Alert>
       )}
 
@@ -61,7 +80,8 @@ export default async function BoardDetailPage({ params }: BoardDetailPageProps) 
           <Alert variant="destructive">
             <AlertDescription>
               Falha ao gerar a ficha. Confirme a reanálise — se for
-              bem-sucedida, consumirá 1 crédito.
+              bem-sucedida, consumirá 1 crédito. Corrija o cadastro para
+              liberar o Match.
             </AlertDescription>
           </Alert>
           <ReanalysisConfirmButton

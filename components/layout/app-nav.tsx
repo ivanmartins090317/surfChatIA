@@ -1,29 +1,16 @@
 import Link from "next/link";
-import {
-  Activity,
-  GitCompareArrows,
-  Home,
-  Sparkles,
-  User,
-} from "lucide-react";
+import { Activity, Home, Sparkles, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/analyses", label: "Análises", icon: Activity },
   { href: "/boards", label: "Pranchas", icon: Sparkles },
-  {
-    href: "/compatibility",
-    label: "Match",
-    icon: GitCompareArrows,
-    activePrefix: "/compatibility",
-  },
   { href: "/profile", label: "Perfil", icon: User },
 ] as const;
 
-function isNavActive(pathname: string, item: (typeof NAV_ITEMS)[number]) {
-  const prefix = "activePrefix" in item ? item.activePrefix : item.href;
-  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+function isNavActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 interface AppNavProps {
@@ -40,7 +27,7 @@ export function AppNav({ pathname }: AppNavProps) {
         <div className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map((item) => {
             const { href, label, icon: Icon } = item;
-            const isActive = isNavActive(pathname, item);
+            const isActive = isNavActive(pathname, href);
             return (
               <Link
                 key={href}
@@ -67,7 +54,7 @@ export function AppNav({ pathname }: AppNavProps) {
       >
         {NAV_ITEMS.map((item) => {
           const { href, label, icon: Icon } = item;
-          const isActive = isNavActive(pathname, item);
+          const isActive = isNavActive(pathname, href);
           return (
             <Link
               key={href}

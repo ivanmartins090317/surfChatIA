@@ -19,6 +19,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | [07-fase-signup-ux-fluxo-conta.md](./07-fase-signup-ux-fluxo-conta.md) | UX signup: redirect, banners, confirmação de e-mail |
 | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) | Mercado Pago: checkout, webhooks, cobrança |
 | [09-fase-analise-video-frames.md](./09-fase-analise-video-frames.md) | Vídeo por frames sem armazenar o MP4 |
+| [10-fase-match-depende-prancha-magica.md](./10-fase-match-depende-prancha-magica.md) | Match integrado a Pranchas (gate UX mágica `ready`) |
 
 ## Documentos relacionados
 
@@ -44,6 +45,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | Signup UX (Fase A) | implementado (código) · homologação manual pendente | [07-fase-signup-ux-fluxo-conta.md](./07-fase-signup-ux-fluxo-conta.md) |
 | H · Billing Mercado Pago | implementado (código) · homologação sandbox pendente | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) |
 | Análise vídeo por frames | implementado (código) · `db:push` 013 + homologação pendentes | [09-fase-analise-video-frames.md](./09-fase-analise-video-frames.md) |
+| Match depende de prancha mágica | implementado (código) · homologação manual pendente | [10-fase-match-depende-prancha-magica.md](./10-fase-match-depende-prancha-magica.md) |
 | B · Landing | pendente | — |
 | D · Gateway (conta/painel) | app MP criada · `db:push` 012 + E2E pendentes | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) |
 

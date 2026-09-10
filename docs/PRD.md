@@ -155,9 +155,16 @@ Resumo: “Por que ela funciona tão bem para você”.
 
 Prioridade: P0 (faz parte do core de diferenciação).
 
-4.4 Módulo “Essa prancha combina comigo?”
+4.4 Módulo “Essa prancha combina comigo?” (Match)
 User story principal:
 “Como surfista, quero enviar imagens de uma prancha que estou considerando para saber se ela combina comigo e com minha prancha mágica.”
+
+Pré-requisito de produto:
+
+- O fluxo de **novo Match** só é oferecido na interface depois que o surfista tem pelo menos uma **prancha mágica com ficha pronta** (`ready`).
+- A descoberta do Match fica **dentro do fluxo de Pranchas** (hub e detalhe); não é módulo irmão independente na navegação principal.
+- Histórico de matches anteriores (inclusive legado sem referência) permanece acessível.
+- O gate é de produto/UX; o backend pode ainda aceitar criação sem referência.
 
 Requisitos:
 
@@ -165,11 +172,11 @@ Entrada:
 
 Usuário pode:
 
-Subir imagens de uma prancha (fotos de anúncio, loja, etc.).
+Subir imagens de uma prancha candidata (fotos de anúncio, loja, etc.).
 
 Informar, se tiver, medidas anunciadas.
 
-Select da prancha mágica como referência (se houver).
+Selecionar a **prancha mágica de referência** (obrigatória na UX do fluxo novo; só pranchas com ficha pronta).
 
 Processamento:
 
@@ -181,7 +188,7 @@ Compara com:
 
 Perfil do surfista (peso, altura, nível, ondas).
 
-Prancha mágica selecionada (se existir).
+Prancha mágica selecionada como referência.
 
 Gera parecer:
 

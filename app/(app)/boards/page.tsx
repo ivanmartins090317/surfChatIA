@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { Plus, Sparkles } from "lucide-react";
+import { BoardsMatchSection } from "@/components/board-spec/boards-match-section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDatePtBr } from "@/lib/utils";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { BOARD_STATUS } from "@/lib/domain/types";
+import { listBoardMatchAnalyses } from "@/services/board-match-service";
 import { listMagicBoards } from "@/services/board-service";
 
 export const metadata = { title: "Pranchas" };
 
 export default async function BoardsPage() {
   const user = await requireAuthUser();
-  const boards = await listMagicBoards(user.id).catch(() => []);
+  const [boards, matches] = await Promise.all([
+    listMagicBoards(user.id).catch(() => []),
+    listBoardMatchAnalyses(user.id).catch(() => []),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -30,6 +35,11 @@ export default async function BoardsPage() {
           </Link>
         </Button>
       </div>
+
+      <BoardsMatchSection
+        boards={boards}
+        hasMatches={matches.length > 0}
+      />
 
       {boards.length === 0 ? (
         <Card>

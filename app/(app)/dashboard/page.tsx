@@ -5,6 +5,11 @@ import {
   Sparkles,
   UploadCloud,
 } from "lucide-react";
+import {
+  MATCH_GATE_KIND,
+  buildNewMatchHref,
+  resolveMatchGate,
+} from "@/components/board-spec/match-magic-gate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +39,8 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name ?? "Surfista";
   const profileComplete = isProfileComplete(profile);
+  const matchGate = resolveMatchGate(boards);
+  const canOpenMatch = matchGate === MATCH_GATE_KIND.unlocked;
   const doneAnalyses = analyses.filter((a) => a.status === "done");
   const avgScore =
     doneAnalyses.length > 0
@@ -99,7 +106,13 @@ export default async function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div
+        className={
+          canOpenMatch
+            ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            : "grid gap-4 sm:grid-cols-2"
+        }
+      >
         <Button asChild size="lg" className="flex gap-2 py-6">
           <Link href="/analyses/new">
             <UploadCloud className="size-6" aria-hidden />
@@ -117,17 +130,19 @@ export default async function DashboardPage() {
             Cadastrar prancha mágica
           </Link>
         </Button>
-        <Button
-          asChild
-          size="lg"
-          variant="secondary"
-          className="flex gap-2 py-6 sm:col-span-2 lg:col-span-1"
-        >
-          <Link href="/compatibility">
-            <GitCompareArrows className="size-6" aria-hidden />
-            Compatibilidade de prancha
-          </Link>
-        </Button>
+        {canOpenMatch ? (
+          <Button
+            asChild
+            size="lg"
+            variant="secondary"
+            className="flex gap-2 py-6 sm:col-span-2 lg:col-span-1"
+          >
+            <Link href={buildNewMatchHref()}>
+              <GitCompareArrows className="size-6" aria-hidden />
+              Fazer Match
+            </Link>
+          </Button>
+        ) : null}
       </div>
 
       <section>
