@@ -1,6 +1,8 @@
+import { BRAND_NAME } from "@/lib/brand";
+
 /** Responsável pelo tratamento de dados (LGPD). */
 export const DATA_CONTROLLER = {
-  tradeName: "Surf AI Coach",
+  tradeName: BRAND_NAME,
   legalName: "54.595.080 IVAN ROBERTO MARTINS BARBOSA",
   documentId: "54.595.080/0001-02",
   address:

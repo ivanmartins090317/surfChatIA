@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Activity, Home, Sparkles, User } from "lucide-react";
+import { BRAND_NAME } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -22,7 +23,7 @@ export function AppNav({ pathname }: AppNavProps) {
     <>
       <nav className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border lg:bg-card lg:p-6">
         <Link href="/dashboard" className="mb-8 font-display text-xl font-bold">
-          Surf AI Coach
+          {BRAND_NAME}
         </Link>
         <div className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map((item) => {

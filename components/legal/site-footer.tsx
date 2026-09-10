@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DATA_CONTROLLER } from "@/components/legal/controller-placeholder";
+import { BRAND_NAME } from "@/lib/brand";
 
 const LEGAL_LINKS = [
   { href: "/termos", label: "Termos de Uso" },
@@ -29,7 +30,7 @@ export function SiteFooter({ variant }: SiteFooterProps) {
     <footer className="mt-auto border-t border-border/60 bg-background/80">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10 sm:px-8 lg:flex-row lg:justify-between">
         <div className="max-w-sm space-y-2">
-          <p className="font-display text-lg font-bold">Surf AI Coach</p>
+          <p className="font-display text-lg font-bold">{BRAND_NAME}</p>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Feedback técnico de surf e especificação de pranchas com IA.
           </p>

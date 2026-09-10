@@ -1,5 +1,6 @@
 import { PreApproval, Preference } from "mercadopago";
 
+import { BRAND_NAME } from "@/lib/brand";
 import { getBillingOffer } from "@/lib/billing/billing-catalog";
 import {
   getMercadoPagoConfig,
@@ -49,7 +50,7 @@ export async function createMercadoPagoCheckout(input: {
     if (offer.kind === "subscription") {
       const preapproval = await new PreApproval(config).create({
         body: {
-          reason: `Surf AI Coach ${offer.label}`,
+          reason: `${BRAND_NAME} ${offer.label}`,
           external_reference: input.externalRef,
           payer_email: input.payerEmail,
           back_url: `${siteUrl}/planos?checkout=success`,
@@ -75,7 +76,7 @@ export async function createMercadoPagoCheckout(input: {
         items: [
           {
             id: input.offerKey,
-            title: `Surf AI Coach ${offer.label}`,
+            title: `${BRAND_NAME} ${offer.label}`,
             quantity: 1,
             unit_price: centsToReais(offer.priceCents),
             currency_id: "BRL",

@@ -3,6 +3,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { Metadata, Viewport } from "next";
 import { CookieConsentBanner } from "@/components/legal/cookie-consent-banner";
 import { AppToaster } from "@/components/layout/app-toaster";
+import { BRAND_NAME } from "@/lib/brand";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -20,7 +21,7 @@ const sans = Inter({
   display: "swap",
 });
 
-const SITE_NAME = "Surf AI Coach";
+const SITE_NAME = BRAND_NAME;
 const SITE_DESCRIPTION =
   "Análise de performance e especificação de pranchas com IA para surfistas.";
 const SHARE_IMAGE = {
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Surf Performance & Board AI",
-    template: "%s | Surf AI Coach",
+    template: `%s | ${BRAND_NAME}`,
   },
   description: SITE_DESCRIPTION,
   manifest: "/manifest.json",

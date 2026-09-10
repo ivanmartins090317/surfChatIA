@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { signInAction } from "@/actions/auth-actions";
+import { BRAND_NAME } from "@/lib/brand";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,7 @@ export function LoginForm() {
                 <strong>lixo eletrônico</strong>).
               </li>
               <li>
-                Clique em <strong>Confirmar e-mail</strong> no e-mail do Surf AI Coach.
+                Clique em <strong>Confirmar e-mail</strong> no e-mail da {BRAND_NAME}.
               </li>
               <li>Voltar à tela de login e entrar com a senha criada no cadastro.</li>
             </ol>

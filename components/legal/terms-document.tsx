@@ -3,6 +3,7 @@ import {
   LegalSection,
 } from "@/components/legal/legal-document-layout";
 import { DATA_CONTROLLER } from "@/components/legal/controller-placeholder";
+import { PRODUCT_NAME } from "@/lib/brand";
 
 export function TermsDocument() {
   return (
@@ -12,7 +13,7 @@ export function TermsDocument() {
     >
       <LegalSection title="1. Aceite">
         <p>
-          Ao criar conta ou usar o {DATA_CONTROLLER.tradeName}, você concorda
+          Ao criar conta ou usar o {PRODUCT_NAME}, você concorda
           com estes Termos e com a Política de Privacidade. Se não concordar,
           não utilize o serviço.
         </p>

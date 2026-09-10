@@ -4,6 +4,7 @@ import { Activity, GitCompareArrows, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/legal/site-footer";
 import { OceanBackdrop } from "@/components/layout/ocean-backdrop";
+import { BRAND_NAME } from "@/lib/brand";
 import { getAuthUser } from "@/lib/supabase/server";
 
 const HIGHLIGHTS = [
@@ -26,9 +27,9 @@ function Brand() {
     <Link
       href="/"
       className="inline-flex min-h-11 items-center gap-3 rounded-sm font-display text-lg font-bold focus-visible:outline-none focus-visible:glow-focus"
-      aria-label="Surf AI Coach — início"
+      aria-label={`${BRAND_NAME} — início`}
     >
-      Surf AI Coach
+      {BRAND_NAME}
     </Link>
   );
 }

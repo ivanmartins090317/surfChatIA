@@ -2,6 +2,7 @@ import Link from "next/link";
 import { OceanBackdrop } from "@/components/layout/ocean-backdrop";
 import { SiteFooter } from "@/components/legal/site-footer";
 import { LEGAL_LAST_UPDATED } from "@/components/legal/controller-placeholder";
+import { BRAND_NAME } from "@/lib/brand";
 
 interface LegalDocumentLayoutProps {
   title: string;
@@ -23,7 +24,7 @@ export function LegalDocumentLayout({
             href="/"
             className="inline-flex min-h-11 items-center rounded-sm font-display text-lg font-bold focus-visible:outline-none focus-visible:glow-focus"
           >
-            Surf AI Coach
+            {BRAND_NAME}
           </Link>
         </header>
 
