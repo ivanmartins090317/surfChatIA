@@ -54,7 +54,6 @@ export async function createMercadoPagoCheckout(input: {
           external_reference: input.externalRef,
           payer_email: input.payerEmail,
           back_url: `${siteUrl}/planos?checkout=success`,
-          notification_url: notificationUrl,
           status: "pending",
           auto_recurring: {
             frequency: 1,
