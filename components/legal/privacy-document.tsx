@@ -14,9 +14,8 @@ export function PrivacyDocument() {
         <p>
           O tratamento é feito por <strong>{DATA_CONTROLLER.legalName}</strong>{" "}
           ({DATA_CONTROLLER.documentId}), {DATA_CONTROLLER.companyName}, com
-          nome fantasia {DATA_CONTROLLER.tradeName}, endereço{" "}
-          {DATA_CONTROLLER.address}.
-          Contato do titular:{" "}
+          nome fantasia {DATA_CONTROLLER.tradeName}, sede em{" "}
+          {DATA_CONTROLLER.headquarters}. Pedidos do titular:{" "}
           <a
             className="text-primary underline-offset-4 hover:underline"
             href={`mailto:${DATA_CONTROLLER.contactEmail}`}

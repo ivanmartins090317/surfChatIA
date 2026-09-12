@@ -107,7 +107,7 @@ export function TermsDocument() {
             {DATA_CONTROLLER.contactEmail}
           </a>
           . Responsável: {DATA_CONTROLLER.legalName} ({DATA_CONTROLLER.documentId}
-          ), {DATA_CONTROLLER.address}.
+          ), sede em {DATA_CONTROLLER.headquarters}.
         </p>
       </LegalSection>
     </LegalDocumentLayout>
