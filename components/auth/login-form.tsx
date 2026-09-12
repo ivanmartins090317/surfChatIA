@@ -59,7 +59,7 @@ export function LoginForm() {
                 <strong>lixo eletrônico</strong>).
               </li>
               <li>
-                Clique em <strong>Confirmar e-mail</strong> no e-mail da {BRAND_NAME}.
+                Clique em <strong>Confirmar e-mail</strong> no e-mail do {BRAND_NAME}.
               </li>
               <li>Voltar à tela de login e entrar com a senha criada no cadastro.</li>
             </ol>

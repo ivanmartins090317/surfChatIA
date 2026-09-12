@@ -1,6 +1,6 @@
 {
   "name": "Surf Performance & Board AI",
-  "short_name": "ModernXLab",
+  "short_name": "Surf AI Coach",
   "description": "Análise de performance e especificação de pranchas com IA para surfistas.",
   "start_url": "/",
   "display": "standalone",

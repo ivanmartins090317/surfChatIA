@@ -13,8 +13,9 @@ export function PrivacyDocument() {
       <LegalSection title="1. Quem é o responsável">
         <p>
           O tratamento é feito por <strong>{DATA_CONTROLLER.legalName}</strong>{" "}
-          ({DATA_CONTROLLER.documentId}), com nome fantasia{" "}
-          {DATA_CONTROLLER.tradeName}, endereço {DATA_CONTROLLER.address}.
+          ({DATA_CONTROLLER.documentId}), {DATA_CONTROLLER.companyName}, com
+          nome fantasia {DATA_CONTROLLER.tradeName}, endereço{" "}
+          {DATA_CONTROLLER.address}.
           Contato do titular:{" "}
           <a
             className="text-primary underline-offset-4 hover:underline"

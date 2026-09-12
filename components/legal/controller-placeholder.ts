@@ -1,8 +1,9 @@
-import { BRAND_NAME } from "@/lib/brand";
+import { COMPANY_NAME, PRODUCT_NAME } from "@/lib/brand";
 
 /** Responsável pelo tratamento de dados (LGPD). */
 export const DATA_CONTROLLER = {
-  tradeName: BRAND_NAME,
+  tradeName: PRODUCT_NAME,
+  companyName: COMPANY_NAME,
   legalName: "54.595.080 IVAN ROBERTO MARTINS BARBOSA",
   documentId: "54.595.080/0001-02",
   address:

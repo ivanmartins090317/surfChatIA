@@ -54,7 +54,7 @@ export function SiteFooter({ variant }: SiteFooterProps) {
         </nav>
       </div>
       <div className="border-t border-border/40 px-4 py-4 text-center text-xs text-muted-foreground sm:px-8">
-        © {new Date().getFullYear()} {DATA_CONTROLLER.tradeName}.{" "}
+        © {new Date().getFullYear()} {DATA_CONTROLLER.companyName}.{" "}
         {DATA_CONTROLLER.legalName}.
       </div>
     </footer>
