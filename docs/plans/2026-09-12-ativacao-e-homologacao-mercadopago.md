@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |-------|--------|
-| **Status** | `em aprovação` — aguarda aprovação do owner para execução |
+| **Status** | `concluído` — homologação real com Pack S (R$ 19 via PIX) aprovada e créditos refletidos em 12/09/2026 |
 | **Autonomia** | `medium` (código de billing já existe; ajuste de tipo + deploy + homologação) |
 | **Data** | 2026-09-12 |
 | **Owner** | Ivan Martins (ModernXLab) |

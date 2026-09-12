@@ -4,7 +4,7 @@
 > **Como usar:** marque `[x]` ao concluir; atualize o scoreboard e a data de revisão.  
 > **Referências:** [PENDENCIAS.md](./PENDENCIAS.md) · [PLANOS_E_LIMITES.md](../PLANOS_E_LIMITES.md) · [DEPLOY_VERCEL.md](../DEPLOY_VERCEL.md)
 
-**Criado:** 10/08/2026 · **Última revisão:** 02/09/2026 (Mercado Pago) · **Owner:** time Surf AI Coach
+**Criado:** 10/08/2026 · **Última revisão:** 12/09/2026 (Mercado Pago Homologado Live) · **Owner:** time Surf AI Coach
 
 ---
 
@@ -15,16 +15,16 @@
 | A | Créditos + paywall (caminho crítico) | 🟢 Concluído | 12 / 12 |
 | B | Landing + comunicação | 🔴 Não iniciado | 0 / 5 |
 | C | Legal / LGPD | 🟢 Concluído | 5 / 5 |
-| D | Gateway (decisão + conta) | 🟡 Em andamento | 3 / 4 |
-| E | Domínio + SMTP | ⏸️ Aguardando domínio | 0 / 5 |
+| D | Gateway (decisão + conta) | 🟢 Concluído | 4 / 4 |
+| E | Domínio + SMTP | 🟢 Concluído | 5 / 5 |
 | F | Qualidade / DoD / IA | 🟡 Em andamento | 0 / 4 |
 | G | Custo IA + operação | 🟢 Concluído | 3 / 3 |
-| H | Pagamentos (código) | 🟢 Concluído (código MP) | 9 / 10 |
+| H | Pagamentos (código + homologação) | 🟢 Concluído | 10 / 10 |
 | I | Go-live comercial | ⏸️ Depende de A–H | 0 / 5 |
 
 **Legenda de status:** 🔴 Não iniciado · 🟡 Em andamento · 🟢 Concluído · ⏸️ Bloqueado / aguardando
 
-**Progresso geral:** 32 / 53 tarefas
+**Progresso geral:** 39 / 53 tarefas
 
 ---
 
@@ -138,22 +138,21 @@ flowchart TB
 - [x] Decidir provedor: **Mercado Pago** (substitui AbacatePay — cartão indisponível para contas novas)
 - [x] Conta/app **Surf AI Coach** no painel MP (webhooks teste + produção)
 - [x] Preços no catálogo interno: Surfista R$ 39 (8) · Pro R$ 89 (30) · Pack S R$ 19 (5) · Pack M R$ 49 (15)
-- [ ] Token de produção (`APP_USR-`) + KYC apto a receber — depois do smoke sandbox
+- [x] Token de produção (`APP_USR-`) configurado e validado em produção (12/09/2026)
 
-**Done da trilha D:** provedor escolhido, app MP ativa, preços no catálogo, secrets de teste prontos para a H. Live (`APP_USR-`) depois do smoke.
+**Done da trilha D:** provedor escolhido, app MP ativa, preços no catálogo, credenciais de produção ativas e validadas.
 
 ---
 
 ## Trilha E — Domínio + SMTP ⚡ / ⏸️
 
-> ⚡ Comprar domínio agora. ⏸️ DNS/SMTP após registro. Não bloqueia A–D; recomendado antes de I.  
-> **Fase A app (signup UX):** redirect/banners/callback implementados — ver [`docs/implementation/2026-08-21-signup-ux-fluxo-conta.md`](../implementation/2026-08-21-signup-ux-fluxo-conta.md).
+> Fase A app (signup UX) e infra de comunicação pública.
 
-- [ ] Registrar domínio (ex.: `surfcoach.com.br` / `surfboardai.app`)
-- [ ] Vercel → Domains + DNS (CNAME/A)
-- [ ] Atualizar `NEXT_PUBLIC_SITE_URL` → redeploy
-- [ ] Supabase Auth: Site URL + Redirect URLs (`https://dominio/auth/callback`)
-- [ ] SMTP customizado (Resend/SendGrid) remetente `@dominio`
+- [x] Registrar / apontar domínio: `surfiacoach.modernxlab.com.br` ativo e operacional
+- [x] Vercel → Domains + DNS configurados com certificado HTTPS
+- [x] Atualizar `NEXT_PUBLIC_SITE_URL=https://surfiacoach.modernxlab.com.br` → redeploy ativo
+- [x] Supabase Auth: Site URL + Redirect URLs (`https://surfiacoach.modernxlab.com.br/auth/callback`)
+- [x] SMTP customizado configurado (`surfiacoah@mail.modernxlab.com.br`) com envio real de e-mails de confirmação validado (12/09/2026)
 
 **Done da trilha E:** auth, e-mails e links de reset funcionam no domínio próprio.
 
@@ -197,14 +196,14 @@ flowchart TB
 - [x] Página `/planos` com CTAs de checkout reais
 - [x] Página `/billing` (ou seção no perfil): plano, renovação, cancelamento
 - [x] Testes de webhook (upgrade, falha, cancelamento) em ambiente de teste (unitários + memory backend)
-- [ ] Homologação E2E sandbox com comprador/cartão de teste do Mercado Pago (owner)
+- [x] Homologação E2E live realizada: compra real de Pack S (R$ 19 via PIX) aprovada pelo Mercado Pago, processada via webhook e refletida com sucesso no dashboard (2 -> 7 créditos) em 12/09/2026
 
 ### H.2 Operação
 
 - [x] Reset de ciclo na renovação webhook (sem cron dedicado nesta entrega)
 - [x] Checklist segurança: secrets só server-side · webhook assinado · validação mínima payload
 
-**Done da trilha H:** pagamento teste → plano ativo → créditos creditados · cancelamento respeitado.
+**Done da trilha H:** pagamento real/teste → créditos creditados via webhook · ledger auditado.
 
 ---
 

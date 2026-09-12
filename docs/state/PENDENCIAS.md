@@ -1,8 +1,8 @@
 # Pendências — Surf Performance & Board AI
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
-> **Status atual:** MVP funcional homologado (26/26 TCs) · **Etapa 2.2 concluída** · billing Mercado Pago no código · homologação sandbox pendente.  
-> **Última revisão:** 10/09/2026 — Match integrado a Pranchas (gate UX exige mágica `ready`); homologação manual pendente · Análise de vídeo por **frames** (sem MP4) implementada (código); `db:push` **013** + homologação manual pendentes · Billing **Mercado Pago** implementado (código); `db:push` 012 + homologação sandbox pendentes · Signup UX Fase A implementada (código); homologação manual pendente.
+> **Status atual:** MVP funcional homologado (26/26 TCs) · Produção live no domínio `surfiacoach.modernxlab.com.br` · Billing Mercado Pago **homologado e validado em produção com compra real** (12/09/2026).  
+> **Última revisão:** 12/09/2026 — Domínio próprio e SMTP ativos · Billing Mercado Pago validado em produção (compra real Pack S via PIX aprovada e refletida no dashboard) · Match integrado a Pranchas · Análise por frames ativa.
 
 ---
 
@@ -10,17 +10,17 @@
 
 | Marco | Situação | Homologação |
 |-------|----------|-------------|
-| Auth + perfil | ✅ Código + E2E | FL-01 (7/7) · FL-02 (3/3) |
-| Análise performance | ✅ Código + E2E · frames-only (código 02/09) | FL-03 (6/6) · revalidar upload grande |
+| Auth + perfil | ✅ Código + E2E | FL-01 (7/7) · FL-02 (3/3) · SMTP próprio validado |
+| Análise performance | ✅ Código + E2E · frames-only | FL-03 (6/6) · frames no bucket |
 | Prancha mágica | ✅ Código + E2E | FL-04 (4/4) |
-| Compatibilidade | ✅ Código + E2E · gate UX mágica (código 10/09) | FL-05 (2/2) · revalidar CTAs |
+| Compatibilidade | ✅ Código + E2E · gate UX mágica | FL-05 (2/2) |
 | Segurança RLS | ✅ Validado | FL-06 (2/2) |
 | Shell / mobile | ✅ Validado | FL-07 (2/2) |
 | Especialização IA performance | 🟡 Fase A implementada, validação pendente | — |
-| Monetização | 🟡 Créditos + paywall (Trilha A) | — |
-| Pagamentos | 🟡 Código Mercado Pago (Trilha H) · homologação sandbox pendente | — |
-| Deploy produção | 🟡 Live (2.1–2.2 ✅ · 2.3 pendente) | smoke test prod OK |
-| Legal (LGPD / Termos) | ❌ Não existe | — |
+| Monetização | ✅ Créditos + paywall (Trilha A) | 12/12 concluído |
+| Pagamentos | ✅ Mercado Pago live (Trilha H) | Homologado com compra real em 12/09 |
+| Deploy produção | ✅ Live (`surfiacoach.modernxlab.com.br`) | HTTPS + SMTP + Vercel Gru1 |
+| Legal (LGPD / Termos) | ✅ Concluído (Trilha C) | Termos, Privacidade, Reembolso |
 
 **Total homologação:** 26/26 TCs aprovados (100%).
 
