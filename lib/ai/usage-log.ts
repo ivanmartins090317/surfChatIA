@@ -7,6 +7,7 @@ export const GPT_4O_MINI_OUTPUT_USD_PER_1M = 0.6;
 export const AI_USAGE_KIND = {
   text: "text",
   vision: "vision",
+  image_edit: "image_edit",
 } as const;
 
 export type AiUsageKind = (typeof AI_USAGE_KIND)[keyof typeof AI_USAGE_KIND];
@@ -70,14 +71,19 @@ export function buildAiUsageLogPayload(input: {
 }): AiUsageLogPayload {
   const usage = extractAiTokenUsage(input.usage);
   const imageCount =
-    input.kind === AI_USAGE_KIND.vision ? Math.max(0, input.imageCount ?? 0) : 0;
+    input.kind === AI_USAGE_KIND.text
+      ? 0
+      : Math.max(0, input.imageCount ?? 0);
 
   return {
     model: input.model,
     kind: input.kind,
     imageCount,
     usage,
-    estimatedCostUsd: estimateGpt4oMiniCostUsd(usage),
+    estimatedCostUsd:
+      input.kind === AI_USAGE_KIND.image_edit
+        ? null
+        : estimateGpt4oMiniCostUsd(usage),
   };
 }
 

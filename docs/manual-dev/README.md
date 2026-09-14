@@ -20,6 +20,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) | Mercado Pago: checkout, webhooks, cobrança |
 | [09-fase-analise-video-frames.md](./09-fase-analise-video-frames.md) | Vídeo por frames sem armazenar o MP4 |
 | [10-fase-match-depende-prancha-magica.md](./10-fase-match-depende-prancha-magica.md) | Match integrado a Pranchas (gate UX mágica `ready`) |
+| [11-fase-analise-onda-completa.md](./11-fase-analise-onda-completa.md) | Vídeo: timeline da onda + 8 fotos (pintura desligada) |
 
 ## Documentos relacionados
 
@@ -46,6 +47,7 @@ Guia de arquitetura, fases implementadas, homologação manual e operação do a
 | H · Billing Mercado Pago | implementado (código) · homologação sandbox pendente | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) |
 | Análise vídeo por frames | implementado (código) · `db:push` 013 + homologação pendentes | [09-fase-analise-video-frames.md](./09-fase-analise-video-frames.md) |
 | Match depende de prancha mágica | implementado (código) · homologação manual pendente | [10-fase-match-depende-prancha-magica.md](./10-fase-match-depende-prancha-magica.md) |
+| Análise da onda completa (vídeo) | implementado (código) · pintura desligada · gabarito (2 vídeos) pendente | [11-fase-analise-onda-completa.md](./11-fase-analise-onda-completa.md) |
 | B · Landing | pendente | — |
 | D · Gateway (conta/painel) | app MP criada · `db:push` 012 + E2E pendentes | [08-fase-billing-mercadopago.md](./08-fase-billing-mercadopago.md) |
 

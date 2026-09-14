@@ -8,5 +8,7 @@ Planos aprovados ou em revisão **antes** de virar Spec (`specs/`) ou código.
 | [2026-09-02-analise-video-frames-sem-armazenar-original.md](./2026-09-02-analise-video-frames-sem-armazenar-original.md) | Aprovado | Análise de vídeo só com frames; MP4 não sobe para o Storage |
 | [2026-09-10-match-integrado-pranchas.md](./2026-09-10-match-integrado-pranchas.md) | Em revisão | Match dentro de Pranchas; gate UX exige mágica `ready` |
 | [2026-09-12-ativacao-e-homologacao-mercadopago.md](./2026-09-12-ativacao-e-homologacao-mercadopago.md) | Em aprovação | Ativação operacional, webhook, sandbox e go-live Mercado Pago |
+| [2026-09-14-research-melhoria-analise-ondas.md](./2026-09-14-research-melhoria-analise-ondas.md) | Research fechada | Insumo do plano de onda completa |
+| [2026-09-14-analise-onda-completa.md](./2026-09-14-analise-onda-completa.md) | Em revisão | Timeline da onda, 8 frames, coaching visual C (editar o frame real) |
 
 **Workflow:** plano em `docs/plans/` → aprovação owner → Spec em `specs/` → implementação → fechamento em `docs/implementation/` + `docs/manual-dev/` + `docs/state/PENDENCIAS.md`.

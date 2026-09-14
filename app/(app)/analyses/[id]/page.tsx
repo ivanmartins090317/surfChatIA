@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { PerformanceResult } from "@/lib/domain/types";
 import { requireAuthUser } from "@/lib/supabase/server";
 import { getPerformanceAnalysisDetail } from "@/services/analysis-service";
+import { createSignedMediaUrl } from "@/services/media-service";
 
 interface AnalysisDetailPageProps {
   params: Promise<{ id: string }>;
@@ -33,6 +34,10 @@ export default async function AnalysisDetailPage({
 
   const { analysis, media, previewUrl } = detail;
   const result = analysis.result_json as PerformanceResult | null;
+  const framePreviewUrls =
+    analysis.status === "done" && result
+      ? await resolveFramePreviewUrls(media?.frame_paths ?? [])
+      : [];
 
   return (
     <div className="space-y-6">
@@ -91,8 +96,20 @@ export default async function AnalysisDetailPage({
       )}
 
       {analysis.status === "done" && result && (
-        <PerformanceResultView result={result} />
+        <PerformanceResultView
+          result={result}
+          framePreviewUrls={framePreviewUrls}
+        />
       )}
     </div>
+  );
+}
+
+async function resolveFramePreviewUrls(paths: string[]): Promise<string[]> {
+  return Promise.all(
+    paths.map(async (path) => {
+      const url = await createSignedMediaUrl(path);
+      return url ?? "";
+    }),
   );
 }

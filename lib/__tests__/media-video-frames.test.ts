@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildCoachingImageStoragePath,
   buildMediaFrameStoragePath,
   isMediaStoragePathOwned,
 } from "@/lib/media/storage-path";
@@ -81,6 +82,17 @@ describe("paths das fotos da session", () => {
         "user-2/media-1/frames/abc.jpg",
       ),
     ).toBe(false);
+  });
+
+  it("aceita ownership do path de coaching do dono", () => {
+    const path = buildCoachingImageStoragePath(
+      "user-1",
+      "media-1",
+      "analysis-1",
+      "uuid-1",
+    );
+    expect(isMediaStoragePathOwned("user-1", "media-1", path)).toBe(true);
+    expect(isMediaStoragePathOwned("user-2", "media-1", path)).toBe(false);
   });
 });
 

@@ -2,7 +2,7 @@
 
 > **Objetivo:** fechar MVP funcional → deploy produção → monetização SaaS → lançamento comercial.  
 > **Status atual:** MVP funcional homologado (26/26 TCs) · Produção live no domínio `surfiacoach.modernxlab.com.br` · Billing Mercado Pago **homologado e validado em produção com compra real** (12/09/2026).  
-> **Última revisão:** 12/09/2026 — Domínio próprio e SMTP ativos · Billing Mercado Pago validado em produção (compra real Pack S via PIX aprovada e refletida no dashboard) · Match integrado a Pranchas · Análise por frames ativa.
+> **Última revisão:** 14/09/2026 — Análise da onda completa (vídeo) no código; pintura da foto desligada após homologação do owner. Billing Mercado Pago validado em produção (12/09).
 
 ---
 
@@ -11,7 +11,7 @@
 | Marco | Situação | Homologação |
 |-------|----------|-------------|
 | Auth + perfil | ✅ Código + E2E | FL-01 (7/7) · FL-02 (3/3) · SMTP próprio validado |
-| Análise performance | ✅ Código + E2E · frames-only | FL-03 (6/6) · frames no bucket |
+| Análise performance | ✅ Código + E2E · frames-only · onda em fases (código) | FL-03 (6/6) · gabarito 14/09 pendente |
 | Prancha mágica | ✅ Código + E2E | FL-04 (4/4) |
 | Compatibilidade | ✅ Código + E2E · gate UX mágica | FL-05 (2/2) |
 | Segurança RLS | ✅ Validado | FL-06 (2/2) |
@@ -44,6 +44,29 @@
 
 - [ ] `db:push` migration **013** (confirmação do owner)
 - [ ] Homologação manual: vídeo > 50 MB; conferir bucket sem MP4; reanálise nova/legado; exclusão
+
+---
+
+## Iniciativa — Análise da onda completa (vídeo) 🟡
+
+> Spec: [`specs/2026-09-14-analise-onda-completa.md`](../../specs/2026-09-14-analise-onda-completa.md) · Manual: [`docs/manual-dev/11-fase-analise-onda-completa.md`](../manual-dev/11-fase-analise-onda-completa.md) · Implementação: [`docs/implementation/2026-09-14-analise-onda-completa.md`](../implementation/2026-09-14-analise-onda-completa.md)
+
+**Código implementado (14/09/2026):**
+
+- [x] Extração até **8** fotos da session; mobile ainda aceita **≥ 2**
+- [x] Contrato `fases[]` + `leitura_da_secao` (parser Zod; legado sem fases continua válido)
+- [x] Prompt de vídeo: onda inteira, drop relativo, não elogiar manobra falhada, dica concreta
+- [x] Timeline na UI com foto da evidência, qualidade e certeza da identificação rotulada
+- [x] Coaching visual **desligado** (owner 14/09): `WAVE_COACHING_VISUAL_ENABLED = false`; timeline fica na foto original
+- [x] Exclusão de conta remove frames **e** paths de coaching (legado)
+- [x] Testes da feature · typecheck · lint · test verdes
+
+**Pendente (homologação — não código extra):**
+
+- [ ] Gabarito point lento: drop não cobra agressividade irreal
+- [ ] Gabarito beach break: batida errada = falhou/regular, não “bem executada”
+- [ ] 2ª manobra abortada = leitura de seção
+- [ ] Timeline cobre drop, bottom turn e manobras visíveis
 
 ---
 

@@ -249,3 +249,25 @@ export async function retryAnalysisAction(
     };
   }
 }
+
+export async function generateWaveCoachingVisualsAction(
+  analysisId: string,
+): Promise<ActionResult> {
+  try {
+    const user = await requireAuthUser();
+    const { applyWaveCoachingVisuals } = await import(
+      "@/services/wave-coaching-service"
+    );
+    await applyWaveCoachingVisuals(user.id, analysisId);
+    revalidatePath(`/analyses/${analysisId}`);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: toActionErrorMessage(
+        error,
+        "Não foi possível preparar o visual do ajuste.",
+      ),
+    };
+  }
+}

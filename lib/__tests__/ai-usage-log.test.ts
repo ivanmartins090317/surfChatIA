@@ -115,6 +115,23 @@ describe("buildAiUsageLogPayload", () => {
 
     expect(payload.imageCount).toBe(6);
   });
+
+  it("mantém imageCount em image_edit e não estima custo de mini", () => {
+    const payload = buildAiUsageLogPayload({
+      model: "gpt-image-1",
+      kind: AI_USAGE_KIND.image_edit,
+      imageCount: 1,
+      usage: {
+        prompt_tokens: 800,
+        completion_tokens: 200,
+        total_tokens: 1000,
+      },
+    });
+
+    expect(payload.kind).toBe("image_edit");
+    expect(payload.imageCount).toBe(1);
+    expect(payload.estimatedCostUsd).toBeNull();
+  });
 });
 
 describe("logAiUsage", () => {

@@ -1,5 +1,6 @@
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { collectCoachingImagePathsFromResult } from "@/lib/domain/analysis-display";
 import {
   buildAccountExportPayload,
   DELETE_ACCOUNT_CONFIRMATION,
@@ -88,6 +89,10 @@ export async function deleteUserAccount(
     .from("boards")
     .select("photo_paths")
     .eq("user_id", userId);
+  const { data: analyses } = await supabase
+    .from("analyses")
+    .select("result_json")
+    .eq("user_id", userId);
 
   const admin = createAdminClient();
   const mediaPaths = (mediaItems ?? []).flatMap((item) => {
@@ -104,7 +109,10 @@ export async function deleteUserAccount(
     }
     return paths;
   });
-  await removeStoragePaths(admin, "media", mediaPaths);
+  const coachingPaths = (analyses ?? []).flatMap((row) =>
+    collectCoachingImagePathsFromResult(row.result_json),
+  );
+  await removeStoragePaths(admin, "media", [...mediaPaths, ...coachingPaths]);
   await removeStoragePaths(
     admin,
     "boards",

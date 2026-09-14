@@ -21,6 +21,7 @@ import {
 import {
   buildMediaFrameStoragePath,
   buildMediaStoragePath,
+  buildCoachingImageStoragePath,
   inferMediaExtension,
   isMediaStoragePathOwned,
 } from "@/lib/media/storage-path";
@@ -280,6 +281,39 @@ export async function persistMediaVideoFrames(
   }
 
   return framePaths;
+}
+
+export async function persistCoachingImage(
+  userId: string,
+  mediaId: string,
+  analysisId: string,
+  bytes: Buffer,
+  mimeType: string,
+): Promise<string> {
+  if (mimeType !== "image/png") {
+    throw new Error("Foto anotada com tipo não suportado.");
+  }
+
+  const path = buildCoachingImageStoragePath(userId, mediaId, analysisId);
+  if (!isMediaStoragePathOwned(userId, mediaId, path)) {
+    throw new Error("Caminho de coaching inválido.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.storage
+    .from("media")
+    .upload(path, bytes, { contentType: mimeType, upsert: false });
+
+  if (error) {
+    reportServerError(error, {
+      area: "upload",
+      operation: "persist_coaching_image",
+      userId,
+    });
+    throw new Error("Não foi possível gravar a foto anotada.");
+  }
+
+  return path;
 }
 
 export async function uploadMediaFile(

@@ -4,6 +4,7 @@ import {
   AI_USAGE_KIND,
   buildAiUsageLogPayload,
   logAiUsage,
+  type RawCompletionUsage,
 } from "@/lib/ai/usage-log";
 
 const AI_TIMEOUT_MS = process.env.VERCEL ? 55_000 : 90_000;
@@ -117,4 +118,79 @@ export async function chatJsonCompletionWithVision(
     throw new Error("Resposta vazia da IA.");
   }
   return content;
+}
+
+export const COACHING_IMAGE_MODEL = "gpt-image-1";
+
+export interface EditedImageResult {
+  bytes: Buffer;
+  mimeType: "image/png";
+}
+
+/**
+ * Edita a foto real do usuário (marcas de coaching). Saída não confiável —
+ * o caller valida MIME/tamanho antes de persistir.
+ */
+export async function editUserImage(input: {
+  imageBytes: Buffer;
+  mimeType: string;
+  fileName: string;
+  prompt: string;
+}): Promise<EditedImageResult> {
+  const client = createAiClient();
+  if (!client) {
+    throw new Error(
+      "IA não configurada. Defina OPENAI_API_KEY no servidor.",
+    );
+  }
+
+  const imageFile = new File([new Uint8Array(input.imageBytes)], input.fileName, {
+    type: input.mimeType,
+  });
+
+  const response = await client.images.edit({
+    model: COACHING_IMAGE_MODEL,
+    image: imageFile,
+    prompt: input.prompt,
+    input_fidelity: "high",
+    quality: "low",
+    output_format: "png",
+  });
+
+  logAiUsage(
+    buildAiUsageLogPayload({
+      model: COACHING_IMAGE_MODEL,
+      kind: AI_USAGE_KIND.image_edit,
+      imageCount: 1,
+      usage: mapImageEditUsage(response.usage),
+    }),
+  );
+
+  const b64 = response.data?.[0]?.b64_json;
+  if (!b64) {
+    throw new Error("Edição de imagem sem conteúdo.");
+  }
+
+  return {
+    bytes: Buffer.from(b64, "base64"),
+    mimeType: "image/png",
+  };
+}
+
+function mapImageEditUsage(
+  usage:
+    | {
+        input_tokens?: number | null;
+        output_tokens?: number | null;
+        total_tokens?: number | null;
+      }
+    | null
+    | undefined,
+): RawCompletionUsage | null {
+  if (!usage) return null;
+  return {
+    prompt_tokens: usage.input_tokens,
+    completion_tokens: usage.output_tokens,
+    total_tokens: usage.total_tokens,
+  };
 }

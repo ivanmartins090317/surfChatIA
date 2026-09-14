@@ -1,4 +1,10 @@
-import type { Analysis, MediaItem, MediaType, PerformanceResult } from "@/lib/domain/types";
+import type {
+  Analysis,
+  MediaItem,
+  MediaType,
+  PerformanceResult,
+  WavePhase,
+} from "@/lib/domain/types";
 import { ANALYSIS_FOCUS, MEDIA_TYPES, WAVE_TYPES } from "@/lib/domain/types";
 
 export interface PerformanceAnalysisListItem {
@@ -62,4 +68,40 @@ export function getAnalysisListSubtitle(media: MediaItem | null): string | null 
 
 export function getMediaTypeIconName(type: MediaType): "link" | "image" | "video" {
   return type;
+}
+
+export function hasWavePhaseTimeline(result: PerformanceResult): boolean {
+  return Array.isArray(result.fases) && result.fases.length > 0;
+}
+
+export function getWavePhaseIdentificationLabel(phase: WavePhase): string {
+  const certainty =
+    phase.confianca_identificacao === "alta"
+      ? "Certeza alta"
+      : phase.confianca_identificacao === "media"
+        ? "Certeza média"
+        : "Certeza baixa";
+  return `${certainty} de que era ${phase.nome}`;
+}
+
+export function collectCoachingImagePathsFromResult(
+  result: unknown,
+): string[] {
+  if (!result || typeof result !== "object") return [];
+  const fases = (result as { fases?: unknown }).fases;
+  if (!Array.isArray(fases)) return [];
+
+  const paths: string[] = [];
+  for (const fase of fases) {
+    if (!fase || typeof fase !== "object") continue;
+    const path = (fase as { coaching_image_path?: unknown }).coaching_image_path;
+    if (typeof path === "string" && path.length > 0 && !path.includes("..")) {
+      paths.push(path);
+    }
+  }
+  return paths;
+}
+
+export function getWavePhaseKey(phase: WavePhase): string {
+  return `${phase.frame_index}:${phase.nome}`;
 }

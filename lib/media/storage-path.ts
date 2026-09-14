@@ -50,6 +50,16 @@ export function buildMediaFrameStoragePath(
   return `${userId}/${mediaId}/frames/${objectId}.jpg`;
 }
 
+/** Path da foto anotada de coaching no bucket media (privado, prefixo do dono). */
+export function buildCoachingImageStoragePath(
+  userId: string,
+  mediaId: string,
+  analysisId: string,
+  objectId: string = randomUUID(),
+): string {
+  return `${userId}/${mediaId}/coaching/${analysisId}/${objectId}.png`;
+}
+
 export function isMediaStoragePathOwned(
   userId: string,
   mediaId: string,

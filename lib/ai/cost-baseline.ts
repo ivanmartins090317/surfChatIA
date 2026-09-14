@@ -7,7 +7,7 @@ import {
  * Perfis representativos (tokens) para baseline de margem — Trilha G.
  * Valores calibrados pelo tamanho dos prompts em `lib/ai/*-prompt.ts`
  * + custo típico de visão `detail: high` (1 imagem ~1–2k tokens de input;
- * vídeo ~6 frames via VIDEO_FRAME_COUNT).
+ * vídeo ~8 frames via VIDEO_FRAME_COUNT).
  *
  * Substituir pelas médias reais dos logs `ai.usage` após a amostra operacional.
  */
@@ -21,10 +21,10 @@ export const AI_COST_BASELINE_PROFILES = {
   },
   performance_video: {
     analysisType: "performance",
-    label: "Performance (vídeo ~6 frames)",
-    promptTokens: 16_000,
-    completionTokens: 950,
-    imageCount: 6,
+    label: "Performance (vídeo ~8 frames)",
+    promptTokens: 20_000,
+    completionTokens: 1_400,
+    imageCount: 8,
   },
   board_spec: {
     analysisType: "board_spec",

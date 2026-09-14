@@ -1,5 +1,6 @@
 import { runPerformanceAnalysis } from "@/lib/ai/analyze-performance";
 import { parsePerformanceResult } from "@/lib/ai/performance-parser";
+import { toPersistedPerformanceResult } from "@/lib/ai/wave-coaching";
 import type { Analysis, MediaItem } from "@/lib/domain/types";
 import type { PerformanceAnalysisListItem } from "@/lib/domain/analysis-display";
 import type { ExtractedVideoFrame } from "@/lib/media/extract-video-frames";
@@ -18,6 +19,7 @@ import {
   runWithAnalysisCreditGate,
   withSystemAutoRetries,
 } from "@/services/usage-service";
+import { scheduleWaveCoachingVisuals } from "@/services/wave-coaching-service";
 
 interface AnalysisRowWithMedia extends Analysis {
   media_items: MediaItem | null;
@@ -190,7 +192,7 @@ export async function createPerformanceAnalysis(
           videoFrameTimestamps = resolved.videoFrameTimestamps;
         }
 
-        const result = await withSystemAutoRetries(async () => {
+        const parsed = await withSystemAutoRetries(async () => {
           const raw = await runPerformanceAnalysis({
             media,
             profile,
@@ -199,6 +201,12 @@ export async function createPerformanceAnalysis(
           });
           return parsePerformanceResult(raw);
         });
+
+        const result = toPersistedPerformanceResult(
+          media.type,
+          parsed,
+          videoFrameTimestamps,
+        );
 
         const { data: updated, error: updateError } = await supabase
           .from("analyses")
@@ -217,6 +225,13 @@ export async function createPerformanceAnalysis(
         if (updateError || !updated) {
           throw new Error("Falha ao salvar resultado.");
         }
+
+        scheduleWaveCoachingVisuals({
+          userId,
+          analysisId: updated.id,
+          mediaId: mediaItemId,
+          result,
+        });
 
         return updated as Analysis;
       } catch (error) {

@@ -1,10 +1,8 @@
 /**
- * Quantidade de frames extraídos por vídeo para análise visual da IA.
- * Aumentado de 3 para 6 (Fase A do plano de especialização — ver
- * docs/implementation/2026-07-17-plano-especializacao-ia-performance.md)
- * para reduzir a chance de a manobra principal cair fora dos frames amostrados.
+ * Quantidade de fotos da session extraídas por vídeo para análise visual.
+ * 8 cortes uniformes (onda em fases). Mínimo mobile permanece em MIN_VIDEO_FRAMES.
  */
-export const VIDEO_FRAME_COUNT = 6;
+export const VIDEO_FRAME_COUNT = 8;
 
 /**
  * Quantidade mínima de frames aceita quando a extração no navegador falha

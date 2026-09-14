@@ -80,6 +80,40 @@ export const MANEUVER_CONFIDENCE_LEVELS = {
 
 export type ManeuverConfidence = keyof typeof MANEUVER_CONFIDENCE_LEVELS;
 
+export const WAVE_PHASE_QUALITY = {
+  boa: "Boa",
+  regular: "Regular",
+  falhou: "Falhou",
+} as const;
+
+export type WavePhaseQuality = keyof typeof WAVE_PHASE_QUALITY;
+
+export const COACHING_VISUAL_STATUS = {
+  pending: "pending",
+  processing: "processing",
+  ready: "ready",
+  skipped: "skipped",
+} as const;
+
+export type CoachingVisualStatus =
+  keyof typeof COACHING_VISUAL_STATUS;
+
+export interface WavePhase {
+  nome: string;
+  frame_index: number;
+  timestamp: string;
+  qualidade_execucao: WavePhaseQuality;
+  confianca_identificacao: ManeuverConfidence;
+  o_que_vi: string;
+  como_melhorar: string;
+  coaching_image_path?: string;
+}
+
+export interface WaveSectionReading {
+  o_que_a_onda_fez: string;
+  alternativa: string;
+}
+
 export const USER_PLANS = {
   free: "Grátis",
   surfista: "Surfista",
@@ -162,6 +196,10 @@ export interface PerformanceResult {
   confianca_manobra?: ManeuverConfidence;
   /** Detalhes técnicos visíveis no frame ou nos frames do vídeo */
   detalhes_frame?: string;
+  /** Fases da ride (vídeo novo). Ausente em foto, link e análises antigas. */
+  fases?: WavePhase[];
+  leitura_da_secao?: WaveSectionReading;
+  coaching_visual_status?: CoachingVisualStatus;
 }
 
 export interface BoardSpecResult {

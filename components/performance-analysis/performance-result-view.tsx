@@ -1,16 +1,20 @@
 import { CheckCircle2, Lightbulb, Target, TrendingUp, Zap } from "lucide-react";
+import { WavePhaseTimeline } from "@/components/performance-analysis/wave-phase-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { hasWavePhaseTimeline } from "@/lib/domain/analysis-display";
 import type {
   MelhoriaDetalhada,
   ManeuverConfidence,
   PerformanceResult,
+  WaveSectionReading,
 } from "@/lib/domain/types";
 import { MANEUVER_CONFIDENCE_LEVELS } from "@/lib/domain/types";
 
 interface PerformanceResultViewProps {
   result: PerformanceResult;
+  framePreviewUrls?: string[];
 }
 
 const CONFIDENCE_BADGE_VARIANT: Record<
@@ -113,7 +117,67 @@ function MelhoriasList({ result }: { result: PerformanceResult }) {
   );
 }
 
-export function PerformanceResultView({ result }: PerformanceResultViewProps) {
+function WaveSectionCard({ reading }: { reading: WaveSectionReading }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Leitura da seção</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">O que a onda fez: </span>
+          <span className="text-muted-foreground">{reading.o_que_a_onda_fez}</span>
+        </p>
+        <p>
+          <span className="font-semibold text-foreground">Alternativa: </span>
+          <span className="text-muted-foreground">{reading.alternativa}</span>
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ManeuverObservedCard({ result }: { result: PerformanceResult }) {
+  if (!result.manobra_observada) return null;
+
+  return (
+    <Card className="border-primary/20">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <Zap className="size-5 text-primary" aria-hidden />
+            Manobra observada
+          </span>
+          {result.confianca_manobra && (
+            <ManeuverConfidenceBadge confidence={result.confianca_manobra} />
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-lg font-medium leading-relaxed">
+          {result.manobra_observada}
+        </p>
+        {result.detalhes_frame && (
+          <p className="text-muted-foreground leading-relaxed">
+            {result.detalhes_frame}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function PerformanceResultView({
+  result,
+  framePreviewUrls = [],
+}: PerformanceResultViewProps) {
+  const showTimeline = hasWavePhaseTimeline(result);
+
+  const resumoTitle =
+    showTimeline || result.manobra_observada
+      ? "Resumo técnico"
+      : "Resumo da sessão";
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {result.score != null && (
@@ -136,37 +200,22 @@ export function PerformanceResultView({ result }: PerformanceResultViewProps) {
 
       <ScoreBreakdown result={result} />
 
-      {result.manobra_observada && (
-        <Card className="border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
-                <Zap className="size-5 text-primary" aria-hidden />
-                Manobra observada
-              </span>
-              {result.confianca_manobra && (
-                <ManeuverConfidenceBadge confidence={result.confianca_manobra} />
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-lg font-medium leading-relaxed">
-              {result.manobra_observada}
-            </p>
-            {result.detalhes_frame && (
-              <p className="text-muted-foreground leading-relaxed">
-                {result.detalhes_frame}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      {showTimeline ? (
+        <WavePhaseTimeline
+          fases={result.fases ?? []}
+          framePreviewUrls={framePreviewUrls}
+        />
+      ) : (
+        <ManeuverObservedCard result={result} />
       )}
+
+      {showTimeline && result.leitura_da_secao ? (
+        <WaveSectionCard reading={result.leitura_da_secao} />
+      ) : null}
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {result.manobra_observada ? "Resumo técnico" : "Resumo da sessão"}
-          </CardTitle>
+          <CardTitle>{resumoTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-lg leading-relaxed">{result.resumo}</p>

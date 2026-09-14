@@ -105,6 +105,42 @@ const PERFORMANCE_IMAGE_JSON_SHAPE = `{
   "detalhes_frame": "string",
   ${PERFORMANCE_JSON_SHAPE.slice(1)}`;
 
+const PERFORMANCE_VIDEO_JSON_SHAPE = `{
+  "fases": [
+    {
+      "nome": "string — use exatamente um nome da TAXONOMIA DE MANOBRAS",
+      "frame_index": 0,
+      "timestamp": "string — rótulo do frame (ex.: 0:12)",
+      "qualidade_execucao": "boa | regular | falhou",
+      "confianca_identificacao": "alta | media | baixa",
+      "o_que_vi": "string — evidência visível NESTE frame",
+      "como_melhorar": "string — didático e concreto (olhar, bico, mão/rail, amplitude)"
+    }
+  ],
+  "leitura_da_secao": {
+    "o_que_a_onda_fez": "string",
+    "alternativa": "string — emendar, abortar ou reposicionar, e se fez sentido"
+  },
+  "manobra_observada": "string — fase de manobra mais relevante (legado)",
+  "confianca_manobra": "alta | media | baixa",
+  "detalhes_frame": "string",
+  ${PERFORMANCE_JSON_SHAPE.slice(1)}`;
+
+function buildWavePhaseRules(): string {
+  return `ONDAS EM FASES (obrigatório no vídeo):
+- Analise a onda INTEIRA na ordem da ride: drop → bottom turn → linha → manobras → aborto/seção.
+- Emita fase SÓ com evidência em um JPEG anexado. "frame_index" é 0-based na ordem cronológica enviada.
+- Se inferir sem evidência clara, confianca_identificacao = baixa. Não invente instante: sem foto daquela fase, não emita a fase.
+- qualidade_execucao julga a TÉCNICA (boa | regular | falhou). confianca_identificacao é só a certeza do NOME da fase — NÃO é qualidade e NÃO autoriza elogio nem sobe nota.
+- NÃO elogie execução se a manobra falhou (batida sem conexão no lip, spray errado, prancha sem vertical). Use falhou ou regular e copy crítico.
+- Drop RELATIVO ao tipo de onda: point/lento pode ser cadenciado; desacelerar para entrar no face pode ser correto. Beach break/seção rápida pede drop mais comprometido, ainda relativo ao tamanho. NUNCA use "mais agressivo" ou "entrada mais agressiva" como dica padrão sem evidência visual E sem contextualizar a onda.
+- "como_melhorar" é obrigatório em regular ou falhou: pelo menos um de olhar, direção do bico (relógio), mão/rail, amplitude do bottom turn ou vertical da batida. Tom didático — não genérico ("melhore a postura").
+- Em fase boa, "como_melhorar" pode ser reforço curto.
+- "resumo" cita as fases observadas, não só a primeira.
+- "leitura_da_secao": o que a onda fez e a alternativa (emendar / abortar / reposicionar). Abortar a 2ª manobra NÃO vira só "falta de consistência".
+- "manobra_observada" (legado) = fase de manobra mais relevante; NÃO substitui fases[].`;
+}
+
 function buildScoreRules(mediaType: MediaType): string {
   const criteriaList = SCORE_CRITERIA.map((c) => `- ${c}: 0–20 pts`).join("\n");
 
@@ -181,16 +217,16 @@ Regras adicionais:
 
   if (mediaType === "video") {
     return `Você é um coach de surf experiente analisando FRAMES extraídos de um vídeo de surf (amostras em momentos diferentes).
-${visualRules}${sharedRules}
+${visualRules}${buildWavePhaseRules()}
+
+${sharedRules}
 
 Formato:
-${PERFORMANCE_IMAGE_JSON_SHAPE}
+${PERFORMANCE_VIDEO_JSON_SHAPE}
 
 Regras adicionais:
-- Compare os frames para inferir sequência, ritmo e consistência.
-- "manobra_observada" descreve a manobra ou fase mais relevante entre os frames.
+- Compare os frames para inferir sequência, ritmo e consistência da ride.
 - "detalhes_frame" sintetiza postura, linha e posição na onda vistos nos frames.
-- Se frames mostrarem momentos distintos, mencione evolução ou repetição de padrão.
 - Diferencie claramente esta sessão de uma análise genérica — cite o que é único aqui.`;
   }
 
@@ -239,7 +275,7 @@ export function buildPerformanceUserPrompt(input: {
     input.mediaType === "image"
       ? "Analise o frame anexado com rigor: manobra, postura, linha, peso nos pés e o que pode melhorar neste instante."
       : input.mediaType === "video"
-        ? "Analise os frames anexados como amostras do vídeo. Cruze os momentos para avaliar técnica, consistência e prioridades de treino."
+        ? "Analise os frames anexados como a onda completa. Quebre em fases na ordem da ride, cada uma com evidência no JPEG correspondente, qualidade da execução, certeza da identificação e como melhorar no corpo/prancha."
         : "Com base no link e contexto, dê orientação técnica honesta (sem afirmar que viu o vídeo).";
 
   return `[PERFIL]
